@@ -1,0 +1,132 @@
+/* assets/style.css */
+
+body {
+    font-family: "Consolas", sans-serif;
+    margin: 0;
+    background-color: #fff;
+}
+
+.header {
+    background-color: #222222;
+    height: 120px;
+    padding: 16px 0 0 0;
+}
+
+.header-emoji {
+    font-size: 48px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.header-title {
+    color: #FFFFFF;
+    font-size: 28px;
+    font-weight: bold;
+    text-align: center;
+    margin: 0 auto;
+}
+
+.header-description {
+    color: #CFCFCF;
+    margin: 4px auto;
+    text-align: center;
+    max-width: 384px;
+}
+
+.wrapper {
+    margin-right: auto;
+    margin-left: auto;
+    max-width: 1024px;
+    background-color: #ffffff;
+    padding-right: 10px;
+    padding-left: 10px;
+    padding-top: 70px;
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-evenly;
+    border: none;
+}
+
+#graficodiagnostico{
+    border: none;
+}
+.card {
+    margin-bottom: 0px;
+    border: none;
+    
+}
+
+.option_menu_side{
+    font-size: 18px;
+}
+
+.option_menu_side:focus{
+    font-weight: bold;
+}
+
+.option_menu_side:active{
+    font-weight: bold;
+}
+
+.flexible{
+    display: flex;
+    justify-content: space-around;
+    width: 800px;
+    font-size: 20px;
+}
+
+.home{
+    height: 40px;
+    width: 500px;
+    font-size: 20px;
+    display: flex;
+    justify-content: left;
+    margin-left: 12px;
+    padding-top: 16px;
+    font-weight: bold;
+    
+}
+
+.menu {
+    height: 40px;
+    width: 1000px;
+    display: flex;
+    justify-content: space-evenly;
+    padding-top: 16px;
+    margin: 0 auto 0 auto;
+    background-color: #FFFFFF;
+    
+}
+
+.Select-control {
+    position: relative;
+    right: 2px;
+    bottom: 5px;
+    width: 296px;
+    height: 20px;
+}
+
+.Select--single >.Select-control .Select-value,
+.Select-placeholder {
+    line-height: 30px;
+    font-weight: bold;
+}
+
+.Select--multi .Select-value-label {
+    line-height: 30px;
+
+}
+
+.menu-title {
+    position: relative;
+    bottom: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #00249c;
+}
+
+.dropdown {
+    font-size: 16px;
+    
+    
+}
