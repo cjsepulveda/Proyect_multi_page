@@ -24,7 +24,7 @@ app = dash.Dash(
         FA621,  # Font Awesome Icons CSS
     ],
     title=APP_TITLE,
-    use_pages=True,  # New in Dash 2.7 - Allows us to register pages
+    use_pages=True,  
 )
 
 server = app.server
