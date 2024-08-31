@@ -29,12 +29,6 @@ df01['HISTORIA'] = pd.to_numeric(df01['HISTORIA'])
 df01['CIENCIAS'] = df01['CIENCIAS'].replace(',','.',regex=True)
 df01['CIENCIAS'] = pd.to_numeric(df01['CIENCIAS'])
 
-#print(df01.info())
-#print(df01[['LENGUAJE','MATEMÁTICA','PROM. LEN-MAT','HISTORIA', 'CIENCIAS']].head())
-
-#df03= df01[df01.columns[0]]
-#print(df03.head())
-
 # Inicio aplicacion Dash
 
 # Diagrama de la aplicación
