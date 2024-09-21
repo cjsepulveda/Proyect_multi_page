@@ -195,6 +195,14 @@ def update_charts(nivel,test,asig):
     margin=dict(l=0, r=0, b=50, t=80, pad=0),
        
         )
+    
+    trace01.add_layout_image(                                 
+                            source= "assets/Original-Apaisado.png",
+                            x=1, y=1.05,
+                            sizex=0.2, sizey=0.2,
+                            xanchor="right", yanchor="bottom",                                
+                            )
+
     trace01.update_yaxes(tickformat='.0%', tickfont_family='Consolas', tickfont_size=15, tickfont_weight=1000)
     trace01.update_xaxes(tickfont_family='Consolas', tickfont_size=15, tickfont_weight=1000)
     

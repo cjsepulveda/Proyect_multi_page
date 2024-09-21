@@ -15,6 +15,7 @@ import dash_bootstrap_components as dbc
 # To use Font Awesome Icons
 FA621 = "https://use.fontawesome.com/releases/v6.2.1/css/all.css"
 APP_TITLE = "Rendimientos LMLA 2024"
+image_path = 'assets/Original-Apaisado.png'
 
 app = dash.Dash(
     __name__,
@@ -43,12 +44,14 @@ navbar = dbc.NavbarSimple(
             nav=True,
             in_navbar=True,
             label="DIA",
+           
         ),
     ],
     brand="Liceo Particular Mixto Los Andes",
     brand_href="/",
-    color="primary",
+    color="#b51808",
     dark=True,
+    
    )
     
 

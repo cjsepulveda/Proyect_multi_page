@@ -7,12 +7,14 @@ register_page(
     path='/'
 )
 
+image_path = 'assets/Original-Apaisado.png'
 
 def layout():
     layout = html.Div([
+        html.Img(src=image_path),
         html.P(
             [
-                "Elija una opción desde el menu"
+                "Análisis de Datos, elija una opción del menu"
             ], className='home'
         )
     ])

@@ -71,6 +71,13 @@ def display_time_series(select_area):
                   template="simple_white",
                   
                   )
+    fig_test.add_layout_image(                                 
+                            source= "assets/Original-Apaisado.png",
+                            xref="paper", yref="paper",
+                            x=1.12, y=1.15,
+                            sizex=0.2, sizey=0.2,
+                            xanchor="right", yanchor="bottom",                                
+                            )
     
     fig_test.update_traces(
         mode="markers+lines", hovertemplate=None, line=dict( width=1.5))

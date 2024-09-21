@@ -125,6 +125,15 @@ def update_charts(nivel,test):
                      template="simple_white",
                      
                      )
+    
+    trace01.add_layout_image(                                 
+                            source= "assets/Original-Apaisado.png",
+                            xref="paper", yref="paper",
+                            x=1.12, y=1.15,
+                            sizex=0.2, sizey=0.2,
+                            xanchor="right", yanchor="bottom",                                
+                            )
+
     trace01.update_traces(hovertemplate=
                           '<b>Puntaje:</b>: %{y:.1f}'+
                           '<br><b>Curso:</b>: %{x}<br>',

@@ -177,7 +177,7 @@ def update_charts(nivel,test,asig):
             b ='Promedio Habilidades'
     
     trace01.update_layout(
-    title_text=f"Rendimiento DIA Diagnóstico: {b}, {a} {n}",
+    title_text=f"Rendimiento DIA Diagnóstico: {b} <br>{a} {n}",
     title_font_family='Consolas',
     title_font_weight=1000,
     legend_font_family='Consolas',
@@ -194,6 +194,14 @@ def update_charts(nivel,test,asig):
         )
     trace01.update_yaxes(tickformat='.0%', tickfont_family='Consolas', tickfont_size=15, tickfont_weight=1000)
     trace01.update_xaxes(tickfont_family='Consolas', tickfont_size=15, tickfont_weight=1000)
+
+    trace01.add_layout_image(                                 
+                            source= "assets/Original-Apaisado.png",
+                            x=1, y=1.05,
+                            sizex=0.2, sizey=0.2,
+                            xanchor="right", yanchor="bottom",                                
+                            )
+
     
     
     

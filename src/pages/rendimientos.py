@@ -200,6 +200,13 @@ def update_charts(nivel,asignatura,area_id):
                      template="simple_white",
                      range_y=[0,1],
                      )
+    trace01.add_layout_image(                                 
+                            source= "assets/Original-Apaisado.png",
+                            xref="paper", yref="paper",
+                            x=1.12, y=1.15,
+                            sizex=0.2, sizey=0.2,
+                            xanchor="right", yanchor="bottom",                                
+                            )
     
     trace01.update_yaxes(tickformat=".1%", tickfont_weight='bold',title_font_weight='bold',tickfont_size=15)
     trace01.update_xaxes(tickfont_weight='bold', title_font_weight='bold')
@@ -213,6 +220,7 @@ def update_charts(nivel,asignatura,area_id):
                          title_font_size=20,
                          title_x=0.5
                          )
+    
     new_trace01 = [dcc.Graph(figure=trace01, config={"displayModeBar": False}, className="card")]
    
     return new_trace01
