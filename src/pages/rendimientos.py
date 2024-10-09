@@ -12,7 +12,7 @@ register_page(
 
 PATH = pathlib.Path(__file__).parent
 DATA_PATH = PATH.joinpath("data").resolve()
-df01 = pd.read_excel(DATA_PATH.joinpath('data_level_grade_02.xlsx'), sheet_name='DATA_JUN')
+df01 = pd.read_excel(DATA_PATH.joinpath('data_level_grade_02.xlsx'), sheet_name='DATA_OCT')
 
 grades = df01["NIVEL"].sort_values().unique()
 subjetsALL = df01["ASIGNATURA"].unique()
