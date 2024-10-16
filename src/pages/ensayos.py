@@ -100,28 +100,32 @@ def update_charts(nivel,test):
     graph_x_axes = 'CURSO'
     
     if test =='LEN':
-        color_01='#f44336'
-        color_02='#ffeb3b'
+        color_01='#664200'
+        color_02='#ffc966'
+        color_03='#ffa500'
 
     elif test =='MAT-01':
-        color_01='#1a237e'
+        color_01='#000033'
         color_02='#42a5f5'
+        color_03='#000099'
 
     elif test=='HIST':
         color_01='#33691e'
         color_02='#8bc34a'
+        color_03='#0b5010'
 
     else:
         color_01='#2e7d32'
         color_02='gold'
+        color_03='#ffa500'
 
 
-    trace01 = px.bar(select_nivel_subject, x=graph_x_axes, y=['ENSAYO-01','ENSAYO-02'], 
+    trace01 = px.bar(select_nivel_subject, x=graph_x_axes, y=['ENSAYO-01','ENSAYO-02','ENSAYO-03'], 
                      title= f'PROMEDIOS {nivel} en {test}',
                      width=1000, height=380,
                      labels={'value':'','variable':'Ensayos','CURSO':'Cursos'},
                      barmode='group',
-                     color_discrete_map={'ENSAYO-01':color_01,'ENSAYO-02':color_02},
+                     color_discrete_map={'ENSAYO-01':color_01,'ENSAYO-02':color_02,'ENSAYO-03':color_03},
                      template="simple_white",
                      
                      )
