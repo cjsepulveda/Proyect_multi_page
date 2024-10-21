@@ -262,32 +262,38 @@ def update_charts(nivel,test,asig):
     margin=dict(l=0, r=0, b=50, t=80, pad=0),
        
         )
+    # opciones fuente, tamaño para ejes
+    trace01.update_xaxes(
+            tickfont_family='Consolas', 
+            tickfont_size=15, 
+            tickfont_weight=1000,
+            )
+    trace01.update_yaxes(
+             tickfont_family='Consolas', 
+             tickfont_size=15, 
+             tickfont_weight=1000
+             )
+        
+    if test == 'score': #opcion grafico con escala numérica para puntajes simce
 
-    if test == 'score': #opcion grafico numérico, porcentaje
-
-        trace01.update_yaxes(tickformat='.0f', tickfont_family='Consolas', tickfont_size=15, tickfont_weight=1000)
-    
-    elif test == 'var_score':
+        trace01.update_yaxes(
+             tickformat='.0f', 
+             )
+                
+    elif test == 'var_score': # opción gráfico para variacion puntajes SIMCE
 
         trace01.update_yaxes(
             tickformat='.0%', 
-            tickfont_family='Consolas', 
-            tickfont_size=15, 
-            tickfont_weight=1000,
             zeroline=True,
             zerolinecolor='black'
             )
-        trace01.update_xaxes(
-            tickfont_family='Consolas', 
-            tickfont_size=15, 
-            tickfont_weight=1000,
-            )
+        
       
-    else:
-        trace01.update_yaxes(tickformat='.0%', tickfont_family='Consolas', tickfont_size=15, tickfont_weight=1000)
-        trace01.update_xaxes(tickfont_family='Consolas', tickfont_size=15, tickfont_weight=1000)
-       
-    
+    else: # opción graficos con escalas en porcentaje
+        trace01.update_yaxes(
+             tickformat='.0%', 
+             )
+        
     new_trace01 = [dcc.Graph(figure=trace01, config={"displayModeBar": False}, className="card")]
    
     return new_trace01
