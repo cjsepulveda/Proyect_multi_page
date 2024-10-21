@@ -7,7 +7,7 @@ register_page(
     __name__,
     name='Ensayos PAES',
     top_nav=True,
-    path='/ensayos'
+    path='/ensayos_paes'
 )
 
 PATH = pathlib.Path(__file__).parent

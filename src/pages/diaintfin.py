@@ -16,8 +16,8 @@ DATA_PATH = PATH.joinpath("data").resolve()
 
 
 # Inicio aplicacion Dash
-#app = Dash(__name__)
-#server=app.server
+# app = Dash(__name__)
+# server=app.server
 
 # Diagrama de la aplicación (Dos listas despegables y un gráfico)
 def layout(): 
@@ -91,7 +91,6 @@ def layout():
         ])
     
     return layout
-
 
 # callback para filtrar gráfico segun nivel, asignatura y descriptor
 @callback(
