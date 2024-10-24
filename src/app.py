@@ -48,11 +48,12 @@ navbar = dbc.NavbarSimple(
            
         ),
     ],
+   
     brand="Liceo Particular Mixto Los Andes",
     brand_href="/",
     color="#b51808",
     dark=True,
-    
+        
    )
     
 
