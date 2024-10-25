@@ -37,16 +37,18 @@ navbar = dbc.NavbarSimple(
         dbc.NavItem(dbc.NavLink("Ensayos PAES", class_name='option_menu_side', href="/ensayos_paes")),
         dbc.NavItem(dbc.NavLink("Ensayos SIMCE", class_name='option_menu_side', href="/simce_ensayos")),
         dbc.DropdownMenu(
+            size="md",
             children=[
                 dbc.DropdownMenuItem("Etapa", header=True),
                 dbc.DropdownMenuItem("Diagnóstico", href="/diadiagnostico"),
                 dbc.DropdownMenuItem("Intermedio/Final", href="/diaintfin"),
             ],
+            
             nav=True,
             in_navbar=True,
             label="DIA",
-           
-        ),
+            
+            ),
     ],
    
     brand="Liceo Particular Mixto Los Andes",
