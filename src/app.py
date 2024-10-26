@@ -39,35 +39,28 @@ navbar = dbc.NavbarSimple(
         dbc.DropdownMenu(
             size="md",
             children=[
-                dbc.DropdownMenuItem("Etapa", header=True),
+                #dbc.DropdownMenuItem("Etapa", header=True),
                 dbc.DropdownMenuItem("Diagnóstico", href="/diadiagnostico"),
                 dbc.DropdownMenuItem("Intermedio/Final", href="/diaintfin"),
             ],
-            
             nav=True,
             in_navbar=True,
             label="DIA",
-            
             ),
-    ],
+        ],
    
     brand="Liceo Particular Mixto Los Andes",
     brand_href="/",
     color="#b51808",
     dark=True,
-        
    )
     
-
-
 app.layout = html.Div(
                 children=[
                     navbar,
                     dash.page_container
-            ],
-                        
-        )
+                ],
+            )
 
-       
 if __name__ == '__main__':
     app.run_server(debug=True)
