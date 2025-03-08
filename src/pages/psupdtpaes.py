@@ -66,7 +66,7 @@ def display_time_series(select_area):
     fig_test = px.line(df01, x='AÑO', y=select_area, color='AREA',
                   title= f'RENDIMIENTO ESTUDIANTES en {my_string}',
                   width=1000, height=390,
-                  labels={'value':'select_area','variable':'PRUEBA','AÑO':'Año'},
+                  labels={'value':'','variable':'PRUEBA','AÑO':'Año'},
                   color_discrete_map={'HC':'blue','TP-COM':'green','TP-IND':'orange'},
                   template="simple_white",
                   
