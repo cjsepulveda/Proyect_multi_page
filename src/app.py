@@ -8,7 +8,7 @@ import dash_bootstrap_components as dbc
 # BOOTSTRAP, CERULEAN, COSMO, CYBORG, DARKLY, FLATLY, JOURNAL, LITERA, LUMEN,
 # LUX, MATERIA, MINTY, PULSE, SANDSTONE, SIMPLEX, SKETCHY, SLATE, SOLAR,
 # SPACELAB, SUPERHERO, UNITED, YETI, ZEPHYR.
-# To see all themes in action visit:
+# To see all themes in action visit: cvvbvbvb
 # https://dash-bootstrap-components.opensource.faculty.ai/docs/themes/explorer/
 
 
