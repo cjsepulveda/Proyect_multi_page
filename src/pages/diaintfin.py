@@ -2,6 +2,7 @@ import pathlib
 from dash import dcc, html, Input, Output, callback, register_page
 import pandas as pd
 import plotly.graph_objs as go
+from plotly.subplots import make_subplots
 
 register_page(
     __name__,
@@ -141,18 +142,26 @@ def update_charts(nivel,test,asig):
     # Parámetros constantes para el gráfico, TITULO, y eje X con múltiples valores
     new_hovertemplate = 'Rendimiento: %{y:.0%}'+'<br>Curso: %{x[0]}<br>'+'Etapa: %{x[1]}'
     graph_x_axes = [mask01['CURSO'], mask01['Etapa']]
+    #graph_x_axes = [mask01['CURSO'], mask01['Etapa']]
 
     #print(mask01.iloc[:,1])
            
-    trace01 = go.Figure()
-    
+    #trace01 = go.Figure()
+    trace01 = make_subplots(rows=1, cols=2)
+
     if test == 'level_score': # Gráfica para NIVEL de LOGRO
             
             for x in count_level:
                 trace01.add_bar( x=graph_x_axes, y=graph_y_axes_LEVEL[x], 
                                 name=name_level[x],
                                 marker_color=colors_level[x],
-                                hovertemplate = new_hovertemplate)
+                                hovertemplate = new_hovertemplate,
+                                 row=1, col=1)
+                trace01.add_bar( x=graph_x_axes, y=graph_y_axes_LEVEL[x], 
+                                name=name_level[x],
+                                marker_color=colors_level[x],
+                                hovertemplate = new_hovertemplate,
+                                 row=1, col=2)
                
             trace01.update_layout(barmode="relative", template='simple_white')
             b ='Niveles de Logro'
