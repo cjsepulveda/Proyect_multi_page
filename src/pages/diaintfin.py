@@ -136,28 +136,33 @@ def update_charts(nivel,test,asig):
     # Parámetros constantes para ambas asignaturas, petenecientes al descriptor NIVEL de LOGRO
     count_level=[0,1,2]
     name_level=['Nivel I','Nivel II','Nivel III']
-    graph_y_axes_LEVEL=[mask01['NIVEL I'], mask01['NIVEL II'], mask01['NIVEL III']]
+    mask01_T1 = mask01[mask01['TIEMPO'] == 2024]
+    mask01_T2 = mask01[mask01['TIEMPO'] == 2025]
+    graph_y_axes_LEVEL_T1=[mask01_T1['NIVEL I'], mask01_T1['NIVEL II'], mask01_T1['NIVEL III']]
+    graph_y_axes_LEVEL_T2=[mask01_T2['NIVEL I'], mask01_T2['NIVEL II'], mask01_T2['NIVEL III']]
     colors_level=['#062c80','#0e6ac7','#4fb9fc']
     
     # Parámetros constantes para el gráfico, TITULO, y eje X con múltiples valores
     new_hovertemplate = 'Rendimiento: %{y:.0%}'+'<br>Curso: %{x[0]}<br>'+'Etapa: %{x[1]}'
-    graph_x_axes = [mask01['CURSO'], mask01['Etapa']]
+    graph_x_axes_T1 = [mask01_T1['CURSO'], mask01_T1['Etapa']]
+    graph_x_axes_T2 = [mask01_T2['CURSO'], mask01_T2['Etapa']]
     #graph_x_axes = [mask01['CURSO'], mask01['Etapa']]
 
     #print(mask01.iloc[:,1])
-           
+    #print(mask01[mask01['TIEMPO'] == 2024])
     #trace01 = go.Figure()
     trace01 = make_subplots(rows=1, cols=2)
 
     if test == 'level_score': # Gráfica para NIVEL de LOGRO
             
             for x in count_level:
-                trace01.add_bar( x=graph_x_axes, y=graph_y_axes_LEVEL[x], 
+                trace01.add_bar( x=graph_x_axes_T1, y=graph_y_axes_LEVEL_T1[x], 
                                 name=name_level[x],
                                 marker_color=colors_level[x],
+                                showlegend=False,
                                 hovertemplate = new_hovertemplate,
                                  row=1, col=1)
-                trace01.add_bar( x=graph_x_axes, y=graph_y_axes_LEVEL[x], 
+                trace01.add_bar( x=graph_x_axes_T2, y=graph_y_axes_LEVEL_T2[x], 
                                 name=name_level[x],
                                 marker_color=colors_level[x],
                                 hovertemplate = new_hovertemplate,
@@ -212,7 +217,7 @@ def update_charts(nivel,test,asig):
                             )
 
     trace01.update_yaxes(tickformat='.0%', tickfont_family='Consolas', tickfont_size=15, tickfont_weight=1000)
-    trace01.update_xaxes(tickfont_family='Consolas', tickfont_size=15, tickfont_weight=1000)
+    trace01.update_xaxes(tickfont_family='Consolas', tickfont_size=10, tickfont_weight=1000)
     
     
     

@@ -36,6 +36,7 @@ navbar = dbc.NavbarSimple(
         dbc.NavItem(dbc.NavLink("PSU PAES PDT", class_name='option_menu_side',href="/psupdtpaes")),
         dbc.NavItem(dbc.NavLink("Ensayos PAES", class_name='option_menu_side', href="/ensayos_paes")),
         dbc.NavItem(dbc.NavLink("Ensayos SIMCE", class_name='option_menu_side', href="/simce_ensayos")),
+        dbc.NavItem(dbc.NavLink("Matrícula", class_name='option_menu_side', href="/simce_ensayos")),
         dbc.DropdownMenu(
             size="md",
             children=[
@@ -63,4 +64,4 @@ app.layout = html.Div(
             )
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host = '127.0.0.1',debug=True)
