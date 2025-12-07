@@ -12,13 +12,16 @@ register_page(
 
 PATH = pathlib.Path(__file__).parent
 DATA_PATH = PATH.joinpath("data").resolve()
-df01 = pd.read_excel(DATA_PATH.joinpath('data_paes_2024_py.xlsx'), sheet_name='data')
+df01 = pd.read_excel(DATA_PATH.joinpath('mat_2026.xlsx'), sheet_name='mat_2026')
 
 
-# Listas de Niveles PAES
+# Listas de Unidades Educativas
 nivel_options = {
-                '3° MEDIO':'3MEDIO',
-                '4° MEDIO':'4MEDIO'}
+                'BÁSICA 1':'BÁSICA 1',
+                'BÁSICA 2':'BÁSICA 2',
+                'BÁSICA SAN FELIPE':'BÁSICA SF',
+                'MEDIA LOS ANDES':'MEDIA LOS ANDES',
+                'MEDIA SAN FELIPE':'MEDIA SAN FELIPE'}
 
 # Lista de pruebas PAES
 type_options= ['LEN','MAT-01','HIST','CIEN HC/TP','CIEN PROF']
@@ -27,52 +30,55 @@ type_options= ['LEN','MAT-01','HIST','CIEN HC/TP','CIEN PROF']
 #app = Dash(__name__)
 # server=app.server
 
-# Diagrama de la aplicación (Dos listas despegables y un gráfico)
+# Diagrama de la aplicación (Una lista despegable y un gráfico)
 def layout():    
     layout = html.Div(
         children=[
 
 
-    # Marco para dos listas despegables NIVEL y PRUEBAS
+    # Marco para dos listas despegables UNIDAD EDUCATIVA
     html.Div(children=[
 
-    # Lista despegable de NIVELES
+    # Lista despegable de UNIDAD EDUCATIVA
     html.Div(
         children=[
-            html.Div(children='NIVEL', className='menu-title'),
+            html.Div(children='Unid_Edu', className='menu-title'),
             dcc.Dropdown(
-                id='level_ensayos', 
+                id='unidades_educativas', 
                 options=[ 
-                    {"label": "3° MEDIO", "value": "3MEDIO"},
-                    {"label": "4° MEDIO", "value": "4MEDIO"},
+                    {"label": "BÁSICA 1", "value": "BÁSICA 1"},
+                    {"label": "BÁSICA 2", "value": "BÁSICA 2"},
+                    {"label": "BÁSICA SAN FELIPE", "value": "BÁSICA SF"},
+                    {"label": "MEDIA LOS ANDES", "value": "MEDIA LOS ANDES"},
+                    {"label": "MEDIA SAN FELIPE", "value": "MEDIA SAN FELIPE"},
                                     
                 ],
-                value='3MEDIO',
+                value='MEDIA LOS ANDES',
                 clearable=False,
                 className='dropdown'
             ),
         ]),
 
     # Lista depegable para PRUEBAS PAES
-    html.Div(
-        children=[
-            html.Div(children='PRUEBAS', className='menu-title'),
-            dcc.Dropdown(
-                id='test_ensayos', 
-                options=[ 
-                    {"label": "LENGUAJE", "value": "LEN"},
-                    {"label": "MATEMÁTICA", "value": "MAT-01"},
-                    {"label": "HISTORIA", "value": "HIST"},
-                    {"label": "MATEMÁTICA 2","value": "MAT-02"},
-                    {"label": "CIENCIAS HC/TP","value": "CIEN HC/TP"},
-                    {"label": "CIENCIAS PROFUNDIZACIÓN","value": "CIEN PROF"},
-                ],
-                value= 'LEN',
-                clearable=False,
-                className='dropdown',
+    #html.Div(
+    #    children=[
+    #        html.Div(children='PRUEBAS', className='menu-title'),
+    #        dcc.Dropdown(
+    #            id='test_ensayos', 
+    #            options=[ 
+    #                {"label": "LENGUAJE", "value": "LEN"},
+    #                {"label": "MATEMÁTICA", "value": "MAT-01"},
+    #                {"label": "HISTORIA", "value": "HIST"},
+    #                {"label": "MATEMÁTICA 2","value": "MAT-02"},
+    #                {"label": "CIENCIAS HC/TP","value": "CIEN HC/TP"},
+    #                {"label": "CIENCIAS PROFUNDIZACIÓN","value": "CIEN PROF"},
+    #            ],
+    #            value= 'LEN',
+    #            clearable=False,
+    #            className='dropdown',
             
-            ),
-        ]),
+    #        ),
+    #    ]),
 
 
     ],
@@ -80,52 +86,32 @@ def layout():
     ),
 
     # Marco para el gráfico (dcc.Graph está incorporado en la función update_charts)
-        html.Div(id='grafico_ensayos' , className="wrapper"),
+        html.Div(id='grafico_matricula' , className="wrapper"),
 
         ])
 
     return layout
 
-# callback para filtrar gráfico segun nivel y asignatura
+# callback para filtrar gráfico segun unidad educativa
 @callback(
-        Output('grafico_ensayos', 'children'),
-        [Input('level_ensayos', 'value'),
-         Input('test_ensayos','value')]
+        Output('grafico_matricula', 'children'),
+        [Input('unidades_educativas', 'value'),
+         ]
         )
 
 # función para trazar grafico segun nivel, área y asignatura
-def update_charts(nivel,test):
+def update_charts(unidad_edu):
 
-    select_nivel_subject = df01.query("NIVEL == @nivel and TIPO == @test")
-    graph_x_axes = 'CURSO'
+    select_nivel_subject = df01.query("UNI_EDU == @unidad_edu")
+    graph_x_axes = 'NIVEL'
     
-    if test =='LEN':
-        color_01='#664200'
-        color_02='#ffc966'
-        color_03='#ffa500'
-
-    elif test =='MAT-01':
-        color_01='#000033'
-        color_02='#42a5f5'
-        color_03='#000099'
-
-    elif test=='HIST':
-        color_01='#33691e'
-        color_02='#8bc34a'
-        color_03='#0b5010'
-
-    else:
-        color_01='#2e7d32'
-        color_02='gold'
-        color_03='#ffa500'
-
-
-    trace01 = px.bar(select_nivel_subject, x=graph_x_axes, y=['ENSAYO-01','ENSAYO-02','ENSAYO-03'], 
-                     title= f'PROMEDIOS {nivel} en {test}',
+    
+    trace01 = px.bar(select_nivel_subject, x=graph_x_axes, y=['MAT_2026'], 
+                     title= f'Matrícula 2026 {unidad_edu} ',
                      width=1000, height=380,
                      labels={'value':'','variable':'Ensayos','CURSO':'Cursos'},
                      barmode='group',
-                     color_discrete_map={'ENSAYO-01':color_01,'ENSAYO-02':color_02,'ENSAYO-03':color_03},
+                     #color_discrete_map={'ENSAYO-01':color_01,'ENSAYO-02':color_02,'ENSAYO-03':color_03},
                      template="simple_white",
                      
                      )
@@ -138,10 +124,10 @@ def update_charts(nivel,test):
                             xanchor="right", yanchor="bottom",                                
                             )
 
-    trace01.update_traces(hovertemplate=
-                          '<b>Puntaje:</b>: %{y:.1f}'+
-                          '<br><b>Curso:</b>: %{x}<br>',
-                        )
+    #trace01.update_traces(hovertemplate=
+                          #'<b>Puntaje:</b>: %{y:.1f}'+
+                          #'<br><b>Curso:</b>: %{x}<br>',
+                        #)
 
     
     trace01.update_yaxes(tickfont_weight='bold',title_font_weight='bold',tickfont_size=15)
