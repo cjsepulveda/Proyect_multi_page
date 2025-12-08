@@ -3,6 +3,7 @@ from dash import dcc, html, Input, Output, callback, register_page
 import pandas as pd
 import plotly.express as px
 
+
 register_page(
     __name__,
     name='Matrícula',
@@ -106,23 +107,76 @@ def update_charts(unidad_edu):
     if unidad_edu == 'Corporacion':
         df_agrupado = df01.groupby('UNI_EDU').sum()
         df_agrupado_in = df_agrupado.reset_index()
-        select_nivel_subject = df_agrupado_in
+        df_agrupado_new = df_agrupado_in.drop(['NIVEL','% META'], axis=1)
+
+        # 2. Calcular los totales para las columnas numéricas
+        total_SAE_2026 = df_agrupado_new['SAE_2026'].sum()
+        total_MAT_2026 = df_agrupado_new['MAT_2026'].sum()
+
+        # 3. Crear la fila de totales como una lista o diccionario
+        fila_total = {'UNI_EDU': 'GENERAL', 'SAE_2026': total_SAE_2026, 'MAT_2026': total_MAT_2026}
+                
+        # 4. Convertir la fila a un DataFrame temporal (para concatenar)
+        df_total = pd.DataFrame([fila_total]) # Importante: pasar la fila dentro de una lista
+
+        # 5. Concatenar el DataFrame original con la fila de totales
+        df_agrupado_total = pd.concat([df_agrupado_new, df_total], ignore_index=True)
+
+        # Calcular el porcentaje de 'MAT_2026' respecto a 'SAE_2026'
+        df_agrupado_total['% Meta'] = (df_agrupado_total['MAT_2026'] / df_agrupado_total['SAE_2026']) * 100
+
+        select_nivel_subject = df_agrupado_total
         graph_x_axes = 'UNI_EDU'
-        
-        print(df_agrupado)
+        color_bar = 'UNI_EDU'
+        # Create a new column to identify the last row
+        # We will label the last row 'Last' and the rest 'Other'
+        #df_agrupado_total['is_last'] = ['Other'] * len(df_agrupado_total)
+        #df_agrupado_total.loc[df_agrupado_total.index[-1], 'is_last'] = 'Last'   
+        # Define a specific color map: 'Last' will be red, 'Other' will be blue
+        #color_map = {'Other': 'blue', 'Last': 'red'}
+
+
+
+        print(df_agrupado_total)
     else:
-        select_nivel_subject = df01.query("UNI_EDU == @unidad_edu")
+        df_agrupado_ue = df01.query("UNI_EDU == @unidad_edu")
+        
+        #df_agrupado_ue_in = df_agrupado_ue.reset_index()
+        df_agrupado_new_ue = df_agrupado_ue.drop(['UNI_EDU','% META'], axis=1)
+
+
+        # 2. Calcular los totales para las columnas numéricas
+        total_SAE_2026_ue = df_agrupado_new_ue['SAE_2026'].sum()
+        total_MAT_2026_ue = df_agrupado_new_ue['MAT_2026'].sum()
+        
+        # 3. Crear la fila de totales como una lista o diccionario
+        fila_total_ue = {'NIVEL': 'GENERAL', 'SAE_2026': total_SAE_2026_ue, 'MAT_2026': total_MAT_2026_ue}
+                
+        # 4. Convertir la fila a un DataFrame temporal (para concatenar)
+        df_total_ue = pd.DataFrame([fila_total_ue]) # Importante: pasar la fila dentro de una lista
+
+        # 5. Concatenar el DataFrame original con la fila de totales
+        df_agrupado_total_ue = pd.concat([df_agrupado_new_ue, df_total_ue], ignore_index=True)
+        
+        # Calcular el porcentaje de 'MAT_2026' respecto a 'SAE_2026'
+        df_agrupado_total_ue['% Meta'] = (df_agrupado_total_ue['MAT_2026'] / df_agrupado_total_ue['SAE_2026']) * 100
+
+        select_nivel_subject = df_agrupado_total_ue
         graph_x_axes = 'NIVEL'
+        color_bar = 'NIVEL'
+
+        print(df_agrupado_total_ue)
     
-    
+    color_03='blue'
+
     trace01 = px.bar(select_nivel_subject, x=graph_x_axes, y=['MAT_2026'], 
                      title= f'Matrícula 2026 {unidad_edu} ',
-                     width=1000, height=380,
-                     labels={'value':'','variable':'Ensayos','CURSO':'Cursos'},
-                     barmode='group',
-                     #color_discrete_map={'ENSAYO-01':color_01,'ENSAYO-02':color_02,'ENSAYO-03':color_03},
+                     width=1200, height=380,
+                     labels={'value':'','variable':'Matrícula','NIVEL':'Niveles'},
+                     #barmode='group',
+                     color=color_bar,
+                     color_discrete_map= {'GENERAL':color_03},
                      template="simple_white",
-                     
                      )
     
     trace01.add_layout_image(                                 
@@ -133,10 +187,10 @@ def update_charts(unidad_edu):
                             xanchor="right", yanchor="bottom",                                
                             )
 
-    #trace01.update_traces(hovertemplate=
-                          #'<b>Puntaje:</b>: %{y:.1f}'+
-                          #'<br><b>Curso:</b>: %{x}<br>',
-                        #)
+    trace01.update_traces(hovertemplate=
+                          '<b>Matrícula:</b>: %{y:f}'+
+                          '<br><b>Nivel:</b>: %{x}<br>',
+                        )
 
     
     trace01.update_yaxes(tickfont_weight='bold',title_font_weight='bold',tickfont_size=15)
@@ -146,7 +200,8 @@ def update_charts(unidad_edu):
                          font_family='Consolas',
                          title_font_weight='bold',
                          title_font_size=20,
-                         title_x=0.5
+                         title_x=0.5,
+                         xaxis_type='category',
                          )
     new_trace01 = [dcc.Graph(figure=trace01, config={"displayModeBar": False}, className="card")]
    
