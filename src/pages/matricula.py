@@ -42,10 +42,11 @@ def layout():
     # Lista despegable de UNIDAD EDUCATIVA
     html.Div(
         children=[
-            html.Div(children='Unid_Edu', className='menu-title'),
+            html.Div(children='Unidad Educativa', className='menu-title'),
             dcc.Dropdown(
                 id='unidades_educativas', 
                 options=[ 
+                    {"label": "CORPORACIÓN", "value": "Corporacion"},
                     {"label": "BÁSICA 1", "value": "BÁSICA 1"},
                     {"label": "BÁSICA 2", "value": "BÁSICA 2"},
                     {"label": "BÁSICA SAN FELIPE", "value": "BÁSICA SF"},
@@ -102,8 +103,16 @@ def layout():
 # función para trazar grafico segun nivel, área y asignatura
 def update_charts(unidad_edu):
 
-    select_nivel_subject = df01.query("UNI_EDU == @unidad_edu")
-    graph_x_axes = 'NIVEL'
+    if unidad_edu == 'Corporacion':
+        df_agrupado = df01.groupby('UNI_EDU').sum()
+        df_agrupado_in = df_agrupado.reset_index()
+        select_nivel_subject = df_agrupado_in
+        graph_x_axes = 'UNI_EDU'
+        
+        print(df_agrupado)
+    else:
+        select_nivel_subject = df01.query("UNI_EDU == @unidad_edu")
+        graph_x_axes = 'NIVEL'
     
     
     trace01 = px.bar(select_nivel_subject, x=graph_x_axes, y=['MAT_2026'], 
