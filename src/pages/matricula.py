@@ -171,7 +171,7 @@ def update_charts(unidad_edu):
 
     trace01 = px.bar(select_nivel_subject, x=graph_x_axes, y=['MAT_2026'], 
                      title= f'Matrícula 2026 {unidad_edu} ',
-                     width=1200, height=380,
+                     width=1100, height=380,
                      labels={'value':'Matrícula','variable':'Matrícula','NIVEL ':'Nivel '},
                      #barmode='group',
                      color=color_bar,
