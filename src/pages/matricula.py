@@ -164,7 +164,7 @@ def update_charts(unidad_edu):
         select_nivel_subject = df_agrupado_total_ue
         graph_x_axes = 'NIVEL'
         color_bar = 'NIVEL'
-
+        z1 = 187
         print(df_agrupado_total_ue)
     
     color_03='blue'
@@ -172,12 +172,14 @@ def update_charts(unidad_edu):
     trace01 = px.bar(select_nivel_subject, x=graph_x_axes, y=['MAT_2026'], 
                      title= f'Matrícula 2026 {unidad_edu} ',
                      width=1200, height=380,
-                     labels={'value':'','variable':'Matrícula','NIVEL':'Niveles'},
+                     labels={'value':'Matrícula','variable':'Matrícula','NIVEL ':'Nivel '},
                      #barmode='group',
                      color=color_bar,
                      color_discrete_map= {'GENERAL':color_03},
                      template="simple_white",
-                     )
+                     custom_data=['SAE_2026','% Meta'],
+                     #hover_data=["% Meta"],
+            )
     
     trace01.add_layout_image(                                 
                             source= "assets/Original-Apaisado.png",
@@ -188,9 +190,10 @@ def update_charts(unidad_edu):
                             )
 
     trace01.update_traces(hovertemplate=
-                          '<b>Matrícula:</b>: %{y:f}'+
-                          '<br><b>Nivel:</b>: %{x}<br>',
-                        )
+                          '<b>Mat 2026: </b>%{y:f}<br>'+
+                          '<b>SAE 2026: </b>%{customdata[0]}</b><br>'+
+                          '<b>% Meta  : </b>%{customdata[1]:.1f} %</b><br>',
+                          )
 
     
     trace01.update_yaxes(tickfont_weight='bold',title_font_weight='bold',tickfont_size=15)
@@ -202,6 +205,7 @@ def update_charts(unidad_edu):
                          title_font_size=20,
                          title_x=0.5,
                          xaxis_type='category',
+                         
                          )
     new_trace01 = [dcc.Graph(figure=trace01, config={"displayModeBar": False}, className="card")]
    
