@@ -128,6 +128,7 @@ def update_charts(unidad_edu):
         select_nivel_subject = df_agrupado_total
         graph_x_axes = 'UNI_EDU'
         color_bar = 'UNI_EDU'
+        etiqueta = 'Unidades Educativas'
         # Create a new column to identify the last row
         # We will label the last row 'Last' and the rest 'Other'
         #df_agrupado_total['is_last'] = ['Other'] * len(df_agrupado_total)
@@ -163,16 +164,17 @@ def update_charts(unidad_edu):
 
         select_nivel_subject = df_agrupado_total_ue
         graph_x_axes = 'NIVEL'
+        etiqueta = 'Niveles'
         color_bar = 'NIVEL'
-        z1 = 187
+        
         print(df_agrupado_total_ue)
     
     color_03='blue'
 
-    trace01 = px.bar(select_nivel_subject, x=graph_x_axes, y=['MAT_2026'], 
+    trace01 = px.bar(select_nivel_subject, x=graph_x_axes, y='MAT_2026', 
                      title= f'Matrícula 2026 Corporación Monte Aconcagua',
-                     width=1100, height=380,
-                     labels={'value':'Matrícula','variable':'Matrícula','NIVEL ':'Nivel '},
+                     width=1100, height=420,
+                     labels={graph_x_axes: etiqueta,'MAT_2026':'Matriculados'},
                      #barmode='group',
                      color=color_bar,
                      color_discrete_map= {'GENERAL':color_03},
