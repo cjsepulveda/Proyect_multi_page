@@ -170,7 +170,7 @@ def update_charts(unidad_edu):
     color_03='blue'
 
     trace01 = px.bar(select_nivel_subject, x=graph_x_axes, y=['MAT_2026'], 
-                     title= f'Matrícula 2026 {unidad_edu} ',
+                     title= f'Matrícula 2026 Corporación Monte Aconcagua',
                      width=1100, height=380,
                      labels={'value':'Matrícula','variable':'Matrícula','NIVEL ':'Nivel '},
                      #barmode='group',
