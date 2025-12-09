@@ -32,10 +32,10 @@ server = app.server
 
 navbar = dbc.NavbarSimple(
     children=[
-        dbc.NavItem(dbc.NavLink("Rendimiento", class_name='option_menu_side', href="/rendimientos")),
-        dbc.NavItem(dbc.NavLink("PSU PAES PDT", class_name='option_menu_side',href="/psupdtpaes")),
-        dbc.NavItem(dbc.NavLink("Ensayos PAES", class_name='option_menu_side', href="/ensayos_paes")),
-        dbc.NavItem(dbc.NavLink("Ensayos SIMCE", class_name='option_menu_side', href="/simce_ensayos")),
+        #dbc.NavItem(dbc.NavLink("Rendimiento", class_name='option_menu_side', href="/rendimientos")),
+        #dbc.NavItem(dbc.NavLink("PSU PAES PDT", class_name='option_menu_side',href="/psupdtpaes")),
+        #dbc.NavItem(dbc.NavLink("Ensayos PAES", class_name='option_menu_side', href="/ensayos_paes")),
+        #dbc.NavItem(dbc.NavLink("Ensayos SIMCE", class_name='option_menu_side', href="/simce_ensayos")),
         dbc.NavItem(dbc.NavLink("Matrícula", class_name='option_menu_side', href="/matricula")),
         dbc.DropdownMenu(
             size="md",
