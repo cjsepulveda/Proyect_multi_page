@@ -55,7 +55,7 @@ def layout():
                     {"label": "MEDIA SAN FELIPE", "value": "MEDIA SAN FELIPE"},
                                     
                 ],
-                value='MEDIA LOS ANDES',
+                value='Corporacion',
                 clearable=False,
                 className='dropdown'
             ),
