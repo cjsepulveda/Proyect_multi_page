@@ -180,6 +180,7 @@ def update_charts(unidad_edu):
                      color_discrete_map= {'GENERAL':color_03},
                      template="simple_white",
                      custom_data=['SAE_2026','% Meta'],
+                     text_auto=True,
                      #hover_data=["% Meta"],
             )
     
@@ -195,6 +196,8 @@ def update_charts(unidad_edu):
                           '<b>Mat 2026: </b>%{y:f}<br>'+
                           '<b>SAE 2026: </b>%{customdata[0]}</b><br>'+
                           '<b>% Meta  : </b>%{customdata[1]:.1f} %</b><br>',
+                          textfont_size=18, textangle=0, textposition="outside", cliponaxis=False,
+                          textfont=dict(weight="bold"),
                           )
 
     
