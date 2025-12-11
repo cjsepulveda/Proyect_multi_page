@@ -2,7 +2,8 @@ import pathlib
 from dash import dcc, html, Input, Output, callback, register_page
 import pandas as pd
 import plotly.express as px
-
+import os
+import datetime
 
 register_page(
     __name__,
@@ -15,6 +16,20 @@ PATH = pathlib.Path(__file__).parent
 DATA_PATH = PATH.joinpath("data").resolve()
 df01 = pd.read_excel(DATA_PATH.joinpath('mat_2026.xlsx'), sheet_name='mat_2026')
 
+# Ruta de tu archivo
+ruta_archivo = DATA_PATH.joinpath('mat_2026.xlsx')
+
+# Obtener la hora de última modificación (timestamp Unix)
+timestamp_mod = os.path.getmtime(ruta_archivo)
+
+# Convertir a objeto datetime
+fecha_mod = datetime.datetime.fromtimestamp(timestamp_mod)
+
+# Formatear como string legible (ej: '2025-12-11 10:30:00')
+fecha_actualizada = fecha_mod.strftime('%Y-%m-%d %H:%M:%S')
+
+print(f"The file located at the path {ruta_archivo} \
+was last modified at {fecha_actualizada} ")
 
 # Listas de Unidades Educativas
 nivel_options = {
@@ -35,10 +50,18 @@ type_options= ['LEN','MAT-01','HIST','CIEN HC/TP','CIEN PROF']
 def layout():    
     layout = html.Div(
         children=[
-
-
+    
     # Marco para dos listas despegables UNIDAD EDUCATIVA
     html.Div(children=[
+    
+    #html.H1("Mi Aplicación con Fecha de Actualización"),
+    html.Div(
+         # Clase CSS para el estilo de tarjeta
+        children=[
+            html.P("Última actualización", style={'textAlign': 'center'}),
+            html.P(f"Fecha: {fecha_actualizada}", style={'fontSize': '18px', 'fontWeight': 'bold', 'textAlign': 'center'})
+        ],
+    ),
 
     # Lista despegable de UNIDAD EDUCATIVA
     html.Div(
