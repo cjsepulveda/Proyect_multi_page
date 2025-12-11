@@ -4,6 +4,7 @@ import pandas as pd
 import plotly.express as px
 import os
 import datetime
+from datetime import timedelta
 
 register_page(
     __name__,
@@ -25,11 +26,18 @@ timestamp_mod = os.path.getmtime(ruta_archivo)
 # Convertir a objeto datetime
 fecha_mod = datetime.datetime.fromtimestamp(timestamp_mod)
 
+fecha_menos_3h = fecha_mod + timedelta(hours=-3)
+
+
 # Formatear como string legible (ej: '2025-12-11 10:30:00')
 fecha_actualizada = fecha_mod.strftime('%Y-%m-%d %H:%M:%S')
+fecha_actualizada_menos_tres = fecha_menos_3h.strftime('%Y-%m-%d %H:%M:%S')
 
 print(f"The file located at the path {ruta_archivo} \
-was last modified at {fecha_actualizada} ")
+#was last modified at {fecha_actualizada} ")
+
+print(f"The file located at the path {ruta_archivo} \
+#was last modified at {fecha_actualizada_menos_tres} ")
 
 # Listas de Unidades Educativas
 nivel_options = {
@@ -59,7 +67,7 @@ def layout():
          # Clase CSS para el estilo de tarjeta
         children=[
             html.P("Última actualización", style={'textAlign': 'center'}),
-            html.P(f"Fecha: {fecha_actualizada}", style={'fontSize': '18px', 'fontWeight': 'bold', 'textAlign': 'center'})
+            html.P(f"Fecha: {fecha_actualizada_menos_tres}", style={'fontSize': '18px', 'fontWeight': 'bold', 'textAlign': 'center'})
         ],
     ),
 
