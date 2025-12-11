@@ -33,10 +33,10 @@ fecha_menos_3h = fecha_mod + timedelta(hours=-3)
 fecha_actualizada = fecha_mod.strftime('%Y-%m-%d %H:%M:%S')
 fecha_actualizada_menos_tres = fecha_menos_3h.strftime('%Y-%m-%d %H:%M:%S')
 
-print(f"The file located at the path {ruta_archivo} \
+#print(f"The file located at the path {ruta_archivo} \
 #was last modified at {fecha_actualizada} ")
 
-print(f"The file located at the path {ruta_archivo} \
+#print(f"The file located at the path {ruta_archivo} \
 #was last modified at {fecha_actualizada_menos_tres} ")
 
 # Listas de Unidades Educativas
