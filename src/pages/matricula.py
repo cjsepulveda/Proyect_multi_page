@@ -18,6 +18,7 @@ register_page(
 PATH = pathlib.Path(__file__).parent
 DATA_PATH = PATH.joinpath("data").resolve()
 df01 = pd.read_excel(DATA_PATH.joinpath('mat_2026.xlsx'), sheet_name='mat_2026')
+df02 = pd.read_excel(DATA_PATH.joinpath('mat_2026.xlsx'), sheet_name='proyeccion_2026')
 
 # Ruta de tu archivo
 ruta_archivo = DATA_PATH.joinpath('mat_2026.xlsx')
@@ -97,7 +98,7 @@ def layout():
 
     # Marco para el gráfico (dcc.Graph está incorporado en la función update_charts)
         html.Div(id='grafico_matricula' , className="wrapper"),
-        #html.Div(id='tabla_matricula' , className="wrapper"),
+        html.Div(id='tabla_matricula' , className="wrapper"),
 
         ])
 
@@ -106,7 +107,7 @@ def layout():
 # callback para filtrar gráfico segun unidad educativa
 @callback(
         Output('grafico_matricula', 'children'),
-        #Output('tabla_matricula', 'children'),
+        Output('tabla_matricula', 'children'),
         [Input('unidades_educativas', 'value'),
          ]
         )
@@ -172,7 +173,7 @@ def update_charts(unidad_edu):
 
     trace01 = px.bar(select_nivel_subject, x=graph_x_axes, y='MAT_2026', 
                      title= f'Matrícula 2026 Corporación Monte Aconcagua',
-                     width=1100, height=420,
+                     width=1200, height=420,
                      labels={graph_x_axes: etiqueta,'MAT_2026':'Matriculados'},
                      #barmode='group',
                      color=color_bar,
@@ -214,24 +215,28 @@ def update_charts(unidad_edu):
     new_trace01 = [dcc.Graph(figure=trace01, config={"displayModeBar": False}, className="card")]
     
     #tabla_matricula = [DataTable(
-     #   columns=[{"name": i, "id": i} for i in select_nivel_subject.columns], # Define columnas
-      #  data=select_nivel_subject.to_dict('records'), # Convierte DataFrame a lista de diccionarios
-       # style_table={'width': '50%', 'display': 'inline-block', 'verticalAlign': 'top'} # Ajusta la tabla
+       #columns=[{"name": i, "id": i} for i in df02], # Define columnas
+       #data=df02.to_dict('records'), # Convierte DataFrame a lista de diccionarios
+       #style_table={'width': '50%', 'display': 'inline-block', 'verticalAlign': 'top'} # Ajusta la tabla
     #)
         
     #]
    
-    #df_redondeado_matricula = select_nivel_subject.round({'% Meta': 1})
+    df02_REDONDEADO= df02.round({'% CRECIMIENTO': 3, '% ALCANZADO PROYECCIÓN':3})
+    df02_REDONDEADO['% CRECIMIENTO'] = df02_REDONDEADO['% CRECIMIENTO'].map('{:.2%}'.format)
+    df02_REDONDEADO['% ALCANZADO PROYECCIÓN'] = df02_REDONDEADO['% ALCANZADO PROYECCIÓN'].map('{:.2%}'.format)
     # Para columnas específicas (ej. ColumnaB):
-    #tabla_matricula_redondeado_meta = dbc.Table.from_dataframe(df_redondeado_matricula, 
-                                               #striped=True, 
-                                               #bordered=True, 
-                                               #hover=True,
-                                               #color='dark')
+    tabla_proyeccion = dbc.Table.from_dataframe(df02_REDONDEADO, 
+                                               striped=True, 
+                                               bordered=True, 
+                                               hover=True,
+                                               color='dark',
+                                               style={'width': '100%', 'margin': 'auto', 'text-align': 'center'})
+    
    
     
 
-    return new_trace01
+    return new_trace01, tabla_proyeccion
 
 # cargar en servidor
 # if __name__ == '__main__':
