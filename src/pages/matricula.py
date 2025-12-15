@@ -225,13 +225,18 @@ def update_charts(unidad_edu):
     df02_REDONDEADO= df02.round({'% CRECIMIENTO': 3, '% ALCANZADO PROYECCIÓN':3})
     df02_REDONDEADO['% CRECIMIENTO'] = df02_REDONDEADO['% CRECIMIENTO'].map('{:.2%}'.format)
     df02_REDONDEADO['% ALCANZADO PROYECCIÓN'] = df02_REDONDEADO['% ALCANZADO PROYECCIÓN'].map('{:.2%}'.format)
+    df02_nuevo = df02_REDONDEADO.rename(columns={'% CRECIMIENTO': 'VARIACION PORCENTUAL SAE 2026 Y MATRÍCULA 2025'})
     # Para columnas específicas (ej. ColumnaB):
-    tabla_proyeccion = dbc.Table.from_dataframe(df02_REDONDEADO, 
+    tabla_proyeccion = dbc.Table.from_dataframe(df02_nuevo, 
                                                striped=True, 
                                                bordered=True, 
                                                hover=True,
                                                color='dark',
-                                               style={'width': '100%', 'margin': 'auto', 'text-align': 'center'})
+                                               className="align-middle",
+                                               style={'width': '90%',
+                                                      'margin': 'auto', 
+                                                      'text-align': 'center'
+                                                      })
     
    
     
