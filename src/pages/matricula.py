@@ -5,6 +5,8 @@ import plotly.express as px
 import os
 import datetime
 from datetime import timedelta
+from dash.dash_table import DataTable
+import dash_bootstrap_components as dbc
 
 register_page(
     __name__,
@@ -26,29 +28,25 @@ timestamp_mod = os.path.getmtime(ruta_archivo)
 # Convertir a objeto datetime
 fecha_mod = datetime.datetime.fromtimestamp(timestamp_mod)
 
+# Ajustar Zona Horaria
 fecha_menos_3h = fecha_mod + timedelta(hours=-3)
-
 
 # Formatear como string legible (ej: '2025-12-11 10:30:00')
 fecha_actualizada = fecha_mod.strftime('%Y-%m-%d %H:%M:%S')
 fecha_actualizada_menos_tres = fecha_menos_3h.strftime('%Y-%m-%d %H:%M:%S')
 
-#print(f"The file located at the path {ruta_archivo} \
-#was last modified at {fecha_actualizada} ")
 
-#print(f"The file located at the path {ruta_archivo} \
-#was last modified at {fecha_actualizada_menos_tres} ")
-
-# Listas de Unidades Educativas
-nivel_options = {
+# Diccionario de Unidades Educativas
+ue_options = {
+                'CORPORACIÓN': 'Corporacion',
                 'BÁSICA 1':'BÁSICA 1',
                 'BÁSICA 2':'BÁSICA 2',
                 'BÁSICA SAN FELIPE':'BÁSICA SF',
                 'MEDIA LOS ANDES':'MEDIA LOS ANDES',
                 'MEDIA SAN FELIPE':'MEDIA SAN FELIPE'}
 
-# Lista de pruebas PAES
-type_options= ['LEN','MAT-01','HIST','CIEN HC/TP','CIEN PROF']
+# Lista de diccionarios para 'options' usando una lista por comprensión
+ue_options_dropdown = [{'label': k, 'value': v} for k, v in ue_options.items()]
 
 # Inicio aplicacion Dash
 #app = Dash(__name__)
@@ -59,15 +57,14 @@ def layout():
     layout = html.Div(
         children=[
     
-    # Marco para dos listas despegables UNIDAD EDUCATIVA
+    # Marco para lista despegable UNIDAD EDUCATIVA y Fecha Actualización
     html.Div(children=[
     
-    #html.H1("Mi Aplicación con Fecha de Actualización"),
+    # Fecha Actualización
     html.Div(
-         # Clase CSS para el estilo de tarjeta
-        children=[
+            children=[
             html.P("Última actualización", style={'textAlign': 'center'}),
-            html.P(f"Fecha: {fecha_actualizada_menos_tres}", style={'fontSize': '18px', 'fontWeight': 'bold', 'textAlign': 'center'})
+            html.P(f"Fecha: {fecha_actualizada_menos_tres}", style={'fontSize': '18px', 'fontWeight': 'bold', 'textAlign': 'center','color': 'black'})
         ],
     ),
 
@@ -77,42 +74,22 @@ def layout():
             html.Div(children='Unidad Educativa', className='menu-title'),
             dcc.Dropdown(
                 id='unidades_educativas', 
-                options=[ 
-                    {"label": "CORPORACIÓN", "value": "Corporacion"},
-                    {"label": "BÁSICA 1", "value": "BÁSICA 1"},
-                    {"label": "BÁSICA 2", "value": "BÁSICA 2"},
-                    {"label": "BÁSICA SAN FELIPE", "value": "BÁSICA SF"},
-                    {"label": "MEDIA LOS ANDES", "value": "MEDIA LOS ANDES"},
-                    {"label": "MEDIA SAN FELIPE", "value": "MEDIA SAN FELIPE"},
+                options=ue_options_dropdown,
+                
+                #[ 
+                 # {"label": "CORPORACIÓN", "value": "Corporacion"},
+                 # {"label": "BÁSICA 1", "value": "BÁSICA 1"},
+                 # {"label": "BÁSICA 2", "value": "BÁSICA 2"},
+                 # {"label": "BÁSICA SAN FELIPE", "value": "BÁSICA SF"},
+                 # {"label": "MEDIA LOS ANDES", "value": "MEDIA LOS ANDES"},
+                 # {"label": "MEDIA SAN FELIPE", "value": "MEDIA SAN FELIPE"},
                                     
-                ],
+                #],
                 value='Corporacion',
                 clearable=False,
                 className='dropdown'
             ),
         ]),
-
-    # Lista depegable para PRUEBAS PAES
-    #html.Div(
-    #    children=[
-    #        html.Div(children='PRUEBAS', className='menu-title'),
-    #        dcc.Dropdown(
-    #            id='test_ensayos', 
-    #            options=[ 
-    #                {"label": "LENGUAJE", "value": "LEN"},
-    #                {"label": "MATEMÁTICA", "value": "MAT-01"},
-    #                {"label": "HISTORIA", "value": "HIST"},
-    #                {"label": "MATEMÁTICA 2","value": "MAT-02"},
-    #                {"label": "CIENCIAS HC/TP","value": "CIEN HC/TP"},
-    #                {"label": "CIENCIAS PROFUNDIZACIÓN","value": "CIEN PROF"},
-    #            ],
-    #            value= 'LEN',
-    #            clearable=False,
-    #            className='dropdown',
-            
-    #        ),
-    #    ]),
-
 
     ],
     className="menu",
@@ -120,6 +97,7 @@ def layout():
 
     # Marco para el gráfico (dcc.Graph está incorporado en la función update_charts)
         html.Div(id='grafico_matricula' , className="wrapper"),
+        #html.Div(id='tabla_matricula' , className="wrapper"),
 
         ])
 
@@ -128,11 +106,12 @@ def layout():
 # callback para filtrar gráfico segun unidad educativa
 @callback(
         Output('grafico_matricula', 'children'),
+        #Output('tabla_matricula', 'children'),
         [Input('unidades_educativas', 'value'),
          ]
         )
 
-# función para trazar grafico segun nivel, área y asignatura
+# función para trazar grafico de matricula
 def update_charts(unidad_edu):
 
     if unidad_edu == 'Corporacion':
@@ -140,17 +119,18 @@ def update_charts(unidad_edu):
         df_agrupado_in = df_agrupado.reset_index()
         df_agrupado_new = df_agrupado_in.drop(['NIVEL','% META'], axis=1)
 
-        # 2. Calcular los totales para las columnas numéricas
+        # Agregar al datafram un fila nueva con los totales y calcular porcentaje
+        # Calcular los totales para las columnas numéricas
         total_SAE_2026 = df_agrupado_new['SAE_2026'].sum()
         total_MAT_2026 = df_agrupado_new['MAT_2026'].sum()
 
-        # 3. Crear la fila de totales como una lista o diccionario
+        # Crear la fila de totales como una lista o diccionario
         fila_total = {'UNI_EDU': 'GENERAL', 'SAE_2026': total_SAE_2026, 'MAT_2026': total_MAT_2026}
                 
-        # 4. Convertir la fila a un DataFrame temporal (para concatenar)
+        # Convertir la fila a un DataFrame temporal (para concatenar)
         df_total = pd.DataFrame([fila_total]) # Importante: pasar la fila dentro de una lista
 
-        # 5. Concatenar el DataFrame original con la fila de totales
+        # Concatenar el DataFrame original con la fila de totales
         df_agrupado_total = pd.concat([df_agrupado_new, df_total], ignore_index=True)
 
         # Calcular el porcentaje de 'MAT_2026' respecto a 'SAE_2026'
@@ -160,34 +140,23 @@ def update_charts(unidad_edu):
         graph_x_axes = 'UNI_EDU'
         color_bar = 'UNI_EDU'
         etiqueta = 'Unidades Educativas'
-        # Create a new column to identify the last row
-        # We will label the last row 'Last' and the rest 'Other'
-        #df_agrupado_total['is_last'] = ['Other'] * len(df_agrupado_total)
-        #df_agrupado_total.loc[df_agrupado_total.index[-1], 'is_last'] = 'Last'   
-        # Define a specific color map: 'Last' will be red, 'Other' will be blue
-        #color_map = {'Other': 'blue', 'Last': 'red'}
-
-
-
-        print(df_agrupado_total)
+        
     else:
         df_agrupado_ue = df01.query("UNI_EDU == @unidad_edu")
-        
-        #df_agrupado_ue_in = df_agrupado_ue.reset_index()
         df_agrupado_new_ue = df_agrupado_ue.drop(['UNI_EDU','% META'], axis=1)
 
-
-        # 2. Calcular los totales para las columnas numéricas
+        # Agregar al datafram un fila nueva con los totales y calcular porcentaje
+        # Calcular los totales para las columnas numéricas
         total_SAE_2026_ue = df_agrupado_new_ue['SAE_2026'].sum()
         total_MAT_2026_ue = df_agrupado_new_ue['MAT_2026'].sum()
         
-        # 3. Crear la fila de totales como una lista o diccionario
+        # Crear la fila de totales como una lista o diccionario
         fila_total_ue = {'NIVEL': 'GENERAL', 'SAE_2026': total_SAE_2026_ue, 'MAT_2026': total_MAT_2026_ue}
                 
-        # 4. Convertir la fila a un DataFrame temporal (para concatenar)
+        # Convertir la fila a un DataFrame temporal (para concatenar)
         df_total_ue = pd.DataFrame([fila_total_ue]) # Importante: pasar la fila dentro de una lista
 
-        # 5. Concatenar el DataFrame original con la fila de totales
+        # Concatenar el DataFrame original con la fila de totales
         df_agrupado_total_ue = pd.concat([df_agrupado_new_ue, df_total_ue], ignore_index=True)
         
         # Calcular el porcentaje de 'MAT_2026' respecto a 'SAE_2026'
@@ -195,10 +164,9 @@ def update_charts(unidad_edu):
 
         select_nivel_subject = df_agrupado_total_ue
         graph_x_axes = 'NIVEL'
-        etiqueta = 'Niveles'
         color_bar = 'NIVEL'
-        
-        print(df_agrupado_total_ue)
+        etiqueta = 'Niveles'
+              
     
     color_03='blue'
 
@@ -244,9 +212,27 @@ def update_charts(unidad_edu):
                          
                          )
     new_trace01 = [dcc.Graph(figure=trace01, config={"displayModeBar": False}, className="card")]
+    
+    #tabla_matricula = [DataTable(
+     #   columns=[{"name": i, "id": i} for i in select_nivel_subject.columns], # Define columnas
+      #  data=select_nivel_subject.to_dict('records'), # Convierte DataFrame a lista de diccionarios
+       # style_table={'width': '50%', 'display': 'inline-block', 'verticalAlign': 'top'} # Ajusta la tabla
+    #)
+        
+    #]
    
+    #df_redondeado_matricula = select_nivel_subject.round({'% Meta': 1})
+    # Para columnas específicas (ej. ColumnaB):
+    #tabla_matricula_redondeado_meta = dbc.Table.from_dataframe(df_redondeado_matricula, 
+                                               #striped=True, 
+                                               #bordered=True, 
+                                               #hover=True,
+                                               #color='dark')
+   
+    
+
     return new_trace01
 
 # cargar en servidor
-#if __name__ == '__main__':
- #   app.run_server(debug=True)
+# if __name__ == '__main__':
+#   app.run_server(debug=True)
