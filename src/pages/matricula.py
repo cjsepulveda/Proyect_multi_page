@@ -193,8 +193,8 @@ def update_charts(unidad_edu):
                             )
 
     trace01.update_traces(hovertemplate=
-                          '<b>Mat 2026: </b>%{y:f}<br>'+
                           '<b>SAE 2026: </b>%{customdata[0]}</b><br>'+
+                          '<b>Mat 2026: </b>%{y:f}<br>'+
                           '<b>% Meta  : </b>%{customdata[1]:.1f} %</b><br>',
                           textfont_size=18, textangle=0, textposition="outside", cliponaxis=False,
                           textfont=dict(weight="bold"),
