@@ -201,11 +201,11 @@ def update_charts(unidad_edu):
                           )
 
     
-    trace01.update_yaxes(tickfont_weight='bold',title_font_weight='bold',tickfont_size=15)
+    trace01.update_yaxes(tickfont_weight='bold',title_font_weight='bold',tickfont_size=18)
     trace01.update_xaxes(tickfont_weight='bold', title_font_weight='bold', tickfont_size=15)
     trace01.update_layout(
-                         hoverlabel_font=dict(family='Consolas', weight='bold', size=15, color='white'),
-                         font_family='Consolas',
+                         hoverlabel_font=dict(family='Inconsolata', weight='bold', size=18, color='white'),
+                         font_family='Inconsolata',
                          title_font_weight='bold',
                          title_font_size=20,
                          title_x=0.5,
