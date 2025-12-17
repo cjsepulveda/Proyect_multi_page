@@ -196,16 +196,16 @@ def update_charts(unidad_edu):
                           '<b>SAE 2026: </b>%{customdata[0]}</b><br>'+
                           '<b>Mat 2026: </b>%{y:f}<br>'+
                           '<b>% Meta  : </b>%{customdata[1]:.1f} %</b><br>',
-                          textfont_size=18, textangle=0, textposition="outside", cliponaxis=False,
+                          textfont_size=16, textangle=0, textposition="outside", cliponaxis=False,
                           textfont=dict(weight="bold"),
                           )
 
     
-    trace01.update_yaxes(tickfont_weight='bold',title_font_weight='bold',tickfont_size=18)
+    trace01.update_yaxes(tickfont_weight='bold',title_font_weight='bold',tickfont_size=15)
     trace01.update_xaxes(tickfont_weight='bold', title_font_weight='bold', tickfont_size=15)
     trace01.update_layout(
-                         hoverlabel_font=dict(family='Inconsolata', weight='bold', size=18, color='white'),
-                         font_family='Inconsolata',
+                         hoverlabel_font=dict(family='Roboto mono', weight='bold', size=15, color='white'),
+                         font_family='Roboto mono',
                          title_font_weight='bold',
                          title_font_size=20,
                          title_x=0.5,
