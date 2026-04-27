@@ -80,7 +80,7 @@ def layout():
                 options=[ 
                     {"label": "Nivel de Logro", "value": "level_score"},
                     {"label": "Habilidades", "value": "skill"},
-                    {"label": "Promedio Habilidades", "value": "average"},
+                    {"label": "Promedio de Habilidades", "value": "average"},
                 ],
                 value= 'level_score',
                 clearable=False,
