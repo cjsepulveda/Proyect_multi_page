@@ -1,5 +1,6 @@
 import pathlib
 from dash import dcc, html, Input, Output, callback, register_page
+from plotly.subplots import make_subplots
 import pandas as pd
 import plotly.graph_objs as go
 
@@ -34,11 +35,20 @@ def layout():
             dcc.Dropdown(
                 id='leveldiag', 
                 options=[ 
+                    {"label": "2° BÁSICO", "value": "2BÁSICO"},
+                    {"label": "3° BÁSICO", "value": "3BÁSICO"},
+                    {"label": "4° BÁSICO", "value": "4BÁSICO"},
+                    {"label": "5° BÁSICO", "value": "5BÁSICO"},
+                    {"label": "6° BÁSICO", "value": "6BÁSICO"},
+                    {"label": "7° BÁSICO", "value": "7BÁSICO"},
+                    {"label": "8° BÁSICO", "value": "8BÁSICO"},
                     {"label": "1° MEDIO", "value": "1MEDIO"},
                     {"label": "2° MEDIO", "value": "2MEDIO"},
+
+
                                     
                 ],
-                value='1MEDIO',
+                value='2BÁSICO',
                 clearable=False,
                 className='dropdown'
             ),
@@ -70,7 +80,7 @@ def layout():
                 options=[ 
                     {"label": "Nivel de Logro", "value": "level_score"},
                     {"label": "Habilidades", "value": "skill"},
-                    {"label": "Promedio Habilidades", "value": "average"},
+                    {"label": "Promedio de Habilidades", "value": "average"},
                 ],
                 value= 'level_score',
                 clearable=False,
@@ -101,15 +111,18 @@ def layout():
 # función para trazar grafico segun nivel, asignatura y descriptor
 def update_charts(nivel,test,asig):
 
-    if nivel=='1MEDIO':
-          n='1° Medio'
+    #if nivel=='2BÁSICO':
+    n='Básico'
     
-    elif nivel =='2MEDIO':
-          n='2° Medio'
+    #elif nivel =='3BÁSICO':
+          #n='3° Básico'
 
     if asig == 'mat':
-          df01 = pd.read_excel(DATA_PATH.joinpath('data_dia_2024.xlsx'), sheet_name='data_dia_diag_mat')
-          mask01=df01[df01['NIVEL'] == nivel]
+          df01 = pd.read_excel(DATA_PATH.joinpath('data_dia_2024.xlsx'), sheet_name='diag_update_mat')
+          mask01=df01[(df01['NIVEL'] == nivel) & (df01['UNIDAD ACADÉMICA'] == 'BÁSICA 1')]
+          mask02=df01[(df01['NIVEL'] == nivel) & (df01['UNIDAD ACADÉMICA'] == 'BÁSICA 2')]
+          mask03=df01[(df01['NIVEL'] == nivel) & (df01['UNIDAD ACADÉMICA'] == 'BÁSICA SF')]
+
           a ='Matemáticas'
           count_skill = [0,1,2,3]
           name_skill =['Números','Álgebra','Geometría','Datos y Azar']
@@ -117,10 +130,14 @@ def update_charts(nivel,test,asig):
           graph_y_axes_SKILL=[mask01['num'],mask01['alg'],mask01['geo'],mask01['dat']]
           graph_y_axes_average=mask01['prom_mat']
           color_avr='#007fd2'
-
+          
+          
     elif asig == 'len':
-          df01 = pd.read_excel(DATA_PATH.joinpath('data_dia_2024.xlsx'), sheet_name='data_dia_diag_len')
-          mask01=df01[df01['NIVEL'] == nivel]
+          df01 = pd.read_excel(DATA_PATH.joinpath('data_dia_2024.xlsx'), sheet_name='diag_update_len')
+          mask01=df01[(df01['NIVEL'] == nivel) & (df01['UNIDAD ACADÉMICA'] == 'BÁSICA 1')]
+          mask02=df01[(df01['NIVEL'] == nivel) & (df01['UNIDAD ACADÉMICA'] == 'BÁSICA 2')]
+          mask03=df01[(df01['NIVEL'] == nivel) & (df01['UNIDAD ACADÉMICA'] == 'BÁSICA SF')]
+
           a ='Lenguaje'
           count_skill = [0,1,2]
           name_skill =['Localizar','Interpretar y relacionar','Reflexionar']
@@ -128,30 +145,54 @@ def update_charts(nivel,test,asig):
           graph_y_axes_SKILL=[mask01['loc'],mask01['int'],mask01['ref']]
           graph_y_axes_average=mask01['prom_len']
           color_avr='#ffaf2b '
-
+          print(df01)
     
     # Parámetros constantes para ambas asignaturas, petenecientes al descriptor NIVEL de LOGRO
     count_level=[0,1,2]
     name_level=['Nivel I','Nivel II','Nivel III']
-    graph_y_axes_LEVEL=[mask01['NIVEL I'], mask01['NIVEL II'], mask01['NIVEL III']]
+    graph_y_axes_LEVEL_ua1=[mask01['NIVEL I'], mask01['NIVEL II'], mask01['NIVEL III']]
+    graph_y_axes_LEVEL_ua2=[mask02['NIVEL I'], mask02['NIVEL II'], mask02['NIVEL III']]
+    graph_y_axes_LEVEL_ua3=[mask03['NIVEL I'], mask03['NIVEL II'], mask03['NIVEL III']]
+
     colors_level=['#062c80','#0e6ac7','#4fb9fc']
     
     # Parámetros constantes para el gráfico, TITULO, y eje X con múltiples valores
     new_hovertemplate = 'Rendimiento: %{y:.0%}'+'<br>Curso: %{x[0]}<br>'+'Etapa: %{x[1]}'
-    graph_x_axes = [mask01['CURSO'], mask01['Etapa']]
+    graph_x_axes_ua1 = [mask01['NIVEL'], mask01['ETAPA']]
+    graph_x_axes_ua2 = [mask02['NIVEL'], mask01['ETAPA']]
+    graph_x_axes_ua3 = [mask03['NIVEL'], mask01['ETAPA']]
 
     #print(mask01.iloc[:,1])
            
     trace01 = go.Figure()
     
     if test == 'level_score': # Gráfica para NIVEL de LOGRO
-            
+            trace01 = make_subplots(
+                  rows=1, cols=3,
+                  subplot_titles=("Básica 1", " Básica 2", "Básica SF"))
+            trace01.update_annotations(font=dict(size=16, family="Arial", color="black"), font_weight="bold")
+
             for x in count_level:
-                trace01.add_bar( x=graph_x_axes, y=graph_y_axes_LEVEL[x], 
+                trace01.add_bar( x=graph_x_axes_ua1, y=graph_y_axes_LEVEL_ua1[x],
+                                
                                 name=name_level[x],
                                 marker_color=colors_level[x],
-                                hovertemplate = new_hovertemplate)
+                                hovertemplate = new_hovertemplate,
+                                row=1, col=1)
+                
+                trace01.add_bar( x=graph_x_axes_ua2, y=graph_y_axes_LEVEL_ua2[x], 
+                               
+                                name=name_level[x],
+                                marker_color=colors_level[x],
+                                hovertemplate = new_hovertemplate,
+                                row=1, col=2)
                
+                trace01.add_bar( x=graph_x_axes_ua3, y=graph_y_axes_LEVEL_ua3[x], 
+                               
+                                name=name_level[x],
+                                marker_color=colors_level[x],
+                                hovertemplate = new_hovertemplate,
+                                row=1, col=3)
             trace01.update_layout(barmode="relative", template='simple_white')
             b ='Niveles de Logro'
 
@@ -177,9 +218,10 @@ def update_charts(nivel,test,asig):
             b ='Promedio Habilidades'
     
     trace01.update_layout(
-    title_text=f"Rendimiento DIA Diagnóstico: {b} <br>{a} {n}",
+    title_text=f"Rendimiento DIA Diagnóstico: {b} {a}",
     title_font_family='Consolas',
     title_font_weight=1000,
+    showlegend=False,
     legend_font_family='Consolas',
     activeselection_opacity=1,
     title_xref='paper',
@@ -192,12 +234,12 @@ def update_charts(nivel,test,asig):
     margin=dict(l=0, r=0, b=50, t=80, pad=0),
        
         )
-    trace01.update_yaxes(tickformat='.0%', tickfont_family='Consolas', tickfont_size=15, tickfont_weight=1000)
-    trace01.update_xaxes(tickfont_family='Consolas', tickfont_size=15, tickfont_weight=1000)
+    trace01.update_yaxes(tickformat='.0%', tickfont_family='Consolas', tickfont_size=12, tickfont_weight=1000)
+    trace01.update_xaxes(tickfont_family='Consolas', tickfont_size=12, tickfont_weight=1000)
 
     trace01.add_layout_image(                                 
                             source= "assets/Original-Apaisado.png",
-                            x=1, y=1.05,
+                            x=1, y=1.10,
                             sizex=0.2, sizey=0.2,
                             xanchor="right", yanchor="bottom",                                
                             )
