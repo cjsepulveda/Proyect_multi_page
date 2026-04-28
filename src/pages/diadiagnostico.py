@@ -127,8 +127,15 @@ def update_charts(nivel,test,asig):
           count_skill = [0,1,2,3]
           name_skill =['Números','Álgebra','Geometría','Datos y Azar']
           colors_skill=['#00308F','#03C03C','#ffbf00','#c91b00']
-          graph_y_axes_SKILL=[mask01['num'],mask01['alg'],mask01['geo'],mask01['dat']]
-          graph_y_axes_average=mask01['prom_mat']
+
+          graph_y_axes_SKILL_ua1=[mask01['num'],mask01['alg'],mask01['geo'],mask01['dat']]
+          graph_y_axes_SKILL_ua2=[mask02['num'],mask02['alg'],mask02['geo'],mask02['dat']]
+          graph_y_axes_SKILL_ua3=[mask03['num'],mask03['alg'],mask03['geo'],mask03['dat']]
+
+          graph_y_axes_average_ua1=mask01['prom_mat']
+          graph_y_axes_average_ua2=mask02['prom_mat']
+          graph_y_axes_average_ua3=mask03['prom_mat']
+
           color_avr='#007fd2'
           
           
@@ -142,8 +149,15 @@ def update_charts(nivel,test,asig):
           count_skill = [0,1,2]
           name_skill =['Localizar','Interpretar y relacionar','Reflexionar']
           colors_skill=['#00308F','#03C03C','#ffbf00']
-          graph_y_axes_SKILL=[mask01['loc'],mask01['int'],mask01['ref']]
-          graph_y_axes_average=mask01['prom_len']
+
+          graph_y_axes_SKILL_ua1=[mask01['loc'],mask01['int'],mask01['ref']]
+          graph_y_axes_SKILL_ua2=[mask02['loc'],mask02['int'],mask02['ref']]
+          graph_y_axes_SKILL_ua3=[mask03['loc'],mask03['int'],mask03['ref']]
+
+          graph_y_axes_average_ua1=mask01['prom_len']
+          graph_y_axes_average_ua2=mask02['prom_len']
+          graph_y_axes_average_ua3=mask03['prom_len']
+
           color_avr='#ffaf2b '
           print(df01)
     
@@ -175,21 +189,36 @@ def update_charts(nivel,test,asig):
             for x in count_level:
                 trace01.add_bar( x=graph_x_axes_ua1, y=graph_y_axes_LEVEL_ua1[x],
                                 
+                                legendgroup="group1", showlegend=True,
                                 name=name_level[x],
+                                texttemplate='%{y:.1%}',  # Format the labels as percentages with one decimal place
+                                textposition='inside',
+                                insidetextanchor='middle',  # Position of the labels
+                                textfont=dict(size=15),
                                 marker_color=colors_level[x],
                                 hovertemplate = new_hovertemplate,
                                 row=1, col=1)
                 
                 trace01.add_bar( x=graph_x_axes_ua2, y=graph_y_axes_LEVEL_ua2[x], 
                                
+                                legendgroup="group1", showlegend=False,
                                 name=name_level[x],
+                                texttemplate='%{y:.1%}',  # Format the labels as percentages with one decimal place
+                                textposition='inside',
+                                insidetextanchor='middle',  # Position of the labels
+                                textfont=dict(size=15),
                                 marker_color=colors_level[x],
                                 hovertemplate = new_hovertemplate,
                                 row=1, col=2)
                
                 trace01.add_bar( x=graph_x_axes_ua3, y=graph_y_axes_LEVEL_ua3[x], 
                                
+                                legendgroup="group1", showlegend=False,
                                 name=name_level[x],
+                                texttemplate='%{y:.1%}',  # Format the labels as percentages with one decimal place
+                                textposition='inside',
+                                insidetextanchor='middle',  # Position of the labels
+                                textfont=dict(size=15),
                                 marker_color=colors_level[x],
                                 hovertemplate = new_hovertemplate,
                                 row=1, col=3)
@@ -198,22 +227,91 @@ def update_charts(nivel,test,asig):
 
     elif test == 'skill': # Gráfica para HABILIDADES
             
+            trace01 = make_subplots(
+                  rows=1, cols=3,
+                  subplot_titles=("Básica 1", " Básica 2", "Básica SF"))
+            
+            trace01.update_annotations(font=dict(size=16, family="Arial", color="black"), font_weight="bold")
+
+
             for x in count_skill:
-                trace01.add_bar( x=graph_x_axes, y=graph_y_axes_SKILL[x], 
-                            name=name_skill[x], 
+                trace01.add_bar( x=graph_x_axes_ua1, y=graph_y_axes_SKILL_ua1[x],
+                            legendgroup="group1", showlegend=True, 
+                            name=name_skill[x],
+                            texttemplate='%{y:.1%}',  # Format the labels as percentages with one decimal place
+                            textposition='inside',
+                            insidetextanchor='middle',  # Position of the labels
+                            textfont=dict(size=15),
                             marker_color=colors_skill[x],
-                            hovertemplate = new_hovertemplate)
+                            hovertemplate = new_hovertemplate,
+                            row=1, col=1)
+                
+                trace01.add_bar( x=graph_x_axes_ua2, y=graph_y_axes_SKILL_ua2[x], 
+                            legendgroup="group1", showlegend=False,
+                            name=name_skill[x], 
+                            texttemplate='%{y:.1%}',  # Format the labels as percentages with one decimal place
+                            textposition='inside',
+                            insidetextanchor='middle',  # Position of the labels
+                            textfont=dict(size=15),
+                            marker_color=colors_skill[x],
+                            hovertemplate = new_hovertemplate,
+                            row=1, col=2)
+                
+                trace01.add_bar( x=graph_x_axes_ua3, y=graph_y_axes_SKILL_ua3[x], 
+                            legendgroup="group1", showlegend=False,
+                            name=name_skill[x], 
+                            texttemplate='%{y:.1%}',  # Format the labels as percentages with one decimal place
+                            textposition='inside',
+                            insidetextanchor='middle',  # Position of the labels
+                            textfont=dict(size=15),
+                            marker_color=colors_skill[x],
+                            hovertemplate = new_hovertemplate,
+                            row=1, col=3)
+                
+                #trace01.update_layout(showlegend=False)
                         
             trace01.update_layout(barmode="group",  template='simple_white')
             b ='Habilidades'
 
     elif test == 'average': # Gráfica para PROMEDIO de HABILIDADES
-                        
-            trace01.add_bar( x=graph_x_axes, y=graph_y_axes_average, 
+            
+            trace01 = make_subplots(
+                  rows=1, cols=3,
+                  subplot_titles=("Básica 1", " Básica 2", "Básica SF"))
+            
+            trace01.add_bar( x=graph_x_axes_ua1, y=graph_y_axes_average_ua1,
+                            legendgroup="group1", showlegend=True,  
                             name='Promedio Habilidades', 
                             marker_color=color_avr,
-                            hovertemplate = new_hovertemplate)
-                        
+                            texttemplate='%{y:.1%}',  # Format the labels as percentages with one decimal place
+                            textposition='inside',
+                            insidetextanchor='middle',  # Position of the labels
+                            textfont=dict(size=15),
+                            hovertemplate = new_hovertemplate,
+                            row=1, col=1)
+            
+            trace01.add_bar( x=graph_x_axes_ua2, y=graph_y_axes_average_ua2, 
+                            legendgroup="group1", showlegend=False,
+                            name='Promedio Habilidades',
+                            marker_color=color_avr,
+                            texttemplate='%{y:.1%}',  # Format the labels as percentages with one decimal place
+                            textposition='inside',
+                            insidetextanchor='middle',  # Position of the labels
+                            textfont=dict(size=15),
+                            hovertemplate = new_hovertemplate,
+                            row=1, col=2)
+            
+            trace01.add_bar( x=graph_x_axes_ua3, y=graph_y_axes_average_ua3,
+                            legendgroup="group1", showlegend=False,
+                            name='Promedio Habilidades',
+                            marker_color=color_avr,
+                            texttemplate='%{y:.1%}',  # Format the labels as percentages with one decimal place
+                            textposition='inside',
+                            insidetextanchor='middle',  # Position of the labels
+                            textfont=dict(size=15),
+                            hovertemplate = new_hovertemplate,
+                            row=1, col=3)            
+
             trace01.update_layout(barmode="group",  template='simple_white')
             b ='Promedio Habilidades'
     
@@ -221,7 +319,7 @@ def update_charts(nivel,test,asig):
     title_text=f"Rendimiento DIA Diagnóstico: {b} {a}",
     title_font_family='Consolas',
     title_font_weight=1000,
-    showlegend=False,
+    # showlegend=False,
     legend_font_family='Consolas',
     activeselection_opacity=1,
     title_xref='paper',
@@ -229,12 +327,12 @@ def update_charts(nivel,test,asig):
     title_font_size=20,
     legend_title_text='Descriptor',
     autosize=False,
-    width=1000,
+    width=1200,
     height=380,
     margin=dict(l=0, r=0, b=50, t=80, pad=0),
        
         )
-    trace01.update_yaxes(tickformat='.0%', tickfont_family='Consolas', tickfont_size=12, tickfont_weight=1000)
+    trace01.update_yaxes(tickformat='.0%', tickfont_family='Consolas', tickfont_size=12, tickfont_weight=1000, range=[0, 1])
     trace01.update_xaxes(tickfont_family='Consolas', tickfont_size=12, tickfont_weight=1000)
 
     trace01.add_layout_image(                                 

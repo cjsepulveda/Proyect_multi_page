@@ -42,7 +42,7 @@ navbar = dbc.NavbarSimple(
             children=[
                 dbc.DropdownMenuItem("Etapa", header=True),
                 dbc.DropdownMenuItem("Diagnóstico", href="/diadiagnostico"),
-                dbc.DropdownMenuItem("Intermedio/Final", href="/diaintfin"),
+                #dbc.DropdownMenuItem("Intermedio/Final", href="/diaintfin"),
             ],
             nav=True,
             in_navbar=True,
