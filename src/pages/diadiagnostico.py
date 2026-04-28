@@ -171,7 +171,7 @@ def update_charts(nivel,test,asig):
     colors_level=['#062c80','#0e6ac7','#4fb9fc']
     
     # Parámetros constantes para el gráfico, TITULO, y eje X con múltiples valores
-    new_hovertemplate = 'Rendimiento: %{y:.0%}'+'<br>Curso: %{x[0]}<br>'+'Etapa: %{x[1]}'
+    new_hovertemplate = 'Rendimiento: %{y:.0%}'+'<br>Nivel: %{x[0]}<br>'+'Etapa: %{x[1]}'
     graph_x_axes_ua1 = [mask01['NIVEL'], mask01['ETAPA']]
     graph_x_axes_ua2 = [mask02['NIVEL'], mask01['ETAPA']]
     graph_x_axes_ua3 = [mask03['NIVEL'], mask01['ETAPA']]
@@ -191,36 +191,54 @@ def update_charts(nivel,test,asig):
                                 
                                 legendgroup="group1", showlegend=True,
                                 name=name_level[x],
-                                texttemplate='%{y:.1%}',  # Format the labels as percentages with one decimal place
+                                texttemplate='%{y:.0%}',  # Format the labels as percentages with one decimal place
                                 textposition='inside',
                                 insidetextanchor='middle',  # Position of the labels
-                                textfont=dict(size=15),
+                                textfont=dict(size=15, family="Arial", color="white", weight= 700),
                                 marker_color=colors_level[x],
                                 hovertemplate = new_hovertemplate,
+                                hoverlabel=dict(
+                                                #bgcolor="white",
+                                                #font_size=16,
+                                                font_family="Inter",
+                                                font_color="white"  # Sets the text color inside the box
+                                                ),
                                 row=1, col=1)
                 
                 trace01.add_bar( x=graph_x_axes_ua2, y=graph_y_axes_LEVEL_ua2[x], 
                                
                                 legendgroup="group1", showlegend=False,
                                 name=name_level[x],
-                                texttemplate='%{y:.1%}',  # Format the labels as percentages with one decimal place
+                                texttemplate='%{y:.0%}',  # Format the labels as percentages with one decimal place
                                 textposition='inside',
                                 insidetextanchor='middle',  # Position of the labels
-                                textfont=dict(size=15),
+                                textfont=dict(size=15, family="Arial", color="white", weight= 700),
                                 marker_color=colors_level[x],
                                 hovertemplate = new_hovertemplate,
+                                hoverlabel=dict(
+                                                #bgcolor="white",
+                                                #font_size=16,
+                                                font_family="Inter",
+                                                font_color="white"  , # Sets the text color inside the box
+                                                ),
                                 row=1, col=2)
                
                 trace01.add_bar( x=graph_x_axes_ua3, y=graph_y_axes_LEVEL_ua3[x], 
                                
                                 legendgroup="group1", showlegend=False,
                                 name=name_level[x],
-                                texttemplate='%{y:.1%}',  # Format the labels as percentages with one decimal place
+                                texttemplate='%{y:.0%}',  # Format the labels as percentages with one decimal place
                                 textposition='inside',
                                 insidetextanchor='middle',  # Position of the labels
-                                textfont=dict(size=15),
+                                textfont=dict(size=15, family="Arial", color="white", weight= 700),
                                 marker_color=colors_level[x],
                                 hovertemplate = new_hovertemplate,
+                                hoverlabel=dict(
+                                                #bgcolor="white",
+                                                #font_size=16,
+                                                font_family="Inter",
+                                                font_color="white"  , # Sets the text color inside the box
+                                                ),
                                 row=1, col=3)
             trace01.update_layout(barmode="relative", template='simple_white')
             b ='Niveles de Logro'
@@ -238,34 +256,52 @@ def update_charts(nivel,test,asig):
                 trace01.add_bar( x=graph_x_axes_ua1, y=graph_y_axes_SKILL_ua1[x],
                             legendgroup="group1", showlegend=True, 
                             name=name_skill[x],
-                            texttemplate='%{y:.1%}',  # Format the labels as percentages with one decimal place
-                            textposition='inside',
+                            texttemplate='%{y:.0%}',  # Format the labels as percentages with one decimal place
+                            textposition='outside',
                             insidetextanchor='middle',  # Position of the labels
-                            textfont=dict(size=15),
+                            textfont=dict(size=15, family="Arial", color="black", weight= 700),
                             marker_color=colors_skill[x],
                             hovertemplate = new_hovertemplate,
+                            hoverlabel=dict(
+                                                #bgcolor="white",
+                                                #font_size=16,
+                                                font_family="Inter",
+                                                font_color="white"  , # Sets the text color inside the box
+                                                ),
                             row=1, col=1)
                 
                 trace01.add_bar( x=graph_x_axes_ua2, y=graph_y_axes_SKILL_ua2[x], 
                             legendgroup="group1", showlegend=False,
                             name=name_skill[x], 
-                            texttemplate='%{y:.1%}',  # Format the labels as percentages with one decimal place
-                            textposition='inside',
+                            texttemplate='%{y:.0%}',  # Format the labels as percentages with one decimal place
+                            textposition='outside',
                             insidetextanchor='middle',  # Position of the labels
-                            textfont=dict(size=15),
+                            textfont=dict(size=15, family="Arial", color="black", weight= 700),
                             marker_color=colors_skill[x],
                             hovertemplate = new_hovertemplate,
+                            hoverlabel=dict(
+                                                #bgcolor="white",
+                                                #font_size=16,
+                                                font_family="Inter",
+                                                font_color="white"  , # Sets the text color inside the box
+                                                ),
                             row=1, col=2)
                 
                 trace01.add_bar( x=graph_x_axes_ua3, y=graph_y_axes_SKILL_ua3[x], 
                             legendgroup="group1", showlegend=False,
                             name=name_skill[x], 
-                            texttemplate='%{y:.1%}',  # Format the labels as percentages with one decimal place
-                            textposition='inside',
+                            texttemplate='%{y:.0%}',  # Format the labels as percentages with one decimal place
+                            textposition='outside',
                             insidetextanchor='middle',  # Position of the labels
-                            textfont=dict(size=15),
+                            textfont=dict(size=15, family="Arial", color="black", weight= 700),
                             marker_color=colors_skill[x],
                             hovertemplate = new_hovertemplate,
+                            hoverlabel=dict(
+                                                #bgcolor="white",
+                                                #font_size=16,
+                                                font_family="Inter",
+                                                font_color="white"  , # Sets the text color inside the box
+                                                ),
                             row=1, col=3)
                 
                 #trace01.update_layout(showlegend=False)
@@ -279,37 +315,57 @@ def update_charts(nivel,test,asig):
                   rows=1, cols=3,
                   subplot_titles=("Básica 1", " Básica 2", "Básica SF"))
             
+            trace01.update_annotations(font=dict(size=16, family="Inter", color="black"), font_weight="bold")
+
             trace01.add_bar( x=graph_x_axes_ua1, y=graph_y_axes_average_ua1,
                             legendgroup="group1", showlegend=True,  
                             name='Promedio Habilidades', 
                             marker_color=color_avr,
-                            texttemplate='%{y:.1%}',  # Format the labels as percentages with one decimal place
+                            texttemplate='%{y:.0%}',  # Format the labels as percentages with one decimal place
                             textposition='inside',
                             insidetextanchor='middle',  # Position of the labels
-                            textfont=dict(size=15),
+                            textfont=dict(size=15, family="Arial", color="white", weight= 700),
                             hovertemplate = new_hovertemplate,
+                            hoverlabel=dict(
+                                                #bgcolor="white",
+                                                #font_size=16,
+                                                font_family="Inter",
+                                                font_color="white"  , # Sets the text color inside the box
+                                                ),
                             row=1, col=1)
             
             trace01.add_bar( x=graph_x_axes_ua2, y=graph_y_axes_average_ua2, 
                             legendgroup="group1", showlegend=False,
                             name='Promedio Habilidades',
                             marker_color=color_avr,
-                            texttemplate='%{y:.1%}',  # Format the labels as percentages with one decimal place
+                            texttemplate='%{y:.0%}',  # Format the labels as percentages with one decimal place
                             textposition='inside',
                             insidetextanchor='middle',  # Position of the labels
-                            textfont=dict(size=15),
+                            textfont=dict(size=15, family="Arial", color="white", weight= 700),
                             hovertemplate = new_hovertemplate,
+                            hoverlabel=dict(
+                                                #bgcolor="white",
+                                                #font_size=16,
+                                                font_family="Inter",
+                                                font_color="white"  , # Sets the text color inside the box
+                                                ),
                             row=1, col=2)
             
             trace01.add_bar( x=graph_x_axes_ua3, y=graph_y_axes_average_ua3,
                             legendgroup="group1", showlegend=False,
                             name='Promedio Habilidades',
                             marker_color=color_avr,
-                            texttemplate='%{y:.1%}',  # Format the labels as percentages with one decimal place
+                            texttemplate='%{y:.0%}',  # Format the labels as percentages with one decimal place
                             textposition='inside',
                             insidetextanchor='middle',  # Position of the labels
-                            textfont=dict(size=15),
+                            textfont=dict(size=15, family="Arial", color="white", weight= 700),
                             hovertemplate = new_hovertemplate,
+                            hoverlabel=dict(
+                                                #bgcolor="white",
+                                                #font_size=16,
+                                                font_family="Inter",
+                                                font_color="white"  , # Sets the text color inside the box
+                                                ),
                             row=1, col=3)            
 
             trace01.update_layout(barmode="group",  template='simple_white')
