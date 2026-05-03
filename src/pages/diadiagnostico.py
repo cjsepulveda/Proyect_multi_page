@@ -80,7 +80,7 @@ def layout():
                 options=[ 
                     {"label": "Nivel de Logro", "value": "level_score"},
                     {"label": "Habilidades", "value": "skill"},
-                    {"label": "Promedio de Habilidades", "value": "average"},
+                    {"label": "Porcentaje de Logro", "value": "average"},
                 ],
                 value= 'level_score',
                 clearable=False,
@@ -111,29 +111,30 @@ def layout():
 # función para trazar grafico segun nivel, asignatura y descriptor
 def update_charts(nivel,test,asig):
 
-    #if nivel=='2BÁSICO':
-    n='Básico'
-    
-    #elif nivel =='3BÁSICO':
-          #n='3° Básico'
-
     if asig == 'mat':
           df01 = pd.read_excel(DATA_PATH.joinpath('data_dia_2024.xlsx'), sheet_name='diag_update_mat')
-          mask01=df01[(df01['NIVEL'] == nivel) & (df01['UNIDAD ACADÉMICA'] == 'BÁSICA 1')]
+          mask01=df01[(df01['NIVEL'] == nivel) & (df01['UNIDAD ACADÉMICA'] == 'BÁSICA 1') & (df01['ETAPA'] == 'DIAGNOSTICO 2026')]
           mask02=df01[(df01['NIVEL'] == nivel) & (df01['UNIDAD ACADÉMICA'] == 'BÁSICA 2')]
           mask03=df01[(df01['NIVEL'] == nivel) & (df01['UNIDAD ACADÉMICA'] == 'BÁSICA SF')]
           mask04=df01[(df01['NIVEL'] == nivel) & (df01['UNIDAD ACADÉMICA'] == 'MEDIA LA')]
           mask05=df01[(df01['NIVEL'] == nivel) & (df01['UNIDAD ACADÉMICA'] == 'MEDIA SF')]
 
           a ='Matemáticas'
-          count_skill = [0,1,2,3]
-          name_skill =['Números','Álgebra','Geometría','Datos y Azar']
-          colors_skill=['#00308F','#03C03C','#ffbf00','#c91b00']
           
           
-          graph_y_axes_SKILL_ua1=[mask01['num'],mask01['alg'],mask01['geo'],mask01['dat']]
-          graph_y_axes_SKILL_ua2=[mask02['num'],mask02['alg'],mask02['geo'],mask02['dat']]
-          graph_y_axes_SKILL_ua3=[mask03['num'],mask03['alg'],mask03['geo'],mask03['dat']]
+          if nivel=='1MEDIO' or nivel=='2MEDIO' or nivel=='8BÁSICO' or nivel=='7BÁSICO':
+               count_skill = [0,1,2,3]
+               name_skill =['Números','Álgebra','Geometría','Datos y Azar']
+               colors_skill=['#00308F','#03C03C','#ffbf00','#c91b00']
+          
+          else:
+               count_skill = [0,1,2,3,4]
+               name_skill =['Números','Álgebra','Geometría','Datos y Azar', 'Medición']
+               colors_skill=['#00308F','#03C03C','#ffbf00','#c91b00',"#A200FF"]
+          
+          graph_y_axes_SKILL_ua1=[mask01['num'],mask01['alg'],mask01['geo'],mask01['dat'],mask01['med']]
+          graph_y_axes_SKILL_ua2=[mask02['num'],mask02['alg'],mask02['geo'],mask02['dat'],mask02['med']]
+          graph_y_axes_SKILL_ua3=[mask03['num'],mask03['alg'],mask03['geo'],mask03['dat'],mask03['med']]
           graph_y_axes_SKILL_ua4=[mask04['num'],mask04['alg'],mask04['geo'],mask04['dat']]
           graph_y_axes_SKILL_ua5=[mask05['num'],mask05['alg'],mask05['geo'],mask05['dat']]
 
@@ -152,7 +153,7 @@ def update_charts(nivel,test,asig):
           
     elif asig == 'len':
           df01 = pd.read_excel(DATA_PATH.joinpath('data_dia_2024.xlsx'), sheet_name='diag_update_len')
-          mask01=df01[(df01['NIVEL'] == nivel) & (df01['UNIDAD ACADÉMICA'] == 'BÁSICA 1')]
+          mask01=df01[(df01['NIVEL'] == nivel) & (df01['UNIDAD ACADÉMICA'] == 'BÁSICA 1') & (df01['ETAPA'] == 'DIAGNOSTICO 2026')]
           mask02=df01[(df01['NIVEL'] == nivel) & (df01['UNIDAD ACADÉMICA'] == 'BÁSICA 2')]
           mask03=df01[(df01['NIVEL'] == nivel) & (df01['UNIDAD ACADÉMICA'] == 'BÁSICA SF')]
           mask04=df01[(df01['NIVEL'] == nivel) & (df01['UNIDAD ACADÉMICA'] == 'MEDIA LA')]
@@ -222,23 +223,41 @@ def update_charts(nivel,test,asig):
            
     trace01 = go.Figure()
     
-    if test == 'level_score': # Gráfica para NIVEL de LOGRO
-            trace01 = make_subplots(
-                  rows=1, cols=columnas,
-                  subplot_titles=("Básica 1", " Básica 2", "Básica SF"))
-            trace01.update_annotations(font=dict(size=16, family="Arial", color="black"), font_weight="bold")
+    if nivel=='1MEDIO' or nivel=='2MEDIO':
+        name_ua =("Media Los Andes", "Media San Felipe")
+        
 
+    else:
+        name_ua =("Básica 1", " Básica 2", "Básica SF")
+
+
+    trace01 = make_subplots(
+                  rows=1, cols=columnas,
+                  subplot_titles=name_ua)
+    trace01.update_annotations(font=dict(size=16, family="Arial", color="black"), font_weight="bold")
+
+
+    if test == 'level_score': # Gráfica para NIVEL de LOGRO
+            
             for ua, col in zip(count_ua, count_col):
              for x in count_level:
+                    
+                    if col==0:
+                         opt=True
+                    else:
+                         opt=False
+
                     trace01.add_bar( x=x_axes_ua[ua], y=count_ua_level[ua][x],
                                 
-                                legendgroup="group1", showlegend=True,
+                                legendgroup="group1", 
+                                showlegend=opt,
                                 name=name_level[x],
                                 texttemplate='%{y:.0%}',  # Format the labels as percentages with one decimal place
                                 textposition='inside',
                                 insidetextanchor='middle',  # Position of the labels
                                 textfont=dict(size=15, family="Arial", color="white", weight= 700),
                                 marker_color=colors_level[x],
+                                width=0.3,
                                 hovertemplate = new_hovertemplate,
                                 hoverlabel=dict(
                                                 #bgcolor="white",
@@ -254,16 +273,18 @@ def update_charts(nivel,test,asig):
 
     elif test == 'skill': # Gráfica para HABILIDADES
             
-            trace01 = make_subplots(
-                  rows=1, cols=3,
-                  subplot_titles=("Básica 1", " Básica 2", "Básica SF"))
             
-            trace01.update_annotations(font=dict(size=16, family="Arial", color="black"), font_weight="bold")
+            for ua, col in zip(count_ua, count_col):
+             for x in count_skill:
 
+                if col==0:
+                         opt=True
+                else:
+                         opt=False
 
-            for x in count_skill:
-                trace01.add_bar( x=graph_x_axes_ua1, y=graph_y_axes_SKILL_ua1[x],
-                            legendgroup="group1", showlegend=True, 
+                trace01.add_bar( x=x_axes_ua[ua], y=count_ua_skill[ua][x],
+                            legendgroup="group1", 
+                            showlegend=opt, 
                             name=name_skill[x],
                             texttemplate='%{y:.0%}',  # Format the labels as percentages with one decimal place
                             textposition='outside',
@@ -277,41 +298,9 @@ def update_charts(nivel,test,asig):
                                                 font_family="Inter",
                                                 font_color="white"  , # Sets the text color inside the box
                                                 ),
-                            row=1, col=1)
+                            row=1, col=col+1)
                 
-                trace01.add_bar( x=graph_x_axes_ua2, y=graph_y_axes_SKILL_ua2[x], 
-                            legendgroup="group1", showlegend=False,
-                            name=name_skill[x], 
-                            texttemplate='%{y:.0%}',  # Format the labels as percentages with one decimal place
-                            textposition='outside',
-                            insidetextanchor='middle',  # Position of the labels
-                            textfont=dict(size=15, family="Arial", color="black", weight= 700),
-                            marker_color=colors_skill[x],
-                            hovertemplate = new_hovertemplate,
-                            hoverlabel=dict(
-                                                #bgcolor="white",
-                                                #font_size=16,
-                                                font_family="Inter",
-                                                font_color="white"  , # Sets the text color inside the box
-                                                ),
-                            row=1, col=2)
                 
-                trace01.add_bar( x=graph_x_axes_ua3, y=graph_y_axes_SKILL_ua3[x], 
-                            legendgroup="group1", showlegend=False,
-                            name=name_skill[x], 
-                            texttemplate='%{y:.0%}',  # Format the labels as percentages with one decimal place
-                            textposition='outside',
-                            insidetextanchor='middle',  # Position of the labels
-                            textfont=dict(size=15, family="Arial", color="black", weight= 700),
-                            marker_color=colors_skill[x],
-                            hovertemplate = new_hovertemplate,
-                            hoverlabel=dict(
-                                                #bgcolor="white",
-                                                #font_size=16,
-                                                font_family="Inter",
-                                                font_color="white"  , # Sets the text color inside the box
-                                                ),
-                            row=1, col=3)
                 
                 #trace01.update_layout(showlegend=False)
                         
@@ -320,65 +309,35 @@ def update_charts(nivel,test,asig):
 
     elif test == 'average': # Gráfica para PROMEDIO de HABILIDADES
             
-            trace01 = make_subplots(
-                  rows=1, cols=3,
-                  subplot_titles=("Básica 1", " Básica 2", "Básica SF"))
             
-            trace01.update_annotations(font=dict(size=16, family="Inter", color="black"), font_weight="bold")
 
-            trace01.add_bar( x=graph_x_axes_ua1, y=graph_y_axes_average_ua1,
-                            legendgroup="group1", showlegend=True,  
-                            name='Promedio Habilidades', 
-                            marker_color=color_avr,
-                            texttemplate='%{y:.0%}',  # Format the labels as percentages with one decimal place
-                            textposition='inside',
-                            insidetextanchor='middle',  # Position of the labels
-                            textfont=dict(size=15, family="Arial", color="white", weight= 700),
-                            hovertemplate = new_hovertemplate,
-                            hoverlabel=dict(
-                                                #bgcolor="white",
-                                                #font_size=16,
-                                                font_family="Inter",
-                                                font_color="white"  , # Sets the text color inside the box
-                                                ),
-                            row=1, col=1)
-            
-            trace01.add_bar( x=graph_x_axes_ua2, y=graph_y_axes_average_ua2, 
-                            legendgroup="group1", showlegend=False,
-                            name='Promedio Habilidades',
-                            marker_color=color_avr,
-                            texttemplate='%{y:.0%}',  # Format the labels as percentages with one decimal place
-                            textposition='inside',
-                            insidetextanchor='middle',  # Position of the labels
-                            textfont=dict(size=15, family="Arial", color="white", weight= 700),
-                            hovertemplate = new_hovertemplate,
-                            hoverlabel=dict(
-                                                #bgcolor="white",
-                                                #font_size=16,
-                                                font_family="Inter",
-                                                font_color="white"  , # Sets the text color inside the box
-                                                ),
-                            row=1, col=2)
-            
-            trace01.add_bar( x=graph_x_axes_ua3, y=graph_y_axes_average_ua3,
-                            legendgroup="group1", showlegend=False,
-                            name='Promedio Habilidades',
-                            marker_color=color_avr,
-                            texttemplate='%{y:.0%}',  # Format the labels as percentages with one decimal place
-                            textposition='inside',
-                            insidetextanchor='middle',  # Position of the labels
-                            textfont=dict(size=15, family="Arial", color="white", weight= 700),
-                            hovertemplate = new_hovertemplate,
-                            hoverlabel=dict(
-                                                #bgcolor="white",
-                                                #font_size=16,
-                                                font_family="Inter",
-                                                font_color="white"  , # Sets the text color inside the box
-                                                ),
-                            row=1, col=3)            
+            for ua, col in zip(count_ua, count_col):
 
+                if col==0:
+                         opt=True
+                else:
+                         opt=False
+             
+                trace01.add_bar( x=x_axes_ua[ua], y=count_ua_average[ua],
+                            legendgroup="group1", 
+                            showlegend=opt,  
+                            name='Promedio Porcentaje de Logro', 
+                            marker_color=color_avr,
+                            texttemplate='%{y:.0%}',  # Format the labels as percentages with one decimal place
+                            textposition='inside',
+                            insidetextanchor='middle',  # Position of the labels
+                            textfont=dict(size=15, family="Arial", color="white", weight= 700),
+                            hovertemplate = new_hovertemplate,
+                            hoverlabel=dict(
+                                                #bgcolor="white",
+                                                #font_size=16,
+                                                font_family="Inter",
+                                                font_color="white"  , # Sets the text color inside the box
+                                                ),
+                            row=1, col=col+1)
+            
             trace01.update_layout(barmode="group",  template='simple_white')
-            b ='Promedio Habilidades'
+            b ='Promedio Porcentaje de Logro'
     
     trace01.update_layout(
     title_text=f"Rendimiento DIA Diagnóstico: {b} {a}",
