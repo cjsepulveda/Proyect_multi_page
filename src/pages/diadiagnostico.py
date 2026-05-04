@@ -74,7 +74,7 @@ def layout():
     # Lista depegable para DESCRIPTORES
     html.Div(
         children=[
-            html.Div(children='Descriptor', className='menu-title'),
+            html.Div(children='DESCRIPTOR', className='menu-title'),
             dcc.Dropdown(
                 id='testdiag', 
                 options=[ 
@@ -113,6 +113,7 @@ def update_charts(nivel,test,asig):
 
     if asig == 'mat':
           df01 = pd.read_excel(DATA_PATH.joinpath('data_dia_2024.xlsx'), sheet_name='diag_update_mat')
+          
           mask01=df01[(df01['NIVEL'] == nivel) & (df01['UNIDAD ACADÉMICA'] == 'BÁSICA 1') & (df01['ETAPA'] == 'DIAGNOSTICO 2026')]
           mask02=df01[(df01['NIVEL'] == nivel) & (df01['UNIDAD ACADÉMICA'] == 'BÁSICA 2')]
           mask03=df01[(df01['NIVEL'] == nivel) & (df01['UNIDAD ACADÉMICA'] == 'BÁSICA SF')]
@@ -153,6 +154,7 @@ def update_charts(nivel,test,asig):
           
     elif asig == 'len':
           df01 = pd.read_excel(DATA_PATH.joinpath('data_dia_2024.xlsx'), sheet_name='diag_update_len')
+          
           mask01=df01[(df01['NIVEL'] == nivel) & (df01['UNIDAD ACADÉMICA'] == 'BÁSICA 1') & (df01['ETAPA'] == 'DIAGNOSTICO 2026')]
           mask02=df01[(df01['NIVEL'] == nivel) & (df01['UNIDAD ACADÉMICA'] == 'BÁSICA 2')]
           mask03=df01[(df01['NIVEL'] == nivel) & (df01['UNIDAD ACADÉMICA'] == 'BÁSICA SF')]
@@ -233,8 +235,9 @@ def update_charts(nivel,test,asig):
 
     trace01 = make_subplots(
                   rows=1, cols=columnas,
+                  shared_yaxes=True,
                   subplot_titles=name_ua)
-    trace01.update_annotations(font=dict(size=16, family="Arial", color="black"), font_weight="bold")
+    trace01.update_annotations(font=dict(size=16, family="Inter", color="#646464"), font_weight="bold")
 
 
     if test == 'level_score': # Gráfica para NIVEL de LOGRO
@@ -250,7 +253,7 @@ def update_charts(nivel,test,asig):
                     trace01.add_bar( x=x_axes_ua[ua], y=count_ua_level[ua][x],
                                 
                                 legendgroup="group1", 
-                                showlegend=opt,
+                                showlegend=False,
                                 name=name_level[x],
                                 texttemplate='%{y:.0%}',  # Format the labels as percentages with one decimal place
                                 textposition='inside',
@@ -283,7 +286,7 @@ def update_charts(nivel,test,asig):
                          opt=False
 
                 trace01.add_bar( x=x_axes_ua[ua], y=count_ua_skill[ua][x],
-                            legendgroup="group1", 
+                            #legendgroup="group1", 
                             showlegend=opt, 
                             name=name_skill[x],
                             texttemplate='%{y:.0%}',  # Format the labels as percentages with one decimal place
@@ -320,14 +323,15 @@ def update_charts(nivel,test,asig):
              
                 trace01.add_bar( x=x_axes_ua[ua], y=count_ua_average[ua],
                             legendgroup="group1", 
-                            showlegend=opt,  
+                            showlegend=False,  
                             name='Promedio Porcentaje de Logro', 
                             marker_color=color_avr,
                             texttemplate='%{y:.0%}',  # Format the labels as percentages with one decimal place
                             textposition='inside',
                             insidetextanchor='middle',  # Position of the labels
-                            textfont=dict(size=15, family="Arial", color="white", weight= 700),
+                            textfont=dict(size=20, family="Inter", color="white", weight= 700),
                             hovertemplate = new_hovertemplate,
+                            width=0.3,
                             hoverlabel=dict(
                                                 #bgcolor="white",
                                                 #font_size=16,
@@ -337,27 +341,37 @@ def update_charts(nivel,test,asig):
                             row=1, col=col+1)
             
             trace01.update_layout(barmode="group",  template='simple_white')
-            b ='Promedio Porcentaje de Logro'
+            b ='Porcentaje de Logro'
     
     trace01.update_layout(
-    title_text=f"Rendimiento DIA Diagnóstico: {b} {a}",
+    title_text=f"DIA Diagnóstico: {b} {a}",
     title_font_family='Consolas',
     title_font_weight=1000,
-    # showlegend=False,
     legend_font_family='Consolas',
     activeselection_opacity=1,
     title_xref='paper',
     title_x= 0.0,
+    title_y=0.95,
     title_font_size=20,
-    legend_title_text='Descriptor',
+    #legend_title_text='Descriptor',
     autosize=False,
-    width=1200,
+    width=800,
     height=380,
-    margin=dict(l=0, r=0, b=50, t=80, pad=0),
-       
+    margin=dict(l=20, r=1, b=1, t=80, pad=0),
+    legend=dict(
+        orientation="h",
+        x=0.15,
+        y=0.99,
+        xref='paper',
+        yref='paper',
+        bgcolor='rgba(255, 255, 255, 0.5)' # Optional: semi-transparent background
+            
         )
-    trace01.update_yaxes(tickformat='.0%', tickfont_family='Consolas', tickfont_size=12, tickfont_weight=1000, range=[0, 1])
-    trace01.update_xaxes(tickfont_family='Consolas', tickfont_size=12, tickfont_weight=1000)
+    )
+
+    
+    trace01.update_yaxes(visible=False, tickformat='.0%', tickfont_family='Inter', tickfont_size=10, tickfont_weight=1000, range=[0, 1.1])
+    trace01.update_xaxes(tickfont_family='Inter', tickfont_size=12, tickfont_weight=1000, fixedrange=True)
 
     trace01.add_layout_image(                                 
                             source= "assets/Original-Apaisado.png",

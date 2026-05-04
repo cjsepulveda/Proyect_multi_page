@@ -64,8 +64,8 @@ def layout():
     # Fecha Actualización
     html.Div(
             children=[
-            html.P("Última actualización", style={'textAlign': 'center'}),
-            html.P(f"Fecha: {fecha_actualizada_menos_tres}", style={'fontSize': '18px', 'fontWeight': 'bold', 'textAlign': 'center','color': 'black'})
+            html.P("Última actualización", style={'textAlign': 'center', 'color': 'white'}),
+            html.P(f"Fecha: {fecha_actualizada_menos_tres}", style={'fontSize': '18px', 'fontWeight': 'bold', 'textAlign': 'center','color': 'white'})
         ],
     ),
 
@@ -76,16 +76,6 @@ def layout():
             dcc.Dropdown(
                 id='unidades_educativas', 
                 options=ue_options_dropdown,
-                
-                #[ 
-                 # {"label": "CORPORACIÓN", "value": "Corporacion"},
-                 # {"label": "BÁSICA 1", "value": "BÁSICA 1"},
-                 # {"label": "BÁSICA 2", "value": "BÁSICA 2"},
-                 # {"label": "BÁSICA SAN FELIPE", "value": "BÁSICA SF"},
-                 # {"label": "MEDIA LOS ANDES", "value": "MEDIA LOS ANDES"},
-                 # {"label": "MEDIA SAN FELIPE", "value": "MEDIA SAN FELIPE"},
-                                    
-                #],
                 value='Corporacion',
                 clearable=False,
                 className='dropdown'
@@ -93,7 +83,7 @@ def layout():
         ]),
 
     ],
-    className="menu",
+    className="menu_matricula",
     ),
 
     # Marco para el gráfico (dcc.Graph está incorporado en la función update_charts)
@@ -173,7 +163,7 @@ def update_charts(unidad_edu):
 
     trace01 = px.bar(select_nivel_subject, x=graph_x_axes, y='MAT_2026', 
                      title= f'Matrícula 2026 Corporación Monte Aconcagua',
-                     width=1200, height=420,
+                     width=1200, height=380,
                      labels={graph_x_axes: etiqueta,'MAT_2026':'Matriculados'},
                      #barmode='group',
                      color=color_bar,
@@ -187,7 +177,7 @@ def update_charts(unidad_edu):
     trace01.add_layout_image(                                 
                             source= "assets/Original-Apaisado.png",
                             xref="paper", yref="paper",
-                            x=1.12, y=1.15,
+                            x=1.0, y=1.15,
                             sizex=0.2, sizey=0.2,
                             xanchor="right", yanchor="bottom",                                
                             )
@@ -198,6 +188,8 @@ def update_charts(unidad_edu):
                           '<b>% Meta  : </b>%{customdata[1]:.1f} %</b><br>',
                           textfont_size=16, textangle=0, textposition="outside", cliponaxis=False,
                           textfont=dict(weight="bold"),
+
+                          width=0.7,
                           )
 
     
@@ -210,6 +202,7 @@ def update_charts(unidad_edu):
                          title_font_size=20,
                          title_x=0.5,
                          xaxis_type='category',
+                         showlegend=False,
                          
                          )
     new_trace01 = [dcc.Graph(figure=trace01, config={"displayModeBar": False}, className="card")]
