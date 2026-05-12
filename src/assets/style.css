@@ -6,7 +6,7 @@
 body {
     font-family: "Roboto Mono", monospace;    
     margin: 0;
-    background-color: #fff;
+    background-color: #ffffff;
 }
 
 .header {
@@ -22,7 +22,7 @@ body {
 }
 
 .header-title {
-    color: #FFFFFF;
+    color: #ffffff;
     font-size: 28px;
     font-weight: bold;
     text-align: center;
@@ -43,61 +43,54 @@ body {
     background-color: #ffffff;
     padding-right: 10px;
     padding-left: 10px;
-    padding-top: 70px;
+    padding-top: 10px;
     margin-top: 10px;
     display: flex;
     justify-content: space-evenly;
     border: none;
 }
 
-#graficodiagnostico{
+.grafico_and_card {
+    margin-right: auto;
+    margin-left: auto;
+    max-width: 100vw;
+    background-color: #ffffff;
+    padding-right: 10px;
+    padding-left: 10px;
+    padding-top: 10px;
+    margin-top: 10px;
+    display: flex;
+    justify-content: flex-start;
+    gap: 0px;
     border: none;
 }
-.card {
-    margin-bottom: 0px;
-    border: none;
+
+.graph_bar {
+    margin-bottom: 10px;
+    border: 1px solid rgb(207, 207, 207);
+    border-radius: 10px;
+    padding-right: 10px;
+    padding-left: 10px;
+    padding-top: 10px;
+    padding-bottom: 1px;
+    margin-left: 10px;
+    /*margin-right: auto;*/
+    background-color: rgb(255, 255, 255);
     
-}
-
-.option_menu_side{
-    font-size: 16px;
-}
-
-.option_menu_side:focus{
-    font-weight: bold;
-}
-
-.option_menu_side:active{
-    font-weight: bold;
-}
-
-.flexible{
-    display: flex;
-    justify-content: space-around;
-    width: 800px;
-    font-size: 20px;
-}
-
-.home{
-    height: 40px;
-    width: 500px;
-    font-size: 20px;
-    display: flex;
-    justify-content: left;
-    margin-left: 12px;
-    padding-top: 16px;
-    font-weight: bold;
-    
+   
 }
 
 .menu {
-    height: 40px;
-    width: 1100px;
+    border-radius: 15px;
+    height: 90px;
+    width: 700px;
     display: flex;
     justify-content: space-evenly;
     padding-top: 16px;
-    margin: 0 auto 0 auto;
-    background-color: #FFFFFF;
+    margin-left: 60px;
+    margin-right: auto;
+    margin-top: 10px;
+    background-color: #0c89ff;
     
 }
 
@@ -125,7 +118,7 @@ body {
     bottom: 10px;
     font-size: 16px;
     font-weight: bold;
-    color: #00249c;
+    color: #ffffff;
 }
 
 .dropdown {
@@ -134,11 +127,91 @@ body {
     
 }
 
-.cardfecha{
-    border-radius: 8px;
-    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
-    padding: 20px;
-    margin: 20px;
+.card_contenedor{
+    margin-bottom: 10px;
+    border: 1px solid rgb(207, 207, 207);
+    border-radius: 10px;
+    padding-right: 10px;
+    padding-left: 10px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    margin-left: 15px;
+    margin-right: auto;
     background-color: rgb(255, 255, 255);
-    transition: 0.3s;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    
+    align-content: space-around;
+    justify-content: flex-start;
+    height: 230px;
+    width: 250px;
+    
+  }
+
+.contenedor-icono-texto {
+    border-radius: 10px;
+    
+    display: flex;            /* Flexbox para alinear */
+    overflow: hidden;    
+    width: 100%;                  /* O el ancho que desees */
+    height: 80px;   
+}
+
+.bloque-azul {
+    flex: 0 0 30%;                /* No crecer, no encoger, base 30% */
+    background-color: #007bff; 
+    display: flex;
+    justify-content: center;      /* Centrar horizontalmente */
+    align-items: center;          /* Centrar verticalmente */
+    
+  }
+
+
+  .bloque-azul i {
+    background-color: #007bff; /* Fondo azul */
+    color: rgb(255, 255, 255);
+    font-size: 40px;          /* Tamaño del ícono */
+    
+    
+}
+
+  .bloque-gris {
+    flex: 0 0 70%;                /* No crecer, no encoger, base 70% */
+    background-color: #eeeeee;    /* Color gris */
+    display: flex;
+    justify-content: center;      /* Centrar horizontalmente */
+    align-items: center;          /* Centrar verticalmente */
+    font-size: 22px;
+    color: #222222;
+    font-family: "Roboto Mono", monospace; 
+    
+
+    }
+
+.graph_line {
+        margin-bottom: 10px;
+        border: 1px solid rgb(207, 207, 207);
+        border-radius: 10px;
+        padding-right: 10px;
+        padding-left: 10px;
+        padding-top: 10px;
+        padding-bottom: 1px;
+        margin-left: 10px;
+        /*margin-right: auto;*/
+        background-color: rgb(255, 255, 255);
+    }
+
+.grafico-evolucion {
+    margin-right: auto;
+    margin-left: auto;
+    max-width: 100vw;
+    background-color: #ffffff;
+    padding-right: 5px;
+    padding-left: 10px;
+    padding-top: 10px;
+    margin-top: 10px;
+    display: flex;
+    justify-content: flex-start;
+    border: none;
 }

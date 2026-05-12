@@ -19,6 +19,8 @@ PATH = pathlib.Path(__file__).parent
 DATA_PATH = PATH.joinpath("data").resolve()
 df01 = pd.read_excel(DATA_PATH.joinpath('mat_2026.xlsx'), sheet_name='mat_2026')
 df02 = pd.read_excel(DATA_PATH.joinpath('mat_2026.xlsx'), sheet_name='proyeccion_2026')
+df03 = pd.read_excel(DATA_PATH.joinpath('mat_2026.xlsx'), sheet_name='genero')
+df04 = pd.read_excel(DATA_PATH.joinpath('mat_2026.xlsx'), sheet_name='mat_time')
 
 # Ruta de tu archivo
 ruta_archivo = DATA_PATH.joinpath('mat_2026.xlsx')
@@ -55,17 +57,18 @@ ue_options_dropdown = [{'label': k, 'value': v} for k, v in ue_options.items()]
 
 # Diagrama de la aplicación (Una lista despegable y un gráfico)
 def layout():    
+    
     layout = html.Div(
         children=[
     
     # Marco para lista despegable UNIDAD EDUCATIVA y Fecha Actualización
-    html.Div(children=[
+        html.Div(children=[
     
     # Fecha Actualización
     html.Div(
             children=[
-            html.P("Última actualización", style={'textAlign': 'center'}),
-            html.P(f"Fecha: {fecha_actualizada_menos_tres}", style={'fontSize': '18px', 'fontWeight': 'bold', 'textAlign': 'center','color': 'black'})
+            html.Div("Última actualización", style={'textAlign': 'center', 'color': 'white', 'fontSize': '14px'}),
+            html.Div(f"Fecha: {fecha_actualizada_menos_tres}", style={'fontSize': '18px', 'fontWeight': 'bold', 'textAlign': 'center','color': 'white'})
         ],
     ),
 
@@ -96,9 +99,16 @@ def layout():
     className="menu",
     ),
 
+    
     # Marco para el gráfico (dcc.Graph está incorporado en la función update_charts)
-        html.Div(id='grafico_matricula' , className="wrapper"),
+
+        html.Div(id='grafico_matricula' , className="grafico_and_card"),
+        
+        html.Div(id='grafico_evolucion' , className="grafico-evolucion"),
+
         html.Div(id='tabla_matricula' , className="wrapper"),
+
+
 
         ])
 
@@ -108,6 +118,7 @@ def layout():
 @callback(
         Output('grafico_matricula', 'children'),
         Output('tabla_matricula', 'children'),
+        Output('grafico_evolucion', 'children'),
         [Input('unidades_educativas', 'value'),
          ]
         )
@@ -116,11 +127,32 @@ def layout():
 def update_charts(unidad_edu):
 
     if unidad_edu == 'Corporacion':
-        df_agrupado = df01.groupby('UNI_EDU').sum()
-        df_agrupado_in = df_agrupado.reset_index()
+        
+        df_time_agrupado_OLD_corp= df04.groupby('MATRICULA').sum().reset_index()
+        df_time_agrupado_OLD_corp['MATRICULA'] = pd.to_datetime(df_time_agrupado_OLD_corp['MATRICULA'])
+        df_time_agrupado_corp=df_time_agrupado_OLD_corp.drop(columns=['UE'])
+        df_time_agrupado_corp['accumulated'] = df_time_agrupado_corp['ESTUDIANTES'].cumsum()
+        df_time_agrupado = df_time_agrupado_corp
+
+        #agrupar data frame genero por Femenino y Masculino
+        df_genero_agrupado_corp = df03.groupby('Sexo').sum().reset_index()
+        df_genero_agrupado_new_corp=df_genero_agrupado_corp.drop(['UNIDAD ACADÉMICA'],axis=1)
+        
+        df_genero_dict = df_genero_agrupado_new_corp.set_index('Sexo')['RECUENTO'].to_dict()
+        masculino_count = df_genero_dict.get('F')
+        femenino_count = df_genero_dict.get('M')
+        
+        #print(df_time_agrupado)
+        #print(df_time_agrupado.dtypes)
+
+        #Agrupar data frame para la nueva categoria Corporación, sumando las unidades educativas y eliminando columnas innecesarias
+        df_agrupado_corp = df01.groupby('UNI_EDU').sum()
+        df_agrupado_in = df_agrupado_corp.reset_index()
         df_agrupado_new = df_agrupado_in.drop(['NIVEL','% META'], axis=1)
 
-        # Agregar al datafram un fila nueva con los totales y calcular porcentaje
+        
+
+        # Agregar al dataframe un fila nueva con los totales y calcular porcentaje
         # Calcular los totales para las columnas numéricas
         total_SAE_2026 = df_agrupado_new['SAE_2026'].sum()
         total_MAT_2026 = df_agrupado_new['MAT_2026'].sum()
@@ -143,6 +175,26 @@ def update_charts(unidad_edu):
         etiqueta = 'Unidades Educativas'
         
     else:
+        #datafreme de fechas, segun unidad educaticativa seleccionada en dropdown
+        df_time_agrupado_OLD = df04.query("UE == @unidad_edu").copy() # dataframe como copia para evitar el error de SettingWithCopyWarning al modificar la columna 'MATRICULA' con pd.to_datetime
+        df_time_agrupado_OLD['MATRICULA'] = pd.to_datetime(df_time_agrupado_OLD['MATRICULA'])
+        df_time_agrupado_pre = df_time_agrupado_OLD.groupby('MATRICULA').sum().reset_index()
+        df_time_agrupado_ue = df_time_agrupado_pre.drop(columns=['UE'])
+        df_time_agrupado_ue['accumulated'] = df_time_agrupado_ue['ESTUDIANTES'].cumsum()
+        df_time_agrupado = df_time_agrupado_ue
+
+        #print(df_time_agrupado)|
+        #print(df_time_agrupado.dtypes)
+
+        #filtrado data frame de genero segun unidad educativa seleccionada en dropdown
+        df_genero_agrupado_ue= df03.query("`UNIDAD ACADÉMICA` == @unidad_edu")
+        df_genero_agrupado_new=df_genero_agrupado_ue.drop(['UNIDAD ACADÉMICA'],axis=1)
+        
+        df_genero_dict_ue = df_genero_agrupado_new.set_index('Sexo')['RECUENTO'].to_dict()
+        masculino_count = df_genero_dict_ue.get('F')
+        femenino_count = df_genero_dict_ue.get('M')
+
+        # dataframe filtrado segun unidad educativa seleccionada en dropdown
         df_agrupado_ue = df01.query("UNI_EDU == @unidad_edu")
         df_agrupado_new_ue = df_agrupado_ue.drop(['UNI_EDU','% META'], axis=1)
 
@@ -172,22 +224,22 @@ def update_charts(unidad_edu):
     color_03='blue'
 
     trace01 = px.bar(select_nivel_subject, x=graph_x_axes, y='MAT_2026', 
-                     title= f'Matrícula 2026 Corporación Monte Aconcagua',
-                     width=1200, height=420,
-                     labels={graph_x_axes: etiqueta,'MAT_2026':'Matriculados'},
+                     title= 'Matrícula 2026 Corporación Monte Aconcagua',
+                     width=1020, height=380,
+                     labels={graph_x_axes: '','MAT_2026':''},
                      #barmode='group',
                      color=color_bar,
                      color_discrete_map= {'GENERAL':color_03},
                      template="simple_white",
                      custom_data=['SAE_2026','% Meta'],
                      text_auto=True,
-                     #hover_data=["% Meta"],
+                     
             )
     
     trace01.add_layout_image(                                 
                             source= "assets/Original-Apaisado.png",
                             xref="paper", yref="paper",
-                            x=1.12, y=1.15,
+                            x=1.0, y=1.15,
                             sizex=0.2, sizey=0.2,
                             xanchor="right", yanchor="bottom",                                
                             )
@@ -198,34 +250,91 @@ def update_charts(unidad_edu):
                           '<b>% Meta  : </b>%{customdata[1]:.1f} %</b><br>',
                           textfont_size=16, textangle=0, textposition="outside", cliponaxis=False,
                           textfont=dict(weight="bold"),
+                          width=0.5,
                           )
 
     
-    trace01.update_yaxes(tickfont_weight='bold',title_font_weight='bold',tickfont_size=15)
-    trace01.update_xaxes(tickfont_weight='bold', title_font_weight='bold', tickfont_size=15)
+    trace01.update_yaxes(tickfont_weight='normal', showgrid=True, tickfont_size=15,showline=False, ticks="",
+                         tickfont=dict(color='gray'))
+    trace01.update_xaxes(tickfont_weight='bold', tickfont_size=12, showline=False, ticks="")
     trace01.update_layout(
                          hoverlabel_font=dict(family='Roboto mono', weight='bold', size=15, color='white'),
                          font_family='Roboto mono',
                          title_font_weight='bold',
                          title_font_size=20,
-                         title_x=0.5,
+                         title_x=0.53,
+                         title_xanchor='right',
                          xaxis_type='category',
+                         showlegend=False,
                          
                          )
-    new_trace01 = [dcc.Graph(figure=trace01, config={"displayModeBar": False}, className="card")]
     
-    #tabla_matricula = [DataTable(
-       #columns=[{"name": i, "id": i} for i in df02], # Define columnas
-       #data=df02.to_dict('records'), # Convierte DataFrame a lista de diccionarios
-       #style_table={'width': '50%', 'display': 'inline-block', 'verticalAlign': 'top'} # Ajusta la tabla
-    #)
-        
-    #]
+    # Gráfico de evolución matricula por fecha
+    trace02 = px.line(df_time_agrupado, x='MATRICULA', y='accumulated', 
+                      title='Evolución Matricula 2026 por fecha',
+                      labels={'MATRICULA':'Fecha','accumulated':'Matriculados'},
+                      width=1200, height=500,
+                      template="simple_white",
+                      markers=True,)
+    
+    trace02.update_traces(
+                       marker=dict(color=' #e74040'),   # Change dot size
+                       line=dict(width=2, color='gray')      # Change line thickness
+                    )
+    
+    trace02.update_yaxes(tickfont_weight='normal', showgrid=True, tickfont_size=15,showline=False, ticks="",
+                         title_text="",
+                         tickfont=dict(color='gray'))
+    
+    trace02.update_xaxes(tickfont_weight='bold', tickfont_size=12, showgrid=True, showline=True,
+                         title_text="",
+                         tickfont=dict(color='gray'))
+    
+    trace02.update_layout(
+                         hoverlabel_font=dict(family='Roboto mono', weight='bold', size=15, color='white'),
+                         font_family='Roboto mono',
+                         title_font_weight='bold',
+                         title_font_size=20,
+                         title_x=0.37,
+                         title_xanchor='right',
+                         #xaxis_type='category',
+                         showlegend=False,
+                         
+                         )
+
+    # Gráfico de matricula por unidad educativa o nivel, con tarjetas de genero
+    new_trace01 = [dcc.Graph(figure=trace01, config={"displayModeBar": False}, className="graph_bar"),
+                   html.Div(children=[
+                            html.Div("Matrícula por género", style={'textAlign': 'left', 'color': 'gray', 'fontSize': '14px'}),
+
+                            html.Div(children=[
+                                     html.Div(
+                                         html.I(className="fa-solid fa-child"), className="bloque-azul"),
+                                     html.Div(f"{masculino_count}", className="bloque-gris"),
+                                     
+                            ],
+                                className="contenedor-icono-texto"),
+                             
+                             html.Div(children=[
+                                     html.Div(
+                                         html.I(className="fa-solid fa-child-dress"), className="bloque-azul"),
+                                     html.Div(f"{femenino_count}", className="bloque-gris"),
+                                     
+                            ],
+                                className="contenedor-icono-texto"),
+                            
+                            ],
+                       
+                       className="card_contenedor")]
+    
+    # Tabla de proyección de matricula 2026, con columnas de variación porcentual y porcentaje alcanzado respecto a proyección
+    # Redondear columnas específicas y formatear como porcentaje
    
     df02_REDONDEADO= df02.round({'% CRECIMIENTO': 3, '% ALCANZADO PROYECCIÓN':3})
     df02_REDONDEADO['% CRECIMIENTO'] = df02_REDONDEADO['% CRECIMIENTO'].map('{:.2%}'.format)
     df02_REDONDEADO['% ALCANZADO PROYECCIÓN'] = df02_REDONDEADO['% ALCANZADO PROYECCIÓN'].map('{:.2%}'.format)
     df02_nuevo = df02_REDONDEADO.rename(columns={'% CRECIMIENTO': 'VARIACION PORCENTUAL SAE 2026 Y MATRÍCULA 2025'})
+    
     # Para columnas específicas (ej. ColumnaB):
     tabla_proyeccion = dbc.Table.from_dataframe(df02_nuevo, 
                                                striped=True, 
@@ -237,11 +346,11 @@ def update_charts(unidad_edu):
                                                       'margin': 'auto', 
                                                       'text-align': 'center'
                                                       })
-    
-   
+    # Gráfico de evolución matricula por fecha, para colocar debajo de la tabla de proyección
+    newtrace02 = [dcc.Graph(figure=trace02, config={"displayModeBar": False}, className="graph_line")]
     
 
-    return new_trace01, tabla_proyeccion
+    return new_trace01, tabla_proyeccion, newtrace02
 
 # cargar en servidor
 # if __name__ == '__main__':
