@@ -5,7 +5,6 @@ import plotly.express as px
 import os
 import datetime
 from datetime import timedelta
-from dash.dash_table import DataTable
 import dash_bootstrap_components as dbc
 
 register_page(
@@ -17,10 +16,154 @@ register_page(
 
 PATH = pathlib.Path(__file__).parent
 DATA_PATH = PATH.joinpath("data").resolve()
-df01 = pd.read_excel(DATA_PATH.joinpath('mat_2026.xlsx'), sheet_name='mat_2026')
-df02 = pd.read_excel(DATA_PATH.joinpath('mat_2026.xlsx'), sheet_name='proyeccion_2026')
-df03 = pd.read_excel(DATA_PATH.joinpath('mat_2026.xlsx'), sheet_name='genero')
-df04 = pd.read_excel(DATA_PATH.joinpath('mat_2026.xlsx'), sheet_name='mat_time')
+
+# Caching de datos para evitar leer el Excel en cada importación del módulo.
+# La lectura se hará solo la primera vez que se necesiten los datos.
+_df01 = _df02 = _df03 = _df04 = _df05 = _df06 = None
+_tabla_proyeccion = None
+
+
+def load_data():
+    """Carga los datos de Excel solo una vez por proceso."""
+    global _df01, _df02, _df03, _df04, _df05, _df06
+    # Si ya se cargaron los datos, no hacemos nada.
+    if _df01 is not None:
+        return
+
+    workbook = DATA_PATH.joinpath('mat_2026.xlsx')
+    _df01 = pd.read_excel(workbook, sheet_name='mat_2026')
+    _df02 = pd.read_excel(workbook, sheet_name='proyeccion_2026')
+    _df03 = pd.read_excel(workbook, sheet_name='genero')
+    _df04 = pd.read_excel(workbook, sheet_name='mat_time')
+    _df05 = pd.read_excel(workbook, sheet_name='origen_estudiantes')
+    _df06 = pd.read_excel(workbook, sheet_name='origen_colegios')
+    # Convertir la columna de fechas solo una vez, al leer los datos.
+    _df04['MATRICULA'] = pd.to_datetime(_df04['MATRICULA'], errors='coerce')
+
+
+def get_tabla_proyeccion():
+    """Devuelve la tabla de proyección, construida solo una vez."""
+    global _tabla_proyeccion
+    load_data()
+    if _tabla_proyeccion is not None:
+        return _tabla_proyeccion
+
+    # Formatear el DataFrame de proyección y construir la tabla Dash una sola vez.
+    df02_redondeado = _df02.round({'% CRECIMIENTO': 3, '% ALCANZADO PROYECCIÓN': 3})
+    df02_redondeado['% CRECIMIENTO'] = df02_redondeado['% CRECIMIENTO'].map('{:.2%}'.format)
+    df02_redondeado['% ALCANZADO PROYECCIÓN'] = df02_redondeado['% ALCANZADO PROYECCIÓN'].map('{:.2%}'.format)
+    df02_nuevo = df02_redondeado.rename(columns={'% CRECIMIENTO': 'VARIACION PORCENTUAL SAE 2026 Y MATRÍCULA 2025'})
+
+    _tabla_proyeccion = dbc.Table.from_dataframe(df02_nuevo,
+                                               striped=True,
+                                               bordered=True,
+                                               hover=True,
+                                               color='dark',
+                                               className="align-middle",
+                                               style={'width': '90%',
+                                                      'margin': 'auto',
+                                                      'text-align': 'center'
+                                                      })
+    return _tabla_proyeccion
+
+
+def calculate_origin(df_origen, unidad_edu=None):
+    """Calcula los valores y la tabla de origen según la unidad educativa."""
+
+    interno = df_origen['INTERNO'].sum()
+    nuevo_sae = df_origen['NUEVO-SAE'].sum()
+    anotate_lista = df_origen['ANOTATE-LISTA'].sum()
+    categorias_origen = ['Interno', 'Nuevo SAE', 'Anotate Lista']
+    valores_origen = [interno, nuevo_sae, anotate_lista]
+
+
+    if unidad_edu == 'Corporacion':
+        tabla_origen = df_origen.groupby('UE').sum().reset_index()
+        tabla_origen = tabla_origen.drop(columns=['NIVEL'], errors='ignore')
+        fila_extra_general = {'UE': 'TOTAL', 'INTERNO': interno, 'NUEVO-SAE': nuevo_sae, 'ANOTATE-LISTA': anotate_lista}
+        
+
+    else:
+        tabla_origen = df_origen.copy()
+        tabla_origen = tabla_origen.drop(columns=['UE'], errors='ignore')
+        fila_extra_general = {'NIVEL': 'TOTAL', 'INTERNO': interno, 'NUEVO-SAE': nuevo_sae, 'ANOTATE-LISTA': anotate_lista}
+        
+    df_fila_extra_general = pd.DataFrame([fila_extra_general])
+    tabla_origen= pd.concat([tabla_origen, df_fila_extra_general], ignore_index=True)
+
+    
+    
+    return categorias_origen, valores_origen, tabla_origen
+
+
+def build_evolution_df(df_time, unidad_edu=None):
+    """Crea el DataFrame de evolución de matrícula por fecha."""
+    if unidad_edu and unidad_edu != 'Corporacion':
+        df_filtered = df_time.query("UE == @unidad_edu").copy()
+    else:
+        df_filtered = df_time
+
+    df_agg = df_filtered.groupby('MATRICULA').sum().reset_index()
+    df_agg = df_agg.drop(columns=['UE'], errors='ignore')
+    df_agg['accumulated'] = df_agg['ESTUDIANTES'].cumsum()
+    return df_agg
+
+
+def get_gender_counts(df_genero, unidad_edu=None):
+    """Devuelve los conteos de género para la unidad educativa o la corporación."""
+    if unidad_edu and unidad_edu != 'Corporacion':
+        df_filtered = df_genero.query("`UNIDAD ACADÉMICA` == @unidad_edu")
+    else:
+        df_filtered = df_genero
+
+    df_grouped = df_filtered.groupby('Sexo').sum().reset_index()
+    df_grouped = df_grouped.drop(columns=['UNIDAD ACADÉMICA'], errors='ignore')
+    df_dict = df_grouped.set_index('Sexo')['RECUENTO'].to_dict()
+    return df_dict.get('F', 0), df_dict.get('M', 0)
+
+
+def build_summary_df(df_source, unidad_edu=None):
+    """Construye el DataFrame de resumen con fila GENERAL y calcula % Meta."""
+
+    if unidad_edu and unidad_edu != 'Corporacion':
+        df_filtered = df_source.query("UNI_EDU == @unidad_edu")
+        df_clean = df_filtered.drop(columns=['UNI_EDU', '% META'], errors='ignore')
+        graph_x_axes = 'NIVEL'
+        color_bar = 'NIVEL'
+        etiqueta = 'Niveles'
+        total_label = 'GENERAL'
+        label_col = 'NIVEL'
+    else:
+        df_filtered = df_source.groupby('UNI_EDU').sum().reset_index()
+        df_clean = df_filtered.drop(columns=['NIVEL', '% META'], errors='ignore')
+        graph_x_axes = 'UNI_EDU'
+        color_bar = 'UNI_EDU'
+
+        colors = ['#FF5733', '#33FF57', '#3357FF', '#F3FF33', '#FF33F3']
+
+        etiqueta = 'Unidades Educativas'
+        total_label = 'GENERAL'
+        label_col = 'UNI_EDU'
+
+    total_SAE_2026 = df_clean['SAE_2026'].sum()
+    total_MAT_2026 = df_clean['MAT_2026'].sum()
+    fila_total = {label_col: total_label, 'SAE_2026': total_SAE_2026, 'MAT_2026': total_MAT_2026}
+    df_total = pd.DataFrame([fila_total])
+    df_result = pd.concat([df_clean, df_total], ignore_index=True)
+    df_result['% Meta'] = (df_result['MAT_2026'] / df_result['SAE_2026']) * 100
+    return df_result, graph_x_axes, color_bar, etiqueta
+
+
+def get_origin_school(df_institution, unidad_edu=None):
+    """Construye el DataFrame para el colegio de origen de los estudiantes."""
+
+    if unidad_edu and unidad_edu != 'Corporacion':
+       df_filtered_institution= df_institution[(df_institution['ESTUDIANTES'] >= 10) & (df_institution['UE'] == unidad_edu)]
+    else:
+        df_filtered_institution = df_institution[df_institution['ESTUDIANTES'] >= 10]     
+        
+    return df_filtered_institution
+
 
 # Ruta de tu archivo
 ruta_archivo = DATA_PATH.joinpath('mat_2026.xlsx')
@@ -35,7 +178,6 @@ fecha_mod = datetime.datetime.fromtimestamp(timestamp_mod)
 fecha_menos_3h = fecha_mod + timedelta(hours=-4)
 
 # Formatear como string legible (ej: '2025-12-11 10:30:00')
-fecha_actualizada = fecha_mod.strftime('%Y-%m-%d %H:%M:%S')
 fecha_actualizada_menos_tres = fecha_menos_3h.strftime('%Y-%m-%d %H:%M:%S')
 
 
@@ -106,7 +248,15 @@ def layout():
         
         html.Div(id='grafico_evolucion' , className="grafico-evolucion"),
 
-        html.Div(id='tabla_matricula' , className="wrapper"),
+        #html.Div(id='grafico_origen' , className="grafico-origen"),
+   
+        #html.Div(id='grafico_colegios' , className="grafico-evolucion"),
+
+        html.Div(get_tabla_proyeccion(), id='tabla_matricula' , className="wrapper"),
+
+        
+
+        
 
 
 
@@ -117,119 +267,43 @@ def layout():
 # callback para filtrar gráfico segun unidad educativa
 @callback(
         Output('grafico_matricula', 'children'),
-        Output('tabla_matricula', 'children'),
         Output('grafico_evolucion', 'children'),
+        #Output('grafico_origen', 'children'),
+        #Output('grafico_colegios','children'),
         [Input('unidades_educativas', 'value'),
          ]
         )
 
 # función para trazar grafico de matricula
 def update_charts(unidad_edu):
-
+    # Asegura que los datos de Excel estén cargados antes de generar los gráficos.
+    load_data()
     if unidad_edu == 'Corporacion':
-        
-        df_time_agrupado_OLD_corp= df04.groupby('MATRICULA').sum().reset_index()
-        df_time_agrupado_OLD_corp['MATRICULA'] = pd.to_datetime(df_time_agrupado_OLD_corp['MATRICULA'])
-        df_time_agrupado_corp=df_time_agrupado_OLD_corp.drop(columns=['UE'])
-        df_time_agrupado_corp['accumulated'] = df_time_agrupado_corp['ESTUDIANTES'].cumsum()
-        df_time_agrupado = df_time_agrupado_corp
-
-        #agrupar data frame genero por Femenino y Masculino
-        df_genero_agrupado_corp = df03.groupby('Sexo').sum().reset_index()
-        df_genero_agrupado_new_corp=df_genero_agrupado_corp.drop(['UNIDAD ACADÉMICA'],axis=1)
-        
-        df_genero_dict = df_genero_agrupado_new_corp.set_index('Sexo')['RECUENTO'].to_dict()
-        masculino_count = df_genero_dict.get('F')
-        femenino_count = df_genero_dict.get('M')
-        
-        #print(df_time_agrupado)
-        #print(df_time_agrupado.dtypes)
-
-        #Agrupar data frame para la nueva categoria Corporación, sumando las unidades educativas y eliminando columnas innecesarias
-        df_agrupado_corp = df01.groupby('UNI_EDU').sum()
-        df_agrupado_in = df_agrupado_corp.reset_index()
-        df_agrupado_new = df_agrupado_in.drop(['NIVEL','% META'], axis=1)
-
-        
-
-        # Agregar al dataframe un fila nueva con los totales y calcular porcentaje
-        # Calcular los totales para las columnas numéricas
-        total_SAE_2026 = df_agrupado_new['SAE_2026'].sum()
-        total_MAT_2026 = df_agrupado_new['MAT_2026'].sum()
-
-        # Crear la fila de totales como una lista o diccionario
-        fila_total = {'UNI_EDU': 'GENERAL', 'SAE_2026': total_SAE_2026, 'MAT_2026': total_MAT_2026}
-                
-        # Convertir la fila a un DataFrame temporal (para concatenar)
-        df_total = pd.DataFrame([fila_total]) # Importante: pasar la fila dentro de una lista
-
-        # Concatenar el DataFrame original con la fila de totales
-        df_agrupado_total = pd.concat([df_agrupado_new, df_total], ignore_index=True)
-
-        # Calcular el porcentaje de 'MAT_2026' respecto a 'SAE_2026'
-        df_agrupado_total['% Meta'] = (df_agrupado_total['MAT_2026'] / df_agrupado_total['SAE_2026']) * 100
-
-        select_nivel_subject = df_agrupado_total
-        graph_x_axes = 'UNI_EDU'
-        color_bar = 'UNI_EDU'
-        etiqueta = 'Unidades Educativas'
-        
+        origen_df = _df05
     else:
-        #datafreme de fechas, segun unidad educaticativa seleccionada en dropdown
-        df_time_agrupado_OLD = df04.query("UE == @unidad_edu").copy() # dataframe como copia para evitar el error de SettingWithCopyWarning al modificar la columna 'MATRICULA' con pd.to_datetime
-        df_time_agrupado_OLD['MATRICULA'] = pd.to_datetime(df_time_agrupado_OLD['MATRICULA'])
-        df_time_agrupado_pre = df_time_agrupado_OLD.groupby('MATRICULA').sum().reset_index()
-        df_time_agrupado_ue = df_time_agrupado_pre.drop(columns=['UE'])
-        df_time_agrupado_ue['accumulated'] = df_time_agrupado_ue['ESTUDIANTES'].cumsum()
-        df_time_agrupado = df_time_agrupado_ue
+        origen_df = _df05.query("UE == @unidad_edu")
 
-        #print(df_time_agrupado)|
-        #print(df_time_agrupado.dtypes)
+    # Create a lookup dictionary: {value: key}
+    inverse_dict = {v: k for k, v in ue_options.items()}
 
-        #filtrado data frame de genero segun unidad educativa seleccionada en dropdown
-        df_genero_agrupado_ue= df03.query("`UNIDAD ACADÉMICA` == @unidad_edu")
-        df_genero_agrupado_new=df_genero_agrupado_ue.drop(['UNIDAD ACADÉMICA'],axis=1)
-        
-        df_genero_dict_ue = df_genero_agrupado_new.set_index('Sexo')['RECUENTO'].to_dict()
-        masculino_count = df_genero_dict_ue.get('F')
-        femenino_count = df_genero_dict_ue.get('M')
+    # Now you can look up the label instantly
+    label_graph = inverse_dict.get(unidad_edu) # Returns 'cherry' (replaces previous match if values aren't unique)
 
-        # dataframe filtrado segun unidad educativa seleccionada en dropdown
-        df_agrupado_ue = df01.query("UNI_EDU == @unidad_edu")
-        df_agrupado_new_ue = df_agrupado_ue.drop(['UNI_EDU','% META'], axis=1)
+    categorias_origen, valores_origen, tabla_origen = calculate_origin(origen_df, unidad_edu)
+    df_time_agrupado = build_evolution_df(_df04, unidad_edu)
+    masculino_count, femenino_count = get_gender_counts(_df03, unidad_edu)
+    select_nivel_subject, graph_x_axes, color_bar, etiqueta = build_summary_df(_df01, unidad_edu)
+    df_filtered_institution =get_origin_school(_df06, unidad_edu)
 
-        # Agregar al datafram un fila nueva con los totales y calcular porcentaje
-        # Calcular los totales para las columnas numéricas
-        total_SAE_2026_ue = df_agrupado_new_ue['SAE_2026'].sum()
-        total_MAT_2026_ue = df_agrupado_new_ue['MAT_2026'].sum()
-        
-        # Crear la fila de totales como una lista o diccionario
-        fila_total_ue = {'NIVEL': 'GENERAL', 'SAE_2026': total_SAE_2026_ue, 'MAT_2026': total_MAT_2026_ue}
-                
-        # Convertir la fila a un DataFrame temporal (para concatenar)
-        df_total_ue = pd.DataFrame([fila_total_ue]) # Importante: pasar la fila dentro de una lista
-
-        # Concatenar el DataFrame original con la fila de totales
-        df_agrupado_total_ue = pd.concat([df_agrupado_new_ue, df_total_ue], ignore_index=True)
-        
-        # Calcular el porcentaje de 'MAT_2026' respecto a 'SAE_2026'
-        df_agrupado_total_ue['% Meta'] = (df_agrupado_total_ue['MAT_2026'] / df_agrupado_total_ue['SAE_2026']) * 100
-
-        select_nivel_subject = df_agrupado_total_ue
-        graph_x_axes = 'NIVEL'
-        color_bar = 'NIVEL'
-        etiqueta = 'Niveles'
-              
-    
     color_03='blue'
 
     trace01 = px.bar(select_nivel_subject, x=graph_x_axes, y='MAT_2026', 
-                     title= 'Matrícula 2026 Corporación Monte Aconcagua',
+                     title=f'Matrícula 2026 - {label_graph}',
                      width=1020, height=380,
                      labels={graph_x_axes: '','MAT_2026':''},
-                     #barmode='group',
                      color=color_bar,
                      color_discrete_map= {'GENERAL':color_03},
+                     color_discrete_sequence=px.colors.qualitative.G10,
                      template="simple_white",
                      custom_data=['SAE_2026','% Meta'],
                      text_auto=True,
@@ -262,8 +336,8 @@ def update_charts(unidad_edu):
                          font_family='Roboto mono',
                          title_font_weight='bold',
                          title_font_size=20,
-                         title_x=0.53,
-                         title_xanchor='right',
+                         #title_x=0.47,
+                         title_xanchor='left',
                          xaxis_type='category',
                          showlegend=False,
                          
@@ -271,36 +345,113 @@ def update_charts(unidad_edu):
     
     # Gráfico de evolución matricula por fecha
     trace02 = px.line(df_time_agrupado, x='MATRICULA', y='accumulated', 
-                      title='Evolución Matricula 2026 por fecha',
-                      labels={'MATRICULA':'Fecha','accumulated':'Matriculados'},
-                      width=1200, height=500,
+                      title=f'Evolución Matrícula 2026 - {label_graph}',
+                      #labels={'accumulated':'Matriculados'},
+                      width=1280, height=500,
                       template="simple_white",
-                      markers=True,)
+                      )
     
-    trace02.update_traces(
-                       marker=dict(color=' #e74040'),   # Change dot size
-                       line=dict(width=2, color='gray')      # Change line thickness
+        
+    trace02.update_traces(mode="markers+lines",
+                          #hovertemplate=None,
+                          hovertemplate=
+                           '<b>Matriculados: </b>%{y}</b>',
+                          marker=dict(color=' #e74040'),   # Change dot size
+                          line=dict(width=2, color='#555555'),      # Change line thickness
                     )
     
-    trace02.update_yaxes(tickfont_weight='normal', showgrid=True, tickfont_size=15,showline=False, ticks="",
+    trace02.update_yaxes(tickfont_weight='normal', 
+                         showgrid=True, 
+                         tickfont_size=15,
+                         showline=False, 
+                         ticks="",
                          title_text="",
                          tickfont=dict(color='gray'))
     
-    trace02.update_xaxes(tickfont_weight='bold', tickfont_size=12, showgrid=True, showline=True,
+    trace02.update_xaxes(tickfont_weight='bold', 
+                         tickfont_size=12, 
+                         showgrid=True, 
+                         showline=True,
                          title_text="",
                          tickfont=dict(color='gray'))
     
     trace02.update_layout(
+                         hoverlabel_font=dict(family='Roboto mono', weight='bold', size=14, color='black'),
+                         font_family='Roboto mono',
+                         title_font_weight='bold',
+                         title_font_size=20,
+                         title_xanchor='left',
+                         showlegend=False,
+                         hovermode="x unified",
+                         
+                         )
+    
+    trace03=px.pie(values=valores_origen, names=categorias_origen, 
+                         title=f'Origen Matrícula 2026 - {label_graph}',
+                         labels={'names':'Origen','values':'Cantidad'},
+                         width=700, height=500,
+                         hole=0.4, 
+                         template="simple_white", 
+                         color_discrete_sequence=px.colors.qualitative.D3)
+    
+    trace03.update_traces(
+                            textinfo='percent', # Display label and percentage
+                            textfont=dict(
+                            color='white',       # Set text color to white
+                            size=20,
+                            weight='bold',              # Set text size
+                        ),
+                        )
+    
+    trace03.update_layout(
                          hoverlabel_font=dict(family='Roboto mono', weight='bold', size=15, color='white'),
                          font_family='Roboto mono',
                          title_font_weight='bold',
                          title_font_size=20,
-                         title_x=0.37,
-                         title_xanchor='right',
-                         #xaxis_type='category',
-                         showlegend=False,
+                         title_xanchor='left',
+                         )
+    
+    trace04 = px.bar(df_filtered_institution, x='ESTUDIANTES', y='PROCEDENCIA',
+                     facet_col="UE", 
+                     orientation='h', 
+                     title='Origen Estudiantes, Matrícula 2026 (colegios que aportan 10 o más estudiantes)',
+                     width=1280, height=550,
+                     labels={'UE': 'Unidad Académica'},
+                     color='UE',
+                     color_discrete_sequence=px.colors.qualitative.G10,
+                     template="plotly",
+                     text_auto=True,
+                     
+                )
+    
+    trace04.update_yaxes(title_text="",
+                         tickfont_weight='normal',
+                         tickfont_size=14,
+                         tickfont=dict(color='gray'),
                          
                          )
+    
+    trace04.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1], font=dict(size=14, color='black')))
+    
+    trace04.update_layout(
+                         hoverlabel_font=dict(family='Roboto mono', weight='bold', size=12, color='white'),
+                         title_font=dict(size=20, color="black", family="Roboto mono"),
+                         title_font_weight='bold',
+                         title_xanchor='left',
+                         margin=dict(t=100),
+                         yaxis_autorange='reversed',
+                         )
+
+    trace04.update_traces(
+                           width=0.8,
+                           textangle=0,  
+                           textfont=dict(
+                           color='white',       # Set text color to white
+                           size=20,
+                           family="Roboto mono",
+                           weight='bold',
+                           ),
+                        )
 
     # Gráfico de matricula por unidad educativa o nivel, con tarjetas de genero
     new_trace01 = [dcc.Graph(figure=trace01, config={"displayModeBar": False}, className="graph_bar"),
@@ -327,30 +478,37 @@ def update_charts(unidad_edu):
                        
                        className="card_contenedor")]
     
-    # Tabla de proyección de matricula 2026, con columnas de variación porcentual y porcentaje alcanzado respecto a proyección
-    # Redondear columnas específicas y formatear como porcentaje
-   
-    df02_REDONDEADO= df02.round({'% CRECIMIENTO': 3, '% ALCANZADO PROYECCIÓN':3})
-    df02_REDONDEADO['% CRECIMIENTO'] = df02_REDONDEADO['% CRECIMIENTO'].map('{:.2%}'.format)
-    df02_REDONDEADO['% ALCANZADO PROYECCIÓN'] = df02_REDONDEADO['% ALCANZADO PROYECCIÓN'].map('{:.2%}'.format)
-    df02_nuevo = df02_REDONDEADO.rename(columns={'% CRECIMIENTO': 'VARIACION PORCENTUAL SAE 2026 Y MATRÍCULA 2025'})
     
-    # Para columnas específicas (ej. ColumnaB):
-    tabla_proyeccion = dbc.Table.from_dataframe(df02_nuevo, 
+    
+    tabla_origen_global= dbc.Table.from_dataframe(tabla_origen, 
                                                striped=True, 
                                                bordered=True, 
                                                hover=True,
-                                               color='dark',
+                                               color='light',
+                                               size='sm',
                                                className="align-middle",
-                                               style={'width': '90%',
+                                               style={'width': '100%',
                                                       'margin': 'auto', 
-                                                      'text-align': 'center'
+                                                      'text-align': 'center',
+                                                      "fontSize": "14px",  
                                                       })
+   
+    
+
     # Gráfico de evolución matricula por fecha, para colocar debajo de la tabla de proyección
     newtrace02 = [dcc.Graph(figure=trace02, config={"displayModeBar": False}, className="graph_line")]
     
+    # Gráfico de torta de origen de estudiantes matriculados, para colocar al lado del gráfico de evolución matricula por fecha
+    newtrace03 = [dcc.Graph(figure=trace03, config={"displayModeBar": False}, className="graph_pie"),
+                   html.Div(children=[
+                            html.Div("Origen de estudiantes matriculados", style={'textAlign': 'center', 'color': 'gray', 'fontSize': '14px'}),
+                            html.Div(tabla_origen_global),
+                            ],
+                            className="tabla_origen_contenedor"),
+                    ]
+    newtrace04 = [dcc.Graph(figure=trace04, config={"displayModeBar": False}, className="graph_bar")]
 
-    return new_trace01, tabla_proyeccion, newtrace02
+    return new_trace01, newtrace02 #, newtrace03, newtrace04
 
 # cargar en servidor
 # if __name__ == '__main__':
