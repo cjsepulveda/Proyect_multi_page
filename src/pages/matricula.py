@@ -501,7 +501,7 @@ def update_charts(unidad_edu):
     # Gráfico de torta de origen de estudiantes matriculados, para colocar al lado del gráfico de evolución matricula por fecha
     newtrace03 = [dcc.Graph(figure=trace03, config={"displayModeBar": False}, className="graph_pie"),
                    html.Div(children=[
-                            html.Div("Origen de estudiantes matriculados", style={'textAlign': 'center', 'color': 'gray', 'fontSize': '14px'}),
+                            html.Div("Origen de Estudiantes Matriculados", style={'textAlign': 'center', 'color': 'gray', 'fontSize': '14px'}),
                             html.Div(tabla_origen_global),
                             ],
                             className="tabla_origen_contenedor"),
