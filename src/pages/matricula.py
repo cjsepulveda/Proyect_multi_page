@@ -248,7 +248,7 @@ def layout():
         
         html.Div(id='grafico_evolucion' , className="grafico-evolucion"),
 
-        #html.Div(id='grafico_origen' , className="grafico-origen"),
+        html.Div(id='grafico_origen' , className="grafico-origen"),
    
         #html.Div(id='grafico_colegios' , className="grafico-evolucion"),
 
@@ -268,7 +268,7 @@ def layout():
 @callback(
         Output('grafico_matricula', 'children'),
         Output('grafico_evolucion', 'children'),
-        #Output('grafico_origen', 'children'),
+        Output('grafico_origen', 'children'),
         #Output('grafico_colegios','children'),
         [Input('unidades_educativas', 'value'),
          ]
@@ -508,7 +508,7 @@ def update_charts(unidad_edu):
                     ]
     newtrace04 = [dcc.Graph(figure=trace04, config={"displayModeBar": False}, className="graph_bar")]
 
-    return new_trace01, newtrace02 #, newtrace03, newtrace04
+    return new_trace01, newtrace02, newtrace03 #, newtrace04
 
 # cargar en servidor
 # if __name__ == '__main__':
