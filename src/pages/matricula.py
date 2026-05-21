@@ -409,6 +409,7 @@ def update_charts(unidad_edu):
                          title_font_weight='bold',
                          title_font_size=20,
                          title_xanchor='left',
+                         autosize=False,
                          )
     
     trace04 = px.bar(df_filtered_institution, x='ESTUDIANTES', y='PROCEDENCIA',
