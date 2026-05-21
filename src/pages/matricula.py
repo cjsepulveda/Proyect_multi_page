@@ -389,7 +389,7 @@ def update_charts(unidad_edu):
     trace03=px.pie(values=valores_origen, names=categorias_origen, 
                          title=f'Origen Matrícula 2026 - {label_graph}',
                          labels={'names':'Origen','values':'Cantidad'},
-                         width=700, height=500,
+                         width=700, height=490,
                          hole=0.4, 
                          template="simple_white", 
                          color_discrete_sequence=px.colors.qualitative.D3)
