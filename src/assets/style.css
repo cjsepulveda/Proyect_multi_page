@@ -236,7 +236,7 @@ body {
     border-radius: 10px;
     background-color: rgb(255, 255, 255);
     height: 550px !important;
-    margin: 10px;
+    margin: 10px 10px 10px 20px;
     padding: 10px;
 }
 
