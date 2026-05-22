@@ -6,6 +6,9 @@ import os
 import datetime
 from datetime import timedelta
 import dash_bootstrap_components as dbc
+# Importamos la función de actualización desde el archivo secundario
+from pages.modulos.generador_mapa import actualizar_mapa_comunas 
+
 
 register_page(
     __name__,
@@ -19,13 +22,13 @@ DATA_PATH = PATH.joinpath("data").resolve()
 
 # Caching de datos para evitar leer el Excel en cada importación del módulo.
 # La lectura se hará solo la primera vez que se necesiten los datos.
-_df01 = _df02 = _df03 = _df04 = _df05 = _df06 = None
+_df01 = _df02 = _df03 = _df04 = _df05 = _df06 = _df07= None
 _tabla_proyeccion = None
 
 
 def load_data():
     """Carga los datos de Excel solo una vez por proceso."""
-    global _df01, _df02, _df03, _df04, _df05, _df06
+    global _df01, _df02, _df03, _df04, _df05, _df06, _df07
     # Si ya se cargaron los datos, no hacemos nada.
     if _df01 is not None:
         return
@@ -37,6 +40,8 @@ def load_data():
     _df04 = pd.read_excel(workbook, sheet_name='mat_time')
     _df05 = pd.read_excel(workbook, sheet_name='origen_estudiantes')
     _df06 = pd.read_excel(workbook, sheet_name='origen_colegios')
+    _df07 = pd.read_excel(workbook, sheet_name='com_est')
+
     # Convertir la columna de fechas solo una vez, al leer los datos.
     _df04['MATRICULA'] = pd.to_datetime(_df04['MATRICULA'], errors='coerce')
 
@@ -164,6 +169,25 @@ def get_origin_school(df_institution, unidad_edu=None):
         
     return df_filtered_institution
 
+def origin_city_student(df_city, unidad_edu=None):
+    """Construye el DataFrame para la ciudad de origen de los estudiantes."""
+
+    if unidad_edu and unidad_edu != 'Corporacion':
+        df_filtered_city = df_city.query("UE == @unidad_edu").copy()
+        df_grouped_city = df_filtered_city
+    
+
+    else:
+        df_filtered_city = df_city.groupby('Comuna').sum().reset_index()
+        df_filtered_city_corp=df_filtered_city.drop(columns=['UE'], errors='ignore')
+        #agegar una columna nueva al inicio del data frame llamada Origen con el valor 'Corporación' para todas las filas
+        df_filtered_city_corp.insert(0, 'Origen', 'Corporación')
+        df_grouped_city = df_filtered_city_corp
+    
+    
+
+    return df_grouped_city
+
 
 # Ruta de tu archivo
 ruta_archivo = DATA_PATH.joinpath('mat_2026.xlsx')
@@ -248,9 +272,12 @@ def layout():
         
         html.Div(id='grafico_evolucion' , className="grafico-evolucion"),
 
-        html.Div(id='grafico_origen' , className="grafico-origen"),
+        html.Div(id='grafico_origen' , className="grafico-origen-contenedor"),
    
         #html.Div(id='grafico_colegios' , className="grafico-evolucion"),
+
+        # Contenedor del mapa (se inicializa vacío, el callback lo dibuja)
+        #html.Div([dcc.Graph(id='mapa_comunas', className="mapa-comunas")]),
 
         html.Div(get_tabla_proyeccion(), id='tabla_matricula' , className="wrapper"),
 
@@ -270,6 +297,7 @@ def layout():
         Output('grafico_evolucion', 'children'),
         Output('grafico_origen', 'children'),
         #Output('grafico_colegios','children'),
+        #Output('mapa_comunas', 'figure'),
         [Input('unidades_educativas', 'value'),
          ]
         )
@@ -294,6 +322,7 @@ def update_charts(unidad_edu):
     masculino_count, femenino_count = get_gender_counts(_df03, unidad_edu)
     select_nivel_subject, graph_x_axes, color_bar, etiqueta = build_summary_df(_df01, unidad_edu)
     df_filtered_institution =get_origin_school(_df06, unidad_edu)
+    df_grouped_city = origin_city_student(_df07, unidad_edu)
 
     color_03='blue'
 
@@ -509,7 +538,11 @@ def update_charts(unidad_edu):
                     ]
     newtrace04 = [dcc.Graph(figure=trace04, config={"displayModeBar": False}, className="graph_bar")]
 
-    return new_trace01, newtrace02, newtrace03 #, newtrace04
+     # 2. Le enviamos los datos filtrados a la función externa para generar el nuevo mapa
+    mapa_comunas = actualizar_mapa_comunas(df_grouped_city)
+
+
+    return new_trace01, newtrace02, newtrace03 #, mapa_comunas #, newtrace04
 
 # cargar en servidor
 # if __name__ == '__main__':

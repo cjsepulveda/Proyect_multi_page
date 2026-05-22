@@ -215,50 +215,45 @@ body {
     border: none;
 }
 
-.grafico-origen {
-    margin-right: auto;
-    margin-left: auto;
+.grafico-origen-contenedor {
+    
     background-color: #ffffff;
-    padding-right: 5px;
-    padding-left: 10px;
-    padding-top: 10px;
-    margin-top: 10px;
+    margin-top: 30px;
     display: flex;
-    justify-content: flex-start;
-    border: none;
-    height: 570px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: stretch;
+    gap: 20px; /* Espacio de separación entre el gráfico y el marco */
+    width: 100%;
+
+    
+    
 }
 
 .graph_pie {
     
     border: 1px solid rgb(207, 207, 207);
     border-radius: 10px;
-    padding-right: 10px;
-    padding-left: 10px;
-    padding-top: 10px;
-    margin-left: 10px;
-    /*margin-bottom: 10px;*/
-    /*margin-right: auto;*/
     background-color: rgb(255, 255, 255);
     height: 550px;
+    margin: 10px;
+    padding: 10px;
 }
 
 .tabla_origen_contenedor{
     border: 1px solid rgb(207, 207, 207);
     border-radius: 10px;
-    padding-right: 10px;
-    padding-left: 10px;
-    padding-top: 10px;
-    margin-left: 15px;
-    margin-bottom: 10px;
-    margin-right: auto;
     background-color: rgb(255, 252, 252);
     display: flex;
     flex-direction: column;
     gap: 10px;
-    align-content: space-around;
-    justify-content: flex-start;
     height: 550px;
     width: 570px;
+    margin: 10px;
+
+    
+    box-sizing: border-box;
+    padding: 15px; /* Espacio interno para que el contenido no toque los bordes */
+    overflow-y: auto; /* Agrega barra de desplazamiente si la tabla es muy larga */
     
   }
