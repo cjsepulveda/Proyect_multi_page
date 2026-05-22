@@ -199,7 +199,7 @@ def update_charts(nivel,test,asig):
     elif test == 'skill': # Gráfica para HABILIDADES
             
             for x in count_skill:
-                trace01.add_bar( x=graph_x_axes, y=graph_y_axes_SKILL[x], 
+                trace01.add_bar( x=graph_x_axes_ua1, y=graph_y_axes_SKILL[x], 
                             name=name_skill[x], 
                             marker_color=colors_skill[x],
                             hovertemplate = new_hovertemplate)
@@ -209,7 +209,7 @@ def update_charts(nivel,test,asig):
 
     elif test == 'average': # Gráfica para PROMEDIO de HABILIDADES
                         
-            trace01.add_bar( x=graph_x_axes, y=graph_y_axes_average, 
+            trace01.add_bar( x=graph_x_axes_ua1, y=graph_y_axes_average, 
                             name='Promedio Habilidades', 
                             marker_color=color_avr,
                             hovertemplate = new_hovertemplate)
