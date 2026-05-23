@@ -68,7 +68,7 @@ def get_tabla_proyeccion():
                                                className="align-middle",
                                                style={'width': '90%',
                                                       'margin': 'auto',
-                                                      'text-align': 'center'
+                                                      'textAlign': 'center'
                                                       })
     return _tabla_proyeccion
 
@@ -543,7 +543,7 @@ def update_charts(unidad_edu):
                                                   color='light',                                               size='sm',
                                                   style={'width': '100%',
                                                       'margin': 'auto', 
-                                                      'text-align': 'center',
+                                                      'textAlign': 'center',
                                                       "fontSize": "14px",  
                                                       },
                                                   className="tabla-personalizada" # Agrega esta clase
@@ -576,7 +576,7 @@ def update_charts(unidad_edu):
                                                size='sm',
                                                style={'width': '100%',
                                                       'margin': 'auto', 
-                                                      'text-align': 'center',
+                                                      'textAlign': 'center',
                                                       "fontSize": "14px",  
                                                       },
                                                className="tabla-personalizada" # Agrega esta clase

@@ -123,8 +123,19 @@ body {
 
 .dropdown {
     font-size: 16px;
-    
-    
+    width: 300px;    
+}
+
+/* 2. Anular el violeta nativo de Dash 4.1.0 y forzar Azul + Negrita */
+/* Usamos el ID del componente (#unidades_educativas) para ganarle a Radix UI */
+#unidades_educativas,
+#unidades_educativas *,
+#unidades_educativas *:hover,
+#unidades_educativas [data-selected="true"],
+#unidades_educativas [data-placeholder="false"] {
+    color: rgb(0, 0, 0) !important;
+    font-weight: bold !important;
+    -webkit-text-fill-color: rgb(0, 0, 0) !important; /* Asegura el color en Chrome/Edge/Safari */
 }
 
 .card_contenedor{
@@ -146,7 +157,7 @@ body {
     height: 230px;
     width: 250px;
     
-  }
+}
 
 .contenedor-icono-texto {
     border-radius: 10px;
@@ -272,7 +283,7 @@ body {
     border: 1px solid rgb(207, 207, 207);
     border-radius: 10px;
     background-color: rgb(255, 255, 255);
-    height: 500px !important;
+    height: 520px !important;
     margin: 10px 10px 10px 20px;
     padding: 10px;
 }
@@ -284,7 +295,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    height: 500px;
+    height: 520px;
     width: 570px;
     margin: 10px;
     box-sizing: border-box;

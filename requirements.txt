@@ -1,4 +1,4 @@
-dash==3.1.0
+dash==4.1.0
 pandas
 plotly
 gunicorn
