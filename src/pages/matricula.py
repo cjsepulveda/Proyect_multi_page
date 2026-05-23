@@ -2,6 +2,7 @@ import pathlib
 from dash import dcc, html, Input, Output, callback, register_page
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import os
 import datetime
 from datetime import timedelta
@@ -172,9 +173,17 @@ def get_origin_school(df_institution, unidad_edu=None):
 def origin_city_student(df_city, unidad_edu=None):
     """Construye el DataFrame para la ciudad de origen de los estudiantes."""
 
+
+
     if unidad_edu and unidad_edu != 'Corporacion':
         df_filtered_city = df_city.query("UE == @unidad_edu").copy()
-        df_grouped_city = df_filtered_city
+        df_grouped_city = df_filtered_city.sort_values('Estudiantes', ascending=False).reset_index(drop=True)
+        
+        total_estudiantes_comuna = df_filtered_city['Estudiantes'].sum()
+        fila_total = {'UE': 'General', 'Comuna': 'Todas', 'Estudiantes': total_estudiantes_comuna}
+        df_total = pd.DataFrame([fila_total])
+        df_grouped_city = pd.concat([df_grouped_city, df_total], ignore_index=True)
+
     
 
     else:
@@ -182,8 +191,12 @@ def origin_city_student(df_city, unidad_edu=None):
         df_filtered_city_corp=df_filtered_city.drop(columns=['UE'], errors='ignore')
         #agegar una columna nueva al inicio del data frame llamada Origen con el valor 'Corporación' para todas las filas
         df_filtered_city_corp.insert(0, 'Origen', 'Corporación')
-        df_grouped_city = df_filtered_city_corp
-    
+        df_grouped_city = df_filtered_city_corp.sort_values('Estudiantes', ascending=False).reset_index(drop=True)
+        
+        total_estudiantes_comuna = df_city['Estudiantes'].sum()
+        fila_total = {'Origen': 'General', 'Comuna': 'Todas', 'Estudiantes': total_estudiantes_comuna}
+        df_total = pd.DataFrame([fila_total])
+        df_grouped_city = pd.concat([df_grouped_city, df_total], ignore_index=True)
     
 
     return df_grouped_city
@@ -221,7 +234,7 @@ ue_options_dropdown = [{'label': k, 'value': v} for k, v in ue_options.items()]
 #app = Dash(__name__)
 # server=app.server
 
-# Diagrama de la aplicación (Una lista despegable y un gráfico)
+# Diagrama de la aplicación y layout, con callback para actualizar gráficos según unidad educativa seleccionada en dropdown
 def layout():    
     
     layout = html.Div(
@@ -245,16 +258,6 @@ def layout():
             dcc.Dropdown(
                 id='unidades_educativas', 
                 options=ue_options_dropdown,
-                
-                #[ 
-                 # {"label": "CORPORACIÓN", "value": "Corporacion"},
-                 # {"label": "BÁSICA 1", "value": "BÁSICA 1"},
-                 # {"label": "BÁSICA 2", "value": "BÁSICA 2"},
-                 # {"label": "BÁSICA SAN FELIPE", "value": "BÁSICA SF"},
-                 # {"label": "MEDIA LOS ANDES", "value": "MEDIA LOS ANDES"},
-                 # {"label": "MEDIA SAN FELIPE", "value": "MEDIA SAN FELIPE"},
-                                    
-                #],
                 value='Corporacion',
                 clearable=False,
                 className='dropdown'
@@ -266,7 +269,7 @@ def layout():
     ),
 
     
-    # Marco para el gráfico (dcc.Graph está incorporado en la función update_charts)
+    # Marcos para los gráficos y tablas (dcc.Graph está incorporado en la función update_charts)
 
         html.Div(id='grafico_matricula' , className="grafico_and_card"),
         
@@ -276,17 +279,13 @@ def layout():
    
         #html.Div(id='grafico_colegios' , className="grafico-evolucion"),
 
-        # Contenedor del mapa (se inicializa vacío, el callback lo dibuja)
-        #html.Div([dcc.Graph(id='mapa_comunas', className="mapa-comunas")]),
+        #Contenedor del mapa (se inicializa vacío, el callback lo dibuja)
+        #html.Div(id='mapa_comunas', className="contenedor-mapa-comunas-tabla"),
 
         html.Div(get_tabla_proyeccion(), id='tabla_matricula' , className="wrapper"),
-
-        
-
-        
-
-
-
+       
+       
+       
         ])
 
     return layout
@@ -297,13 +296,14 @@ def layout():
         Output('grafico_evolucion', 'children'),
         Output('grafico_origen', 'children'),
         #Output('grafico_colegios','children'),
-        #Output('mapa_comunas', 'figure'),
+        #Output('mapa_comunas', 'children'),
         [Input('unidades_educativas', 'value'),
          ]
         )
 
 # función para trazar grafico de matricula
 def update_charts(unidad_edu):
+    
     # Asegura que los datos de Excel estén cargados antes de generar los gráficos.
     load_data()
     if unidad_edu == 'Corporacion':
@@ -441,7 +441,33 @@ def update_charts(unidad_edu):
                          autosize=False,
                          )
     
-    trace04 = px.bar(df_filtered_institution, x='ESTUDIANTES', y='PROCEDENCIA',
+    if df_filtered_institution.empty:
+        # Crear una figura vacía con el mensaje de alerta
+        trace04 = go.Figure()
+        trace04.update_layout(
+                title='Origen Estudiantes, Matrícula 2026 (colegios que aportan 10 o más estudiantes)',
+                title_font=dict(size=20, color="black", family="Roboto mono"),
+                title_font_weight='bold',
+                title_xanchor='left',
+                
+                template="simple_white",
+                xaxis={"visible": False},
+                yaxis={"visible": False},
+                annotations=[
+                        {
+                            "text": "No hay colegios externos que aporten 10 o más estudiantes para esta unidad educativa",
+                            #"xref": "paper",
+                             "x": 0.5,
+                             "y": 0.5,
+                            "yref": "paper",
+                            "showarrow": False,
+                            "font": {"size": 20, "color": "gray"},
+                        }
+                ],
+    )
+    else:    
+    
+        trace04 = px.bar(df_filtered_institution, x='ESTUDIANTES', y='PROCEDENCIA',
                      facet_col="UE", 
                      orientation='h', 
                      title='Origen Estudiantes, Matrícula 2026 (colegios que aportan 10 o más estudiantes)',
@@ -454,16 +480,16 @@ def update_charts(unidad_edu):
                      
                 )
     
-    trace04.update_yaxes(title_text="",
+        trace04.update_yaxes(title_text="",
                          tickfont_weight='normal',
                          tickfont_size=14,
                          tickfont=dict(color='gray'),
                          
                          )
     
-    trace04.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1], font=dict(size=14, color='black')))
+        trace04.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1], font=dict(size=14, color='black')))
     
-    trace04.update_layout(
+        trace04.update_layout(
                          hoverlabel_font=dict(family='Roboto mono', weight='bold', size=12, color='white'),
                          title_font=dict(size=20, color="black", family="Roboto mono"),
                          title_font_weight='bold',
@@ -472,7 +498,7 @@ def update_charts(unidad_edu):
                          yaxis_autorange='reversed',
                          )
 
-    trace04.update_traces(
+        trace04.update_traces(
                            width=0.8,
                            textangle=0,  
                            textfont=dict(
@@ -511,24 +537,24 @@ def update_charts(unidad_edu):
     
     
     tabla_origen_global= dbc.Table.from_dataframe(tabla_origen, 
-                                               striped=True, 
-                                               bordered=True, 
-                                               hover=True,
-                                               color='light',
-                                               size='sm',
-                                               className="align-middle",
-                                               style={'width': '100%',
+                                                  striped=True, 
+                                                  bordered=True, 
+                                                  hover=True,
+                                                  color='light',                                               size='sm',
+                                                  style={'width': '100%',
                                                       'margin': 'auto', 
                                                       'text-align': 'center',
                                                       "fontSize": "14px",  
-                                                      })
+                                                      },
+                                                  className="tabla-personalizada" # Agrega esta clase
+                                                      )
    
     
 
     # Gráfico de evolución matricula por fecha, para colocar debajo de la tabla de proyección
     newtrace02 = [dcc.Graph(figure=trace02, config={"displayModeBar": False}, className="graph_line")]
     
-    # Gráfico de torta de origen de estudiantes matriculados, para colocar al lado del gráfico de evolución matricula por fecha
+    # Gráfico de torta de origen de estudiantes matriculados, para colocar debajo del gráfico de evolución matricula por fecha
     newtrace03 = [dcc.Graph(figure=trace03, config={"displayModeBar": False}, className="graph_pie"),
                    html.Div(children=[
                             html.Div("Origen de Estudiantes Matriculados", style={'textAlign': 'center', 'color': 'gray', 'fontSize': '14px'}),
@@ -538,11 +564,37 @@ def update_charts(unidad_edu):
                     ]
     newtrace04 = [dcc.Graph(figure=trace04, config={"displayModeBar": False}, className="graph_bar")]
 
-     # 2. Le enviamos los datos filtrados a la función externa para generar el nuevo mapa
-    mapa_comunas = actualizar_mapa_comunas(df_grouped_city)
+    #Le enviamos los datos filtrados a la función externa para generar el nuevo mapa
+    trace05 = actualizar_mapa_comunas(df_grouped_city,label_graph)
 
+    #Tabla comuna estudiantes para colocar al lado del mapa de las comunas, con el mismo filtro de unidad educativa, para que se actualice junto al mapa. La función externa solo devuelve el mapa, la tabla la construimos aquí mismo.
+    tabla_comuna_estudiantes= dbc.Table.from_dataframe(df_grouped_city, 
+                                               striped=True, 
+                                               bordered=True, 
+                                               hover=True,
+                                               color='light',
+                                               size='sm',
+                                               style={'width': '100%',
+                                                      'margin': 'auto', 
+                                                      'text-align': 'center',
+                                                      "fontSize": "14px",  
+                                                      },
+                                               className="tabla-personalizada" # Agrega esta clase
+                                                      )
+    #Contenedor del mapa y la tabla de la cantidad de estudiantes por comuna, ambos con el mismo filtro de unidad educativa, para que se actualicen juntos.
+    newtrace05= [dcc.Graph(figure=trace05, className="mapa_comunas_estudiantes"),
+                 html.Div(children=[
+                            html.Div("Comuna Estudiantes Matriculados", style={'textAlign': 'center', 'color': 'gray', 'fontSize': '14px'}),
+                            html.Div(tabla_comuna_estudiantes),
+                            ],
+                            className="tabla_comuna_contenedor"),
+                    ]
+                 
+     
+       
+    
 
-    return new_trace01, newtrace02, newtrace03 #, mapa_comunas #, newtrace04
+    return new_trace01, newtrace02, newtrace03 #, newtrace04, newtrace05
 
 # cargar en servidor
 # if __name__ == '__main__':

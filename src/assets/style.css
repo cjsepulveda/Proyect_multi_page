@@ -250,10 +250,62 @@ body {
     height: 550px;
     width: 570px;
     margin: 10px;
-
-    
     box-sizing: border-box;
     padding: 15px; /* Espacio interno para que el contenido no toque los bordes */
     overflow-y: auto; /* Agrega barra de desplazamiente si la tabla es muy larga */
     
   }
+
+.contenedor-mapa-comunas-tabla {
+    background-color: #ffffff;
+    margin-top: 30px;
+    margin-bottom: 30px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: stretch;
+    gap: 20px; /* Espacio de separación entre el gráfico y el marco */
+    width: 100%;
+}
+
+.mapa_comunas_estudiantes {
+    border: 1px solid rgb(207, 207, 207);
+    border-radius: 10px;
+    background-color: rgb(255, 255, 255);
+    height: 500px !important;
+    margin: 10px 10px 10px 20px;
+    padding: 10px;
+}
+
+.tabla_comuna_contenedor{
+    border: 1px solid rgb(207, 207, 207);
+    border-radius: 10px;
+    background-color: rgb(255, 255, 255);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: 500px;
+    width: 570px;
+    margin: 10px;
+    box-sizing: border-box;
+    padding: 15px; /* Espacio interno para que el contenido no toque los bordes */
+    overflow-y: auto; /* Agrega barra de desplazamiente si la tabla es muy larga */
+    
+  }
+
+.tabla-personalizada thead th {
+    background-color: #004891 !important;
+    color: white !important;
+    border: 2.5px solid rgb(207, 207, 207) !important;
+ }
+
+ .tabla-personalizada tbody tr:last-child {
+    background-color: #000000 !important; /* Color de fondo personalizado */
+    color: #ffffff !important; /* Color de texto personalizado */
+    font-weight: bold; /* Texto en negrita (útil para totales) */
+    /*border-bottom: 3px solid #2c3e50; /* Línea gruesa al final */
+}
+
+.tabla-personalizada tbody tr:last-child td {
+    color: #000000 !important; 
+}
