@@ -310,13 +310,13 @@ body {
     border: 2.5px solid rgb(207, 207, 207) !important;
  }
 
- .tabla-personalizada tbody tr:last-child {
-    background-color: #000000 !important; /* Color de fondo personalizado */
-    color: #ffffff !important; /* Color de texto personalizado */
-    font-weight: bold; /* Texto en negrita (útil para totales) */
-    /*border-bottom: 3px solid #2c3e50; /* Línea gruesa al final */
+/* Aplica el fondo y color de texto a las celdas de la última fila */
+.tabla-personalizada tbody tr:last-child td {
+    background-color: #505050 !important; 
+    color: #ffffff !important; 
 }
 
-.tabla-personalizada tbody tr:last-child td {
-    color: #000000 !important; 
+/* Aplica la negrita a toda la última fila */
+.tabla-personalizada tbody tr:last-child {
+    font-weight: bold !important; 
 }

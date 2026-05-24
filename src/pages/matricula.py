@@ -157,6 +157,7 @@ def build_summary_df(df_source, unidad_edu=None):
     df_total = pd.DataFrame([fila_total])
     df_result = pd.concat([df_clean, df_total], ignore_index=True)
     df_result['% Meta'] = (df_result['MAT_2026'] / df_result['SAE_2026']) * 100
+
     return df_result, graph_x_axes, color_bar, etiqueta
 
 
@@ -269,7 +270,7 @@ def layout():
     ),
 
     
-    # Marcos para los gráficos y tablas (dcc.Graph está incorporado en la función update_charts)
+    # Marcos para los gráficos y tablas (dcc.Graph estan incorporados en la función update_charts)
 
         html.Div(id='grafico_matricula' , className="grafico_and_card"),
         
@@ -311,12 +312,17 @@ def update_charts(unidad_edu):
     else:
         origen_df = _df05.query("UE == @unidad_edu")
 
-    # Create a lookup dictionary: {value: key}
+    # Creamos un diccionario inverso para obtener la etiqueta legible 
+    # a partir del valor seleccionado en el dropdown
     inverse_dict = {v: k for k, v in ue_options.items()}
 
-    # Now you can look up the label instantly
-    label_graph = inverse_dict.get(unidad_edu) # Returns 'cherry' (replaces previous match if values aren't unique)
+    # Extraer la etiqueta legible para el gráfico a partir del valor seleccionado en el dropdown
+    label_graph = inverse_dict.get(unidad_edu) 
 
+    # Llamadas a las funciones def con sus respectivos filtros según la unidad educativa seleccionada,
+    # para obtener los datos necesarios para cada gráfico.
+    # Cada función tiene sus propios valores return, que se asignan a variables locales 
+    # para luego construir cada gráfico.
     categorias_origen, valores_origen, tabla_origen = calculate_origin(origen_df, unidad_edu)
     df_time_agrupado = build_evolution_df(_df04, unidad_edu)
     masculino_count, femenino_count = get_gender_counts(_df03, unidad_edu)
@@ -324,8 +330,15 @@ def update_charts(unidad_edu):
     df_filtered_institution =get_origin_school(_df06, unidad_edu)
     df_grouped_city = origin_city_student(_df07, unidad_edu)
 
+    # Color específico para la barra del gráfico de matrícula por unidad educativa o nivel,
+    # para que se destaque del resto de barras, y se mantenga el mismo color tanto 
+    # para la barra de la unidad educativa o nivel seleccionado, 
+    # como para la barra total GENERAL, que siempre se muestra al final del gráfico.
     color_03='blue'
 
+    # Gráfico de matriculados por unidad educativa o nivel, con filtro por unidad educativa, 
+    # con barra de colores diferenciada por unidad educativa o nivel, 
+    # y con porcentaje de meta alcanzada en el tooltip.
     trace01 = px.bar(select_nivel_subject, x=graph_x_axes, y='MAT_2026', 
                      title=f'Matrícula 2026 - {label_graph}',
                      width=1020, height=380,
@@ -365,14 +378,14 @@ def update_charts(unidad_edu):
                          font_family='Roboto mono',
                          title_font_weight='bold',
                          title_font_size=20,
-                         #title_x=0.47,
                          title_xanchor='left',
                          xaxis_type='category',
                          showlegend=False,
                          
                          )
     
-    # Gráfico de evolución matricula por fecha
+    # Gráfico de evolución matricula por fecha, filtrado por unidad educativa, 
+    # con acumulado de estudiantes matriculados en el eje y, y fecha de matrícula en el eje x.
     trace02 = px.line(df_time_agrupado, x='MATRICULA', y='accumulated', 
                       title=f'Evolución Matrícula 2026 - {label_graph}',
                       #labels={'accumulated':'Matriculados'},
@@ -415,6 +428,8 @@ def update_charts(unidad_edu):
                          
                          )
     
+    # Gráfico de torta con el origen de los estudiantes matriculados: Interno, Nuevo SAE y Anotate Lista,
+    # con filtro por unidad educativa.
     trace03=px.pie(values=valores_origen, names=categorias_origen, 
                          title=f'Origen Matrícula 2026 - {label_graph}',
                          labels={'names':'Origen','values':'Cantidad'},
@@ -467,6 +482,8 @@ def update_charts(unidad_edu):
     )
     else:    
     
+        # Gráfico de barras horizontales con los colegios de origen de los estudiantes matriculados, 
+        # con filtro por unidad educativa, mostrando solo los colegios que aportan 10 o más estudiantes.
         trace04 = px.bar(df_filtered_institution, x='ESTUDIANTES', y='PROCEDENCIA',
                      facet_col="UE", 
                      orientation='h', 
@@ -534,13 +551,19 @@ def update_charts(unidad_edu):
                        
                        className="card_contenedor")]
     
+    #Gráfico de evolución matricula por fecha
+    newtrace02 = [dcc.Graph(figure=trace02, config={"displayModeBar": False}, className="graph_line")]
     
-    
+    # Tabla con el origen de los estuidantes, Interno, sae nuevo y anotate lista, 
+    # para colocar al lado del gráfico de torta del origen de estudiantes matriculados. 
+    # La función calculate_origin ya devuelve la tabla con el filtro aplicado 
+    # según la unidad educativa seleccionada, por lo que aquí solo construimos la tabla Dash 
+    # a partir del DataFrame filtrado que nos devuelve la función externa."
     tabla_origen_global= dbc.Table.from_dataframe(tabla_origen, 
                                                   striped=True, 
                                                   bordered=True, 
                                                   hover=True,
-                                                  color='light',                                               size='sm',
+                                                  #color='light',                                               size='sm',
                                                   style={'width': '100%',
                                                       'margin': 'auto', 
                                                       'textAlign': 'center',
@@ -548,13 +571,9 @@ def update_charts(unidad_edu):
                                                       },
                                                   className="tabla-personalizada" # Agrega esta clase
                                                       )
-   
-    
 
-    # Gráfico de evolución matricula por fecha, para colocar debajo de la tabla de proyección
-    newtrace02 = [dcc.Graph(figure=trace02, config={"displayModeBar": False}, className="graph_line")]
-    
-    # Gráfico de torta de origen de estudiantes matriculados, para colocar debajo del gráfico de evolución matricula por fecha
+    # Gráfico de torta y tabla con el origen de estudiantes matriculados, 
+    # para colocar debajo del gráfico de evolución matricula por fecha
     newtrace03 = [dcc.Graph(figure=trace03, config={"displayModeBar": False}, className="graph_pie"),
                    html.Div(children=[
                             html.Div("Origen de Estudiantes Matriculados", style={'textAlign': 'center', 'color': 'gray', 'fontSize': '14px'}),
@@ -564,15 +583,24 @@ def update_charts(unidad_edu):
                     ]
     newtrace04 = [dcc.Graph(figure=trace04, config={"displayModeBar": False}, className="graph_bar")]
 
-    #Le enviamos los datos filtrados a la función externa para generar el nuevo mapa
+    # Grafico con mapa de las comunas de origen de los estudiantes matriculados, 
+    # con filtro por unidad educativa
+    # La función actualizar_mapa_comunas se encarga de generar el mapa filtrado 
+    # según la unidad educativa seleccionada, utilizando el DataFrame df_grouped_city 
+    # que ya tiene aplicado el filtro correspondiente. 
+    # Le pasamos el DataFrame filtrado y el label para que el título del mapa también 
+    # se actualice según la unidad educativa seleccionada.
+    # Le enviamos los datos filtrados a la función externa para generar el nuevo mapa
     trace05 = actualizar_mapa_comunas(df_grouped_city,label_graph)
 
-    #Tabla comuna estudiantes para colocar al lado del mapa de las comunas, con el mismo filtro de unidad educativa, para que se actualice junto al mapa. La función externa solo devuelve el mapa, la tabla la construimos aquí mismo.
+    #Tabla comuna estudiantes para colocar al lado del mapa de las comunas, 
+    # con el mismo filtro de unidad educativa, para que se actualice junto al mapa. 
+    # La función externa solo devuelve el mapa, la tabla la construimos aquí mismo.
     tabla_comuna_estudiantes= dbc.Table.from_dataframe(df_grouped_city, 
                                                striped=True, 
                                                bordered=True, 
                                                hover=True,
-                                               color='light',
+                                               #color='light',
                                                size='sm',
                                                style={'width': '100%',
                                                       'margin': 'auto', 
@@ -581,7 +609,8 @@ def update_charts(unidad_edu):
                                                       },
                                                className="tabla-personalizada" # Agrega esta clase
                                                       )
-    #Contenedor del mapa y la tabla de la cantidad de estudiantes por comuna, ambos con el mismo filtro de unidad educativa, para que se actualicen juntos.
+    #Contenedor del mapa y la tabla de la cantidad de estudiantes por comuna, 
+    # ambos con el mismo filtro de unidad educativa, para que se actualicen juntos.
     newtrace05= [dcc.Graph(figure=trace05, className="mapa_comunas_estudiantes"),
                  html.Div(children=[
                             html.Div("Comuna Estudiantes Matriculados", style={'textAlign': 'center', 'color': 'gray', 'fontSize': '14px'}),
