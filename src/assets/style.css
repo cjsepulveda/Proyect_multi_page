@@ -259,7 +259,7 @@ body {
     flex-direction: column;
     gap: 10px;
     height: 550px;
-    width: 570px;
+    width: 600px;
     margin: 10px;
     box-sizing: border-box;
     padding: 15px; /* Espacio interno para que el contenido no toque los bordes */

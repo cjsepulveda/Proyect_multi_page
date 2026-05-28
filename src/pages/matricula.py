@@ -86,8 +86,9 @@ def calculate_origin(df_origen, unidad_edu=None):
     if unidad_edu == 'Corporacion':
         tabla_origen = df_origen.groupby('UE').sum().reset_index()
         tabla_origen = tabla_origen.drop(columns=['NIVEL'], errors='ignore')
-        fila_extra_general = {'UE': 'TOTAL', 'INTERNO': interno, 'NUEVO-SAE': nuevo_sae, 'ANOTATE-LISTA': anotate_lista}
-        
+        fila_extra_general = {'Origen': 'TOTAL', 'INTERNO': interno, 'NUEVO-SAE': nuevo_sae, 'ANOTATE-LISTA': anotate_lista}
+        tabla_origen.rename(columns={'UE': 'Origen'}, inplace=True)
+
 
     else:
         tabla_origen = df_origen.copy()
@@ -96,6 +97,7 @@ def calculate_origin(df_origen, unidad_edu=None):
         
     df_fila_extra_general = pd.DataFrame([fila_extra_general])
     tabla_origen= pd.concat([tabla_origen, df_fila_extra_general], ignore_index=True)
+    tabla_origen['TOTAL NIVEL']=tabla_origen.select_dtypes(include='number').sum(axis=1)
 
     
     
@@ -184,6 +186,7 @@ def origin_city_student(df_city, unidad_edu=None):
         fila_total = {'UE': 'General', 'Comuna': 'Todas', 'Estudiantes': total_estudiantes_comuna}
         df_total = pd.DataFrame([fila_total])
         df_grouped_city = pd.concat([df_grouped_city, df_total], ignore_index=True)
+        df_grouped_city.rename(columns={'UE': 'Origen'}, inplace=True)
 
     
 
@@ -433,7 +436,7 @@ def update_charts(unidad_edu):
     trace03=px.pie(values=valores_origen, names=categorias_origen, 
                          title=f'Origen Matrícula 2026 - {label_graph}',
                          labels={'names':'Origen','values':'Cantidad'},
-                         width=700, height=490,
+                         width=650, height=490,
                          hole=0.4, 
                          template="simple_white", 
                          color_discrete_sequence=px.colors.qualitative.D3)
