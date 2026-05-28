@@ -7,7 +7,8 @@ import os
 import datetime
 from datetime import timedelta
 import dash_bootstrap_components as dbc
-# Importamos la función de actualización desde el archivo secundario
+# Importamos la función de actualización desde el archivo secundario llamado 
+# generador_mapa.py, que se encuentra en la carpeta modulos dentro de pages.
 from pages.modulos.generador_mapa import actualizar_mapa_comunas 
 
 
@@ -275,17 +276,25 @@ def layout():
     
     # Marcos para los gráficos y tablas (dcc.Graph estan incorporados en la función update_charts)
 
+        # Contenedor del gráfico de matrícula por unidad educativa o nivel, con tarjetas de género.
         html.Div(id='grafico_matricula' , className="grafico_and_card"),
         
+        # Contenedor del gráfico de evolución matricula por fecha.
         html.Div(id='grafico_evolucion' , className="grafico-evolucion"),
 
+        # Contenedor del gráfico de torta y tabla con el origen de estudiantes matriculados,
         html.Div(id='grafico_origen' , className="grafico-origen-contenedor"),
    
-        #Contenedor del mapa (se inicializa vacío, el callback lo dibuja)
+        # Contenedor del mapa (se inicializa vacío, el callback lo dibuja)
         html.Div(id='mapa_comunas', className="contenedor-mapa-comunas-tabla"),
 
+        # Contenedor del gráfico de barras horizontales con los colegios de origen 
+        # de los estudiantes matriculados,
+        # con filtro por unidad educativa, mostrando solo los colegios que aportan 10 o más
         #html.Div(id='grafico_colegios' , className="grafico-evolucion"),
 
+        # Contenedor de la tabla de proyección, con el mismo filtro de unidad educativa,
+        # para que se actualice junto al gráfico de matrícula por unidad educativa o nivel.
         html.Div(get_tabla_proyeccion(), id='tabla_matricula' , className="wrapper"),
        
        
@@ -326,11 +335,28 @@ def update_charts(unidad_edu):
     # para obtener los datos necesarios para cada gráfico.
     # Cada función tiene sus propios valores return, que se asignan a variables locales 
     # para luego construir cada gráfico.
-    categorias_origen, valores_origen, tabla_origen = calculate_origin(origen_df, unidad_edu)
-    df_time_agrupado = build_evolution_df(_df04, unidad_edu)
-    masculino_count, femenino_count = get_gender_counts(_df03, unidad_edu)
+   
+    # Funcion para dataframe de matrícula por unidad educativa o nivel, con fila adicional GENERAL
+    # y calculo de % Meta alcanzada.
     select_nivel_subject, graph_x_axes, color_bar, etiqueta = build_summary_df(_df01, unidad_edu)
+
+    # Función para dataframe de evolución de matrícula por fecha, 
+    # con acumulado de estudiantes matriculados,
+    df_time_agrupado = build_evolution_df(_df04, unidad_edu)
+    
+    # Función para calcular el origen de los estudiantes matriculados
+    # INTERNO, NUEVO-SAE, ANOTATE LISTA, con filtro por unidad educativa,
+    categorias_origen, valores_origen, tabla_origen = calculate_origin(origen_df, unidad_edu)
+
+    # Función para obtener el conteo de estudiantes por género, con filtro por unidad educativa,
+    masculino_count, femenino_count = get_gender_counts(_df03, unidad_edu)
+
+    # Función para obtener el DataFrame filtrado para el gráfico de barras horizontales 
+    # del colegio de origen de los estudiantes matriculados.
     df_filtered_institution =get_origin_school(_df06, unidad_edu)
+
+    # Función para obtener el DataFrame filtrado para el gráfico de mapa 
+    # de las comunas de origen de los estudiantes matriculados,
     df_grouped_city = origin_city_student(_df07, unidad_edu)
 
     # Color específico para la barra del gráfico de matrícula por unidad educativa o nivel,
@@ -375,7 +401,9 @@ def update_charts(unidad_edu):
     
     trace01.update_yaxes(tickfont_weight='normal', showgrid=True, tickfont_size=15,showline=False, ticks="",
                          tickfont=dict(color='gray'))
+    
     trace01.update_xaxes(tickfont_weight='bold', tickfont_size=12, showline=False, ticks="")
+
     trace01.update_layout(
                          hoverlabel_font=dict(family='Roboto mono', weight='bold', size=15, color='white'),
                          font_family='Roboto mono',
@@ -390,19 +418,16 @@ def update_charts(unidad_edu):
     # Gráfico de evolución matricula por fecha, filtrado por unidad educativa, 
     # con acumulado de estudiantes matriculados en el eje y, y fecha de matrícula en el eje x.
     trace02 = px.line(df_time_agrupado, x='MATRICULA', y='accumulated', 
-                      title=f'Evolución Matrícula 2026 - {label_graph}',
-                      #labels={'accumulated':'Matriculados'},
+                      title=f'Matrícula 2026 - {label_graph}',
                       width=1280, height=500,
                       template="simple_white",
                       )
-    
-        
+            
     trace02.update_traces(mode="markers+lines",
-                          #hovertemplate=None,
                           hovertemplate=
                            '<b>Matriculados: </b>%{y}</b>',
-                          marker=dict(color=' #e74040'),   # Change dot size
-                          line=dict(width=2, color='#555555'),      # Change line thickness
+                          marker=dict(color=' #e74040'),
+                          line=dict(width=2, color='#555555'),
                     )
     
     trace02.update_yaxes(tickfont_weight='normal', 
@@ -442,11 +467,11 @@ def update_charts(unidad_edu):
                          color_discrete_sequence=px.colors.qualitative.D3)
     
     trace03.update_traces(
-                            textinfo='percent', # Display label and percentage
+                            textinfo='percent',
                             textfont=dict(
-                            color='white',       # Set text color to white
+                            color='white',  
                             size=20,
-                            weight='bold',              # Set text size
+                            weight='bold',
                         ),
                         )
     
@@ -460,21 +485,22 @@ def update_charts(unidad_edu):
                          )
     
     if df_filtered_institution.empty:
-        # Crear una figura vacía con el mensaje de alerta
+        # Crear una figura vacía con el mensaje de alerta cuando 
+        # no hay datos para mostrar en el gráfico de barras horizontales 
+        # del origen de los estudiantes matriculados por colegio, 
+        
         trace04 = go.Figure()
         trace04.update_layout(
                 title='Origen Estudiantes, Matrícula 2026 (colegios que aportan 10 o más estudiantes)',
                 title_font=dict(size=20, color="black", family="Roboto mono"),
                 title_font_weight='bold',
                 title_xanchor='left',
-                
                 template="simple_white",
                 xaxis={"visible": False},
                 yaxis={"visible": False},
                 annotations=[
                         {
                             "text": "No hay colegios externos que aporten 10 o más estudiantes para esta unidad educativa",
-                            #"xref": "paper",
                              "x": 0.5,
                              "y": 0.5,
                             "yref": "paper",
@@ -522,14 +548,15 @@ def update_charts(unidad_edu):
                            width=0.8,
                            textangle=0,  
                            textfont=dict(
-                           color='white',       # Set text color to white
+                           color='white',
                            size=20,
                            family="Roboto mono",
                            weight='bold',
                            ),
                         )
 
-    # Gráfico de matricula por unidad educativa o nivel, con tarjetas de genero
+    # Div con gráfico de matricula por unidad educativa o nivel, con tarjetas de genero.
+
     new_trace01 = [dcc.Graph(figure=trace01, config={"displayModeBar": False}, className="graph_bar"),
                    html.Div(children=[
                             html.Div("Matrícula por género", style={'textAlign': 'left', 'color': 'gray', 'fontSize': '14px'}),
@@ -554,7 +581,8 @@ def update_charts(unidad_edu):
                        
                        className="card_contenedor")]
     
-    #Gráfico de evolución matricula por fecha
+    # Div con gráfico de matricula por fecha filtrado según unidad educativa.
+
     newtrace02 = [dcc.Graph(figure=trace02, config={"displayModeBar": False}, className="graph_line")]
     
     # Tabla con el origen de los estuidantes, Interno, sae nuevo y anotate lista, 
@@ -584,6 +612,11 @@ def update_charts(unidad_edu):
                             ],
                             className="tabla_origen_contenedor"),
                     ]
+    # Div para el gráfico de barras horizontales con los colegios de origen 
+    # de los estudiantes matriculados, 
+    # con filtro por unidad educativa, mostrando solo los colegios 
+    # que aportan 10 o más estudiantes, para colocar debajo del gráfico de evolución matricula por fecha.
+
     newtrace04 = [dcc.Graph(figure=trace04, config={"displayModeBar": False}, className="graph_bar")]
 
     # Grafico con mapa de las comunas de origen de los estudiantes matriculados, 
@@ -612,7 +645,7 @@ def update_charts(unidad_edu):
                                                       },
                                                className="tabla-personalizada" # Agrega esta clase
                                                       )
-    #Contenedor del mapa y la tabla de la cantidad de estudiantes por comuna, 
+    # Div contenedor del mapa y la tabla de la cantidad de estudiantes por comuna, 
     # ambos con el mismo filtro de unidad educativa, para que se actualicen juntos.
     newtrace05= [dcc.Graph(figure=trace05, className="mapa_comunas_estudiantes"),
                  html.Div(children=[
