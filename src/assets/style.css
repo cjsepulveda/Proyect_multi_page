@@ -320,3 +320,20 @@ body {
 .tabla-personalizada tbody tr:last-child {
     font-weight: bold !important; 
 }
+
+.tabla_cursos_contenedor{
+    border: 1px solid rgb(207, 207, 207);
+    border-radius: 10px;
+    background-color: rgb(255, 255, 255);
+    /*display: flex;*/
+    /*flex-direction: column;*/
+    /*gap: 10px;*/
+    height: auto;
+    width: 800px;
+    
+    margin: 15px;
+    box-sizing: border-box;
+    padding: 15px; /* Espacio interno para que el contenido no toque los bordes */
+    overflow-y: auto; /* Agrega barra de desplazamiente si la tabla es muy larga */
+    
+  }

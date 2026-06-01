@@ -30,7 +30,7 @@ _tabla_proyeccion = None
 
 def load_data():
     """Carga los datos de Excel solo una vez por proceso."""
-    global _df01, _df02, _df03, _df04, _df05, _df06, _df07
+    global _df01, _df02, _df03, _df04, _df05, _df06, _df07, _df08
     # Si ya se cargaron los datos, no hacemos nada.
     if _df01 is not None:
         return
@@ -43,6 +43,7 @@ def load_data():
     _df05 = pd.read_excel(workbook, sheet_name='origen_estudiantes')
     _df06 = pd.read_excel(workbook, sheet_name='origen_colegios')
     _df07 = pd.read_excel(workbook, sheet_name='com_est')
+    _df08 = pd.read_excel(workbook, sheet_name='cantidad_cursos')
 
     # Convertir la columna de fechas solo una vez, al leer los datos.
     _df04['MATRICULA'] = pd.to_datetime(_df04['MATRICULA'], errors='coerce')
@@ -207,6 +208,70 @@ def origin_city_student(df_city, unidad_edu=None):
     return df_grouped_city
 
 
+
+def cantidad_cursos_colegio(df_cursos, unidad_edu=None):
+    """Construye el DataFrame para la cantidad de cursos por colegio."""
+
+    if unidad_edu and unidad_edu != 'Corporacion':
+        df_filtered_cursos = df_cursos.query("UE == @unidad_edu").copy()
+        df_cantidad_cursos = df_filtered_cursos.sort_values('CURSOS', ascending=False).reset_index(drop=True)
+
+        # ordenar dataframe por la columna NIVEL
+        #df_cantidad_cursos = df_cantidad_cursos.sort_values('NIVEL', ascending=False).reset_index(drop=True)
+
+        total_cursos = df_filtered_cursos['CURSOS'].sum()
+        fila_total = {'UE': 'General', 'NIVEL': 'Todos', 'CURSOS': total_cursos}
+
+        df_total = pd.DataFrame([fila_total])
+        df_cantidad_cursos = pd.concat([df_cantidad_cursos, df_total], ignore_index=True)
+        df_cantidad_cursos.rename(columns={'UE': 'UNIDAD EDUCATIVA'}, inplace=True)
+        df_cantidad_cursos.rename(columns={'CURSOS': 'N° de CURSOS'}, inplace=True)
+
+       
+
+
+    else:
+        df_filtered_cursos = df_cursos.groupby('NIVEL').sum().reset_index()
+
+        df_filtered_cursos_corp=df_filtered_cursos.drop(columns=['UE'], errors='ignore')
+
+        #agegar una columna nueva al inicio del data frame llamada Origen con el valor 'Corporación' para todas las filas
+        df_filtered_cursos_corp.insert(0, 'Origen', 'Corporación')
+        
+        df_cantidad_cursos = df_filtered_cursos_corp
+        
+        df_cantidad_cursos.rename(columns={'NIVEL': 'GRADO'}, inplace=True)
+
+        #agregar una columna nueva despues de origen llamada nivel con dos
+        # valores, uno para basica y otro para media, segun corresponda, para luego usar esa columna como filtro en la tabla de cantidad de cursos por colegio.
+        df_cantidad_cursos['NIVEL'] = df_cantidad_cursos['GRADO'].apply(lambda x: 
+                                                                        'BÁSICA' if x in ['PRE-KINDER', 'KINDER', '1BÁSICO', '2BÁSICO', 
+                                                                                          '3BÁSICO','4BÁSICO','5BÁSICO','6BÁSICO','7BÁSICO','8BÁSICO'] else 'MEDIA')
+        #cambiar de posición la columna NIVEL para que quede después de ORIGEN
+        cols = df_cantidad_cursos.columns.tolist()
+        cols = cols[:1] + cols[-1:] + cols[1:-1]
+        df_cantidad_cursos = df_cantidad_cursos[cols]
+
+        #ordenar data frame por la columna NIVEL
+        df_cantidad_cursos = df_cantidad_cursos.sort_values('NIVEL', ascending=True).reset_index(drop=True)
+
+        # ordenar los valores de nivel básica segun el siguiente orden: 
+        # PRE-KINDER, KINDER, 1BÁSICO, 2BÁSICO, 3BÁSICO, 4BÁSICO, 5BÁSICO, 6BÁSICO, 7BÁSICO, 8BÁSICO ylos valores de
+        # nivel media segun el siguiente orden: 1MEDIO, 2MEDIO, 3MEDIO, 4MEDIO
+        orden_basica = ['PRE-KINDER', 'KINDER', '1BÁSICO', '2BÁSICO', '3BÁSICO', '4BÁSICO', '5BÁSICO', '6BÁSICO', '7BÁSICO', '8BÁSICO']
+        orden_media = ['1MEDIO', '2MEDIO', '3MEDIO', '4MEDIO']
+        df_cantidad_cursos['GRADO'] = pd.Categorical(df_cantidad_cursos['GRADO'], categories=orden_basica + orden_media, ordered=True)
+        df_cantidad_cursos = df_cantidad_cursos.sort_values('GRADO').reset_index(drop=True)
+          
+
+        total_cursos = df_cursos['CURSOS'].sum()
+        fila_total = {'Origen': 'General', 'NIVEL': 'Todos', 'GRADO': 'Todos', 'CURSOS': total_cursos}
+        df_total = pd.DataFrame([fila_total])
+        df_cantidad_cursos = pd.concat([df_cantidad_cursos, df_total], ignore_index=True)
+        df_cantidad_cursos.rename(columns={'CURSOS': 'N° de CURSOS'}, inplace=True)
+
+    
+    return df_cantidad_cursos
 # Ruta de tu archivo
 ruta_archivo = DATA_PATH.joinpath('mat_2026.xlsx')
 
@@ -278,6 +343,8 @@ def layout():
 
         # Contenedor del gráfico de matrícula por unidad educativa o nivel, con tarjetas de género.
         html.Div(id='grafico_matricula' , className="grafico_and_card"),
+
+        html.Div(id='tabla_cursos' , className="tabla_cursos_contenedor"),
         
         # Contenedor del gráfico de evolución matricula por fecha.
         html.Div(id='grafico_evolucion' , className="grafico-evolucion"),
@@ -310,6 +377,7 @@ def layout():
         Output('grafico_origen', 'children'),
         #Output('grafico_colegios','children'),
         Output('mapa_comunas', 'children'),
+        Output('tabla_cursos', 'children'),
         [Input('unidades_educativas', 'value'),
          ]
         )
@@ -331,10 +399,10 @@ def update_charts(unidad_edu):
     # Extraer la etiqueta legible para el gráfico a partir del valor seleccionado en el dropdown
     label_graph = inverse_dict.get(unidad_edu) 
 
-    # Llamadas a las funciones def con sus respectivos filtros según la unidad educativa seleccionada,
+    """# Llamadas a las funciones def con sus respectivos filtros según la unidad educativa seleccionada,
     # para obtener los datos necesarios para cada gráfico.
     # Cada función tiene sus propios valores return, que se asignan a variables locales 
-    # para luego construir cada gráfico.
+    # para luego construir cada gráfico."""
    
     # Funcion para dataframe de matrícula por unidad educativa o nivel, con fila adicional GENERAL
     # y calculo de % Meta alcanzada.
@@ -358,6 +426,10 @@ def update_charts(unidad_edu):
     # Función para obtener el DataFrame filtrado para el gráfico de mapa 
     # de las comunas de origen de los estudiantes matriculados,
     df_grouped_city = origin_city_student(_df07, unidad_edu)
+
+    # funcion para obtener la cantidad de cursos por colegio, con filtro por unidad educativa
+    df_cantidad_cursos = cantidad_cursos_colegio(_df08, unidad_edu)
+
 
     # Color específico para la barra del gráfico de matrícula por unidad educativa o nivel,
     # para que se destaque del resto de barras, y se mantenga el mismo color tanto 
@@ -654,12 +726,25 @@ def update_charts(unidad_edu):
                             ],
                             className="tabla_comuna_contenedor"),
                     ]
-                 
+    
+    tabla_cantidad_cursos= dbc.Table.from_dataframe(df_cantidad_cursos, 
+                                               striped=True, 
+                                               bordered=True, 
+                                               hover=True,
+                                               #color='light',
+                                               size='sm',
+                                               style={'width': '100%',
+                                                      'margin': 'auto', 
+                                                      'textAlign': 'center',
+                                                      "fontSize": "14px",  
+                                                      },
+                                               className="tabla-personalizada" # Agrega esta clase
+                                                      )
      
        
     
 
-    return new_trace01, newtrace02, newtrace03, newtrace05 #, newtrace04
+    return new_trace01, newtrace02, newtrace03, newtrace05, tabla_cantidad_cursos #, newtrace04
 
 # cargar en servidor
 # if __name__ == '__main__':
