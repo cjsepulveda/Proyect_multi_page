@@ -214,11 +214,22 @@ def cantidad_cursos_colegio(df_cursos, unidad_edu=None):
 
     if unidad_edu and unidad_edu != 'Corporacion':
         df_filtered_cursos = df_cursos.query("UE == @unidad_edu").copy()
-        df_cantidad_cursos = df_filtered_cursos.sort_values('CURSOS', ascending=False).reset_index(drop=True)
+        #df_cantidad_cursos = df_filtered_cursos.sort_values('CURSOS', ascending=False).reset_index(drop=True)
 
         # ordenar dataframe por la columna NIVEL
-        #df_cantidad_cursos = df_cantidad_cursos.sort_values('NIVEL', ascending=False).reset_index(drop=True)
+        df_cantidad_cursos = df_filtered_cursos.sort_values('NIVEL', ascending=True).reset_index(drop=True)
 
+        # ordenar los valores de nivel básica segun el siguiente orden: 
+        # PRE-KINDER, KINDER, 1BÁSICO, 2BÁSICO, 3BÁSICO, 4BÁSICO, 5BÁSICO, 6BÁSICO, 7BÁSICO, 8BÁSICO ylos valores de
+        # nivel media segun el siguiente orden: 1MEDIO, 2MEDIO, 3MEDIO, 4MEDIO
+        orden_basica = ['PRE-KINDER', 'KINDER', '1BÁSICO', '2BÁSICO', '3BÁSICO', '4BÁSICO', '5BÁSICO', '6BÁSICO', '7BÁSICO', '8BÁSICO']
+        orden_media = ['1MEDIO', '2MEDIO', '3MEDIO', '4MEDIO']
+        df_cantidad_cursos['NIVEL'] = pd.Categorical(df_cantidad_cursos['NIVEL'], categories=orden_basica + orden_media, ordered=True)
+        df_cantidad_cursos = df_cantidad_cursos.sort_values('NIVEL').reset_index(drop=True)
+          
+
+        #Agregar fila total al final del dataframe, 
+        # con el total de cursos para la unidad educativa seleccionada, y con el valor "General" en la columna UE, y "Todos" en la columna NIVEL.
         total_cursos = df_filtered_cursos['CURSOS'].sum()
         fila_total = {'UE': 'General', 'NIVEL': 'Todos', 'CURSOS': total_cursos}
 
