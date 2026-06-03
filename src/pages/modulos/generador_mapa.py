@@ -34,7 +34,7 @@ def actualizar_mapa_comunas(df_filtrado,unidad_educativa):
 
     # Crear la figura MapLibre moderna con los nuevos datos
     mapa_estudiantes_comunas = px.choropleth_map(
-        df_filtrado,                       # El DataFrame que viene desde el callback
+        df_filtrado,              # El DataFrame que viene desde el callback
         geojson=geojson_chile,
         locations='Comuna',                 
         featureidkey='properties.Comuna',   
