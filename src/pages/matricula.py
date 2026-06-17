@@ -373,7 +373,7 @@ def layout():
         # Contenedor del gráfico de barras horizontales con los colegios de origen 
         # de los estudiantes matriculados,
         # con filtro por unidad educativa, mostrando solo los colegios que aportan 10 o más
-        #html.Div(id='grafico_colegios' , className="grafico-evolucion"),
+        html.Div(id='grafico_colegios' , className="grafico-evolucion"),
 
         # Contenedor de la tabla de proyección, con el mismo filtro de unidad educativa,
         # para que se actualice junto al gráfico de matrícula por unidad educativa o nivel.
@@ -390,9 +390,9 @@ def layout():
         Output('grafico_matricula', 'children'),
         Output('grafico_evolucion', 'children'),
         Output('grafico_origen', 'children'),
-        #Output('grafico_colegios','children'),
         Output('mapa_comunas', 'children'),
         Output('tabla_cursos', 'children'),
+        Output('grafico_colegios','children'),
         [Input('unidades_educativas', 'value'),
          ]
         )
@@ -759,7 +759,7 @@ def update_charts(unidad_edu):
        
     
 
-    return new_trace01, newtrace02, newtrace03, newtrace05, tabla_cantidad_cursos #, newtrace04
+    return new_trace01, newtrace02, newtrace03, newtrace05, tabla_cantidad_cursos, newtrace04
 
 # cargar en servidor
 # if __name__ == '__main__':
