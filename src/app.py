@@ -21,7 +21,7 @@ app = dash.Dash(
     __name__,
     suppress_callback_exceptions=True,
     external_stylesheets=[
-        dbc.themes.CERULEAN,  # Dash Themes CSS
+        dbc.themes.BOOTSTRAP,  # Dash Themes CSS
         FA621,  # Font Awesome Icons CSS
     ],
     title=APP_TITLE,

@@ -582,13 +582,14 @@ def update_charts(unidad_edu):
                 title_font=dict(size=20, color="black", family="Roboto mono"),
                 title_font_weight='bold',
                 title_xanchor='left',
+                width=1280, height=550,
                 template="simple_white",
                 xaxis={"visible": False},
                 yaxis={"visible": False},
                 annotations=[
                         {
                             "text": "No hay colegios externos que aporten 10 o más estudiantes para esta unidad educativa",
-                             "x": 0.5,
+                             "x": 1.5,
                              "y": 0.5,
                             "yref": "paper",
                             "showarrow": False,

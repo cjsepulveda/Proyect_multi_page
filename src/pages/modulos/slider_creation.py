@@ -1,0 +1,65 @@
+
+from dash import html, dcc
+
+def crear_grupo_sliders(titulo_grupo, prefijo_id, tipo_slider='retencion'):
+    """
+    Genera un grupo de sliders colapsados.
+    tipo_slider puede ser: 'retencion' (porcentajes) o 'nuevos' (cantidades de alumnos).
+    """
+    sliders = []
+
+    # Estructura limpia: la clave coincide exactamente con el prefijo_id que le pases
+    niveles_basica = {
+        'grupo-a': ['PRE-KINDER', 'KINDER'],
+        'grupo-b': ['1BÁSICO', '2BÁSICO', '3BÁSICO', '4BÁSICO'],
+        'grupo-c': ['5BÁSICO', '6BÁSICO', '7BÁSICO', '8BÁSICO']
+    }
+        
+    # Obtenemos la lista de cursos para este grupo específico
+    cursos = niveles_basica[prefijo_id]
+
+    # Obtenemos la configuración del grupo actual
+    #grupo_actual = configuracion[prefijo_id]
+    #clave_ciclo = grupo_actual["clave"]
+    #limite_rango = grupo_actual["cantidad"] + 1
+    
+     # Iteramos directamente sobre los cursos obteniendo su índice (i) y su nombre (curso)
+    for i, curso in enumerate(cursos, start=1):
+        
+        # CLAVE: El type del ID ahora incluye el tipo de slider para que el Callback no los mezcle
+        id_diccionario = {"type": f"slider-{tipo_slider}", "id": f"{prefijo_id}-{i}"}
+        
+        #id_diccionario = {"type": "slider-dinamico", "id": f"{prefijo_id}-{i}"}
+        
+         # Configuramos las propiedades según el tipo
+        if tipo_slider == 'retencion':
+                min_val, max_val, val_defecto = 50, 100, 95
+                marcas = {j: f"{j}%" for j in range(50, 101, 10)}
+                clase = "slider-retencion"
+
+        elif tipo_slider == 'nuevos': # 👈 Ahora es estricto para 'nuevos'
+                min_val, max_val, val_defecto = 0, 50, 5
+                marcas = {j: str(j) for j in range(0, 51, 10)}
+                clase = "slider-nuevos"
+
+        else:
+                # Si te equivocas al escribir el nombre en el layout, Python te avisará de inmediato
+                raise ValueError(f"Error: El tipo_slider '{tipo_slider}' no es válido. Usa 'retencion' o 'nuevos'.")
+        
+        sliders.append(
+            html.Div([
+                html.Label(curso, style={"fontWeight": "bold", "fontSize": "14px"}),
+                dcc.Slider(
+                    min=min_val, max=max_val, value=val_defecto, step=1, 
+                    id=id_diccionario, 
+                    marks=marcas,
+                    className=clase
+                )
+            ], style={"marginBottom": "20px"})
+        )
+            
+            
+    return html.Details([
+        html.Summary(titulo_grupo, style={"cursor": "pointer", "fontWeight": "bold", "fontSize": "16px", "padding": "10px", "backgroundColor": "#f0f2f5", "borderRadius": "5px", "marginBottom": "10px"}),
+        html.Div(sliders, style={"padding": "10px 15px"})
+    ], open=False, style={"marginBottom": "15px"})

@@ -1,11 +1,12 @@
 import dash
-from dash import html, dcc, callback, Input, Output, State, dash_table, register_page
+from dash import html, dcc, callback, Input, Output, ALL, State, dash_table, register_page
 import dash_bootstrap_components as dbc
 import plotly.graph_objects as graph_objects
 import pandas as pd
 
-# Importamos el motor matemático unificado
-from pages.modulos.calculation_projection import calcular_proyeccion_completa, cargar_datos_consolidados, guardar_datos_reales
+# Importar modulo para calculo de matricula proyectada
+from pages.modulos.calculation_projection import calcular_proyeccion_completa, cargar_datos_consolidados, guardar_datos_reales, test_multiple_slider
+from pages.modulos.slider_creation import crear_grupo_sliders 
 
 register_page(
     __name__, 
@@ -14,81 +15,157 @@ register_page(
     path="/proyeccion",     
     )
 
-UMBRAL_CRITICO = 700
+UMBRAL_CRITICO = 600
 
-# (El objeto 'menu_lateral' se mantiene idéntico al bloque anterior)
+# Menu Lateral
 menu_lateral = dbc.Card([
-    html.H5("Factores Globales", className="text-primary fw-bold mb-3"),
+    html.H5("Configuración", className="text-primary fw-bold mb-3"),
     html.Hr(),
    
-    # --- SLIDER 1 ---
+    # Slider para porcentaje de retencion
     html.Div([
-        html.Label("Tasa de Retención (%): ", className="fw-bold text-secondary me-1"),
-        html.Span("85%", id="val-retencion", className="fw-bold text-primary") # 👈 Aquí se verá el valor
+        html.Label("Tasa Retención (%): ", className="fw-bold text-secondary me-1"),
+        html.Span(id="slider-contenedor-retencion", className="fw-bold text-primary") # Aquí se verá el valor
     ], className="d-flex justify-content-between mb-1"),
-    dcc.Slider(
-        id="sl-retencion", min=50, max=100, step=1, value=85, 
+
+    dcc.Slider(        
+        id="sl-retencion", min=50, max=100, step=1, value=95, 
         marks={i: f"{i}%" for i in range(50, 101, 10)},
-        updatemode="drag" # 👈 Clave para que responda de inmediato al arrastrar
-    ),
+        className="slider-retencion"       
+        ),
     html.Br(),
     
-    html.Label("Captación Nuevos Alumnos", className="fw-bold text-secondary"),
-    dcc.Slider(id="sl-captacion", min=100, max=1000, step=50, value=80, marks={i: str(i) for i in range(100, 1001, 200)}),
-    html.Br(),
-    html.Label("Crecimiento Población (%)", className="fw-bold text-secondary"),
-    dcc.Slider(id="sl-crecimiento", min=-5, max=10, step=0.5, value=0, marks={i: f"{i}%" for i in range(-5, 11, 3)}),
-    html.Hr(),
-    dbc.Button("Exportar Proyección a Excel", id="btn-exportar-excel", color="success", className="w-100 mt-2"),
-    dcc.Download(id="descarga-excel")
-], body=True, className="shadow-sm border-0 bg-light", style={"min-height": "80vh"})
+    # Slider para estudiantes nuevos
+    html.Div([
+    html.Label("Estudiantes Nuevos", className="fw-bold text-secondary"),
+    html.Span(id="slider-contenedor-captacion", className="fw-bold text-primary"), # Aquí se verá el valor
+    ], className="d-flex justify-content-between mb-1"),
 
+    dcc.Slider(
+        id="sl-captacion", min=0, max=500, step=1, value=20, 
+        marks={i: str(i) for i in range(0, 501, 50)},
+        className="slider-retencion" 
+        ),
+    html.Br(),
+
+    dbc.Button(
+        [
+            html.I(className="fas fa-file-excel me-2"), 
+            "Exportar Proyección"
+        ],
+        id="btn-exportar-excel", 
+        color="primary", 
+        className="mt-2"),
+    dcc.Download(id="descarga-excel"),
+
+    html.Br(),
+    html.Br(),
+    html.Br(),
+    
+    # Nuevos Slider retencion
+    html.H5(" Tasa de retencion (%):", className="fw-bold text-secondary me-1"),
+    html.Hr(),
+    # Crear slider con funcion crear_grupo_sliders para retencion
+        crear_grupo_sliders("Prebásica", "grupo-a", tipo_slider='retencion'),
+        crear_grupo_sliders("Primer Ciclo Básica", "grupo-b", tipo_slider='retencion'),
+        crear_grupo_sliders("Segundo Ciclo Básica", "grupo-c", tipo_slider='retencion'),
+    
+    html.Hr(),
+
+    html.H5(" Nuevos Estudiantes:", className="fw-bold text-secondary me-1"),
+    html.Hr(),
+    # Crear slider con funcion crear_grupo_sliders para estudiantes nuevos
+        crear_grupo_sliders("Prebásica", "grupo-a", tipo_slider='nuevos'),
+        crear_grupo_sliders("Primer Ciclo Básica",  "grupo-b", tipo_slider='nuevos'),
+        crear_grupo_sliders("Segundo Ciclo Básica",  "grupo-c", tipo_slider='nuevos'),
+
+
+
+    
+], body=True, className="shadow-sm border-0", 
+
+    
+)   
+
+# Callback para actualizar el valor mostrado del slider de retención
+@callback(
+    Output("slider-contenedor-retencion", "children"),
+    Output("slider-contenedor-captacion", "children"),
+    Input("sl-retencion", "value"),
+    Input("sl-captacion", "value")    
+)
+def actualizar_valores_sliders(valor_retencion, valor_captacion):
+    # El primer retorno va al contenedor de retención, el segundo al de captación
+    texto_retencion = f"{valor_retencion}%"
+    texto_captacion = f"{valor_captacion} alumnos" # O el texto que prefieras
+    
+    return texto_retencion, texto_captacion
+
+# Layaout Genral, Menu Lateral, 2 Tarjetas KPI, Gráfico y Tabla
 layout = dbc.Container([
     dcc.Store(id="store-disparador-cambio", data=0),
     
+    # Layaout General, 1 fila, 2 columnas,
     dbc.Row([
-        dbc.Col(menu_lateral, width=3),
         
-        dbc.Col([
-            html.Div(id="contenedor-kpis", className="mb-4"),
+        # Columna para menu lateral
+        dbc.Col(menu_lateral, width=4), 
+        
+        # Columna para KPI, Gráfico y tabla
+        dbc.Col([                       
+            # Tarjetas KPI
+            html.Div(id="contenedor-kpis", className="mb-4"), # Tarjetas KPI
             
-            dbc.Card([
-                dbc.CardHeader(html.H4("Modelo Predictivo de Matrículas Corporativas", className="m-0 text-dark")),
-                dbc.CardBody(dcc.Graph(id="grafico-dinamico-completo"))
+            # Gráfico en formato tarjeta
+            dbc.Card([                                        
+                dbc.CardHeader(html.H6("Modelación Escenarios Matrículas Corporativas", className="m-0 text-dark")),
+                dbc.CardBody(dcc.Graph(config={"displayModeBar": False}, id="grafico-dinamico-completo"))
             ], className="shadow-sm mb-4"),
             
+            # Tabla para ingresar o cambiar datos
             dbc.Tabs([
-                dbc.Tab(label=" Auditoría e Ingreso de Datos Reales", tab_id="tab-ingreso", children=[
+                dbc.Tab(label="Datos Reales", tab_id="tab-ingreso", children=[
                     html.Div([
-                        html.P("La siguiente tabla muestra el historial consolidado extraído de Power Query (Excel). Puede editar cualquier celda o añadir el valor del año en curso para ajustar la proyección futura dinámicamente.", className="text-muted small"),
+                        html.P("La siguiente tabla muestra el historial de matriculas. Puede editar cualquier celda o añadir el valor del año en curso para ajustar la proyección futura dinámicamente.", className="text-muted small"),
                         
-                        # 📊 TABLA INTERACTIVA CONFIGURADA CON FILAS AÑADIBLES
-dash_table.DataTable(
-    id="tabla-datos-reales",
-    columns=[
-        {"name": "Año Académico", "id": "Año", "editable": True},
-        {"name": "Matrícula Real Efectiva", "id": "Valor Real", "type": "numeric", "editable": True}
-    ],
-    row_deletable=True,
-    style_cell={"textAlign": "center", "padding": "8px"},
-    style_header={"backgroundColor": "#f8f9fa", "fontWeight": "bold"},
-    # SE ELIMINÓ className="mb-3"
-    # Se reemplaza por style_table para aplicar el margen inferior (equivalente a mb-3)
-    style_table={"marginBottom": "1rem"} 
-),
+            # Tabla interactiva
+                dash_table.DataTable(
+                                id="tabla-datos-reales",
+                                columns=[
+                                        {"name": "Año Académico", "id": "Año", "editable": True},
+                                        {"name": "Matrícula Real Efectiva", "id": "Valor Real", "type": "numeric", "editable": True}
+                                    ],
+                                row_deletable=True,
+                                style_cell={"textAlign": "center", "padding": "8px"},
+                                style_header={"backgroundColor": "#f8f9fa", "fontWeight": "bold"},
+                                style_table={"marginBottom": "1rem"} 
+                                ),
                         html.Div([
                             dbc.Button("Añadir Nuevo Año Académico", id="btn-anadir-fila", color="secondary", size="sm", className="me-2"),
                             dbc.Button("Guardar Cambios en Sistema", id="btn-guardar-tabla", color="primary", size="sm")
                         ])
                     ], className="p-3")
                 ]),
-            ], id="tabs-gestion", active_tab="tab-ingreso")
-        ], width=9)
+            ], id="tabs-gestion", active_tab="tab-ingreso"), # fin tabla configuracion
+
+        html.Div([
+        html.H1("Panel Principal de Control"),
+        html.P("Resultado de la operación en el DataFrame:"),
+        
+        # Aquí mostraremos el resultado devuelto por tu función
+        html.Pre(id="salida-dataframe", style={"backgroundColor": "#f4f4f4", "padding": "15px", "borderRadius": "5px"})
+    ], style={"marginLeft": "360px", "padding": "20px"}),
+
+
+
+
+
+        ], width=8) # Fin columna diagrama genreral
     ])
-], fluid=True)
+], fluid=True) # Fin Layaout para leer en aap.py
 
 
-# 🔄 CALLBACK 1: Carga el Historial desde Excel y Gestiona las Ediciones del Usuario
+# Callback para cargar el Historial desde Excel y Gestiona las Ediciones del Usuario
 @callback(
     Output("tabla-datos-reales", "data"),
     Output("store-disparador-cambio", "data"),
@@ -129,118 +206,164 @@ def gestionar_tabla_auditoria(n_guardar, n_anadir, filas_tabla, contador_dispara
     
     return tabla_data, contador_disparador
 
-# (Los callbacks 'actualizar_interfaz_proyeccion' y 'exportar_a_excel' se mantienen idénticos)
-
-
-
-# 🔄 CALLBACK 2: Actualiza Gráfico AND Genera Tarjetas KPI de Forma Simultánea
+# Callback para actualizar Gráfico y Generar Tarjetas KPI de Forma Simultánea
 @callback(
     Output("grafico-dinamico-completo", "figure"),
-    Output("contenedor-kpis", "children"), # 👈 Inyecta las tarjetas aquí
+    Output("contenedor-kpis", "children"), # Inyecta las tarjetas aquí
+    Output("salida-dataframe", "children"), # salida slider en una tabla
     Input("sl-retencion", "value"),
     Input("sl-captacion", "value"),
-    Input("sl-crecimiento", "value"),
-    Input("store-disparador-cambio", "data")
+    Input({"type": "slider-retencion", "id": ALL}, "value"), # Lista de 10 porcentajes
+    Input({"type": "slider-nuevos", "id": ALL}, "value"),    # Lista de 10 cantidades de alumnos
+    Input("store-disparador-cambio", "data"),
+
 )
-def actualizar_interfaz_proyeccion(retencion, captacion, crecimiento, _):
-    df, ultimo_anio_real = calcular_proyeccion_completa(retencion, captacion, crecimiento)
+def actualizar_interfaz_proyeccion(retencion, captacion, lista_retencion, lista_nuevos, _):
     
-    # --- 🧮 CÁLCULO DE MÉTRICAS PARA TARJETAS KPI ---
-    # 1. Pico Máximo
+    # Nuevo valores slider para cada nivel 
+    
+      # 1. Control de seguridad para que Dash no intente calcular con listas vacías
+    if not lista_retencion or not lista_nuevos:
+        raise dash.exceptions.PreventUpdate
+    
+    # Enviamos la lista completa a tu función del módulo especializado
+    resultado_texto = test_multiple_slider(lista_retencion)
+    
+    
+    
+    df, ultimo_anio_real_str= calcular_proyeccion_completa(lista_retencion, lista_nuevos)
+    
+    # CÁLCULO DE MÉTRICAS PARA TARJETAS KPI ---
+    # 1. Matricula Máxima
     fila_max = df.loc[df["Valor"].idxmax()]
     max_valor = fila_max["Valor"]
     max_anio = fila_max["Año"]
     
-    # 2. Estado de Alerta (¿Cae abajo de 3500 en algún año proyectado?)
+    # 2. Estado de Alerta (¿Cae abajo de 500 en algún año proyectado?)
     df_proy_solo = df[df["Tipo"] == "Proyección"]
     quiebra_limite = (df_proy_solo["Valor"] < UMBRAL_CRITICO).any()
+
+    # Cálculo matricula año 2035 para mensaje de alerta específico
+    valor_2035 = df[df["Año"] == "2035"]["Valor"].values[0]
     
     if quiebra_limite:
-        kpi_alerta_texto = "Riesgo Crítico"
+        kpi_alerta_texto = f"Riesgo Crítico {'' if valor_2035 < UMBRAL_CRITICO * 0.8 else ''}"
         kpi_alerta_color = "danger"
-        kpi_alerta_sub = f"Matrícula inferior a {UMBRAL_CRITICO}"
+        
     else:
-        kpi_alerta_texto = "Estable"
+        kpi_alerta_texto = f"Estable {'' if valor_2035 < UMBRAL_CRITICO * 1.2 else ''}"
         kpi_alerta_color = "success"
-        kpi_alerta_sub = "Estructura sobre el límite"
         
-    # 3. Crecimiento Neto (Desde el último año real hasta el final del horizonte 2035)
-    valor_inicial_proy = df[df["Año"] == ultimo_anio_real]["Valor"].values[0]
-    valor_final_proy = df.iloc[-1]["Valor"]
-    pct_crecimiento = ((valor_final_proy - valor_inicial_proy) / valor_inicial_proy) * 100
+        
     
-    # --- 🏗️ CONSTRUCCIÓN VISUAL DE LAS TARJETAS KPI (Bootstrap) ---
+# 1. DEFINIR TU VARIABLE O CONDICIÓN
+# Ejemplo: si el valor es mayor a 50000 es exitoso, si no, es una alerta.
+
+    valor_condicion = valor_2035
+
+    if valor_condicion > UMBRAL_CRITICO:
+        kpi_bg_1 = "bg-success"  # Fondo verde muy suave
+    else:
+        kpi_bg_1 = "bg-danger"   # Fondo rojo muy suave
+
+
+
+# CONSTRUCCIÓN VISUAL DE LAS TARJETAS KPI (Bootstrap)
     kpis_layout = dbc.Row([
+        # 1. Primera Columna 
         dbc.Col(dbc.Card([
             dbc.CardBody([
-                html.H6("Pico Máximo de Matrícula", className="text-muted card-subtitle small"),
-                html.H3(f"{max_valor:,}", className="text-primary fw-bold my-1"),
-                html.Span(f"Año Académico: {max_anio}", className="text-secondary small")
-            ])
-        ], className="border-start border-primary border-4 shadow-sm")),
+                dbc.Row([ # Fila con dos columnas una texto y otra numérica
+                    # Columna de texto
+                    dbc.Col([
+                            html.H6("Máxima Matrícula", className="text-muted card-subtitle small"),
+                            html.Span(f"Año Académico: {max_anio}", className="text-secondary small"),
+                    ],
+                    width=8,
+                    className="d-flex flex-column justify-content-center"
+                    ), # Cierre columna Texto
+
+                    # Columna Numérica
+                    dbc.Col([
+                            html.H6(f"{max_valor:,}", className="text-white fw-bold my-1 fs-2"),
+                    ],
+                    width=4,
+                    className="d-flex flex-column justify-content-center bg-primary text-white py-3 px-1 text-center rounded"
+                    ), # Cierre columna numérica
+                ],
+                className="h-100 g-0" # Alinea verticalmente y quita márgenes (gutters)
+                ) # Cierre de la fila
+            ]) # Cierre cuerpo tarjeta
+        ],className="border-start border-primary border-2 shadow-sm h-100"), width=5), # Cierre borde tarjeta numero 1
         
+        # 2. Segunda Columna 
         dbc.Col(dbc.Card([
             dbc.CardBody([
-                html.H6("Condición de Capacidad", className="text-muted card-subtitle small"),
-                html.H3(kpi_alerta_texto, className=f"text-{kpi_alerta_color} fw-bold my-1"),
-                html.Span(kpi_alerta_sub, className="text-secondary small")
-            ])
-        ], className=f"border-start border-{kpi_alerta_color} border-4 shadow-sm")),
-        
-        dbc.Col(dbc.Card([
-            dbc.CardBody([
-                html.H6("Proyección Neta Total", className="text-muted card-subtitle small"),
-                html.H3(f"{pct_crecimiento:+.1f}%", className=f"text-{'success' if pct_crecimiento >= 0 else 'danger'} fw-bold my-1"),
-                html.Span(f"Periodo post-{ultimo_anio_real} a 2035", className="text-secondary small")
-            ])
-        ], className=f"border-start border-{'success' if pct_crecimiento >= 0 else 'danger'} border-4 shadow-sm"))
-    ], className="g-3", style={"marginTop": "15px"})
+                dbc.Row([ # Filas con dos columnas, una de texto y otra numérica
+                    # Columna de texto
+                    dbc.Col([
+                            html.H6("Estado matrícula al 2035", className="text-muted card-subtitle small"),
+                            html.H6(kpi_alerta_texto, className=f"text-{kpi_alerta_color} fw-bold my-0 me-2"),
+                         ],
+                    width=8,
+                    className="d-flex flex-column justify-content-center"
+                    ), # Cierre columna Texto
+                    # Columna numérica
+                    dbc.Col([
+                            html.Span(f"{valor_2035:,} ", className="text-white fw-bold fs-2"),
+                      ],
+                      width=4,
+                    className= f"{kpi_bg_1} d-flex flex-column justify-content-center text-white py-3 px-1 text-center rounded"
+                    ), # Cierre columna numérica
+                ],
+                className="h-100 g-0" # Alinea verticalmente y quita márgenes (gutters)
+                ) # Cierre de la fila
+            ]) # Cierre cuerpo segunda tarjeta          
+        ], className=f"border-start border-{kpi_alerta_color} border-2 shadow-sm h-100"), width=5), # Cierre borde segunda tarjeta
+                 
+
+    ], className="g-3", style={"marginTop": "5px"}) # Cierre fila con dos tarjetas
     
-    # --- 📈 DISEÑO DEL GRÁFICO ---
-    fig = graph_objects.Figure()
-    
-    #fig.add_shape(
-       # type="rect", x0=df["Año"].min(), x1=df["Año"].max(), y0=0, y1=UMBRAL_CRITICO,
-        #fillcolor="rgba(230, 57, 70, 0.07)", #bordercolor="rgba(230, 57, 70, 0.2)",
-        #borderwidth=1, 
-        #line=dict(dash="dot",color="red"), layer="below"
-    #)
-    #fig.add_trace(graph_objects.Scatter(
-     #   x=df["Año"], y=[UMBRAL_CRITICO] * len(df), name="Límite Institucional",
-      #  mode="lines", line=dict(color="#e63946", width=1.5, dash="dashdot")
-    #))
+    # DISEÑO DEL GRÁFICO ---
+    magtricula_corp_graph = graph_objects.Figure()
     
     df_reales = df[df["Tipo"] == "Real"]
     df_proy = df[df["Tipo"] == "Proyección"]
     
-    fig.add_trace(graph_objects.Scatter(
-        x=df_reales["Año"], y=df_reales["Valor"], name="Historial Real",
-        mode="lines+markers", line=dict(color="#1d3557", width=4)
+    magtricula_corp_graph.add_trace(graph_objects.Scatter(
+        x=df_reales["Año"], y=df_reales["Valor"], name="Datos Reales",
+        mode="lines+markers", 
+        marker=dict(color= "#af0000", size=8),
+        line=dict(color="#4B4B4B", width=2)
     ))
     
     punto_conexion = df_reales.tail(1)
     df_proy_conectado = pd.concat([punto_conexion, df_proy])
     
-    fig.add_trace(graph_objects.Scatter(
-        x=df_proy_conectado["Año"], y=df_proy_conectado["Valor"], name="Proyección Simulada",
-        mode="lines+markers", line=dict(color="#f4a261", width=3, dash="dash")
+    magtricula_corp_graph.add_trace(graph_objects.Scatter(
+        x=df_proy_conectado["Año"], y=df_proy_conectado["Valor"], name="Proyección",
+        mode="lines+markers",
+        marker=dict(color= "#1d1d1d", size=8), 
+        line=dict(color="#ffae00", width=2)
     ))
     
-    fig.update_layout(
-        hovermode="x unified", plot_bgcolor="white", height=350,
+    magtricula_corp_graph.update_layout(
+        hovermode="x unified", plot_bgcolor="white", height=260,
         margin=dict(l=40, r=30, t=10, b=10),
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        hoverlabel_font=dict(family='Roboto mono', weight='bold', size=14, color='black'),
+        font_family='Roboto mono',
     )
-    fig.update_xaxes(showgrid=True, gridcolor="#EAEAEA")
-    fig.update_yaxes(showgrid=True, gridcolor="#EAEAEA",range=[0, 2000])
+    magtricula_corp_graph.update_xaxes(showgrid=True, gridcolor="#EAEAEA")
+    magtricula_corp_graph.update_yaxes(showgrid=True, gridcolor="#EAEAEA",range=[200, 2000])
     
-    print(df)
+    
 
-    return fig, kpis_layout
+    return magtricula_corp_graph, kpis_layout, resultado_texto
 
 
 
-# 🔄 CALLBACK 3: Descarga de archivo Excel (Se mantiene idéntico)
+# Callback para descargar el archivo Excel
 @callback(
     Output("descarga-excel", "data"),
     Input("btn-exportar-excel", "n_clicks"),
