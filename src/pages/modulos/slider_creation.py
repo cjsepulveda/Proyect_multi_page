@@ -38,8 +38,8 @@ def crear_grupo_sliders(titulo_grupo, prefijo_id, tipo_slider='retencion'):
                 clase = "slider-retencion"
 
         elif tipo_slider == 'nuevos': # 👈 Ahora es estricto para 'nuevos'
-                min_val, max_val, val_defecto = 0, 50, 5
-                marcas = {j: str(j) for j in range(0, 51, 10)}
+                min_val, max_val, val_defecto = 0, 500, 10
+                marcas = {j: str(j) for j in range(0, 501, 50)}
                 clase = "slider-nuevos"
 
         else:

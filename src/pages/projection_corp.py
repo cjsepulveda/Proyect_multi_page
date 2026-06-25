@@ -21,32 +21,35 @@ UMBRAL_CRITICO = 600
 menu_lateral = dbc.Card([
     html.H5("Configuración", className="text-primary fw-bold mb-3"),
     html.Hr(),
-   
-    # Slider para porcentaje de retencion
-    html.Div([
-        html.Label("Tasa Retención (%): ", className="fw-bold text-secondary me-1"),
-        html.Span(id="slider-contenedor-retencion", className="fw-bold text-primary") # Aquí se verá el valor
-    ], className="d-flex justify-content-between mb-1"),
-
-    dcc.Slider(        
-        id="sl-retencion", min=50, max=100, step=1, value=95, 
-        marks={i: f"{i}%" for i in range(50, 101, 10)},
-        className="slider-retencion"       
-        ),
-    html.Br(),
     
-    # Slider para estudiantes nuevos
-    html.Div([
-    html.Label("Estudiantes Nuevos", className="fw-bold text-secondary"),
-    html.Span(id="slider-contenedor-captacion", className="fw-bold text-primary"), # Aquí se verá el valor
-    ], className="d-flex justify-content-between mb-1"),
+    # Pestañas para los 20 slider separados en 10 para retencion y 10 para captacion
+    dbc.Tabs([
+        # Pestaña 1: Controles de Retención
+        dbc.Tab(label="Retención", tab_id="tab-sliders-retencion", children=[
+            html.Div([
+            # Nuevos Slider retencion
+                    html.Label(" Tasa de retencion (%):", className="fw-bold text-secondary me-1"),
+                    html.Hr(),
+                    # Crear slider con funcion crear_grupo_sliders para retencion
+                    crear_grupo_sliders("Prebásica", "grupo-a", tipo_slider='retencion'),
+                    crear_grupo_sliders("Primer Ciclo Básica", "grupo-b", tipo_slider='retencion'),
+                    crear_grupo_sliders("Segundo Ciclo Básica", "grupo-c", tipo_slider='retencion'),
+                ], className="pt-2")
+             ]),
 
-    dcc.Slider(
-        id="sl-captacion", min=0, max=500, step=1, value=20, 
-        marks={i: str(i) for i in range(0, 501, 50)},
-        className="slider-retencion" 
-        ),
-    html.Br(),
+
+        dbc.Tab(label="Alumnos Nuevos", tab_id="tab-sliders-nuevos", children=[
+            html.Div([
+                    html.Label(" Nuevos Estudiantes:", className="fw-bold text-secondary me-1"),
+                    html.Hr(),
+                    # Crear slider con funcion crear_grupo_sliders para estudiantes nuevos
+                    crear_grupo_sliders("Prebásica", "grupo-a", tipo_slider='nuevos'),
+                    crear_grupo_sliders("Primer Ciclo Básica",  "grupo-b", tipo_slider='nuevos'),
+                    crear_grupo_sliders("Segundo Ciclo Básica",  "grupo-c", tipo_slider='nuevos'),
+
+                ], className="pt-2")
+             ]),
+      ], id="tabs-sliders-menu", active_tab="tab-sliders-retencion"),
 
     dbc.Button(
         [
@@ -57,49 +60,10 @@ menu_lateral = dbc.Card([
         color="primary", 
         className="mt-2"),
     dcc.Download(id="descarga-excel"),
-
-    html.Br(),
-    html.Br(),
-    html.Br(),
-    
-    # Nuevos Slider retencion
-    html.H5(" Tasa de retencion (%):", className="fw-bold text-secondary me-1"),
-    html.Hr(),
-    # Crear slider con funcion crear_grupo_sliders para retencion
-        crear_grupo_sliders("Prebásica", "grupo-a", tipo_slider='retencion'),
-        crear_grupo_sliders("Primer Ciclo Básica", "grupo-b", tipo_slider='retencion'),
-        crear_grupo_sliders("Segundo Ciclo Básica", "grupo-c", tipo_slider='retencion'),
-    
-    html.Hr(),
-
-    html.H5(" Nuevos Estudiantes:", className="fw-bold text-secondary me-1"),
-    html.Hr(),
-    # Crear slider con funcion crear_grupo_sliders para estudiantes nuevos
-        crear_grupo_sliders("Prebásica", "grupo-a", tipo_slider='nuevos'),
-        crear_grupo_sliders("Primer Ciclo Básica",  "grupo-b", tipo_slider='nuevos'),
-        crear_grupo_sliders("Segundo Ciclo Básica",  "grupo-c", tipo_slider='nuevos'),
-
-
-
     
 ], body=True, className="shadow-sm border-0", 
-
     
 )   
-
-# Callback para actualizar el valor mostrado del slider de retención
-@callback(
-    Output("slider-contenedor-retencion", "children"),
-    Output("slider-contenedor-captacion", "children"),
-    Input("sl-retencion", "value"),
-    Input("sl-captacion", "value")    
-)
-def actualizar_valores_sliders(valor_retencion, valor_captacion):
-    # El primer retorno va al contenedor de retención, el segundo al de captación
-    texto_retencion = f"{valor_retencion}%"
-    texto_captacion = f"{valor_captacion} alumnos" # O el texto que prefieras
-    
-    return texto_retencion, texto_captacion
 
 # Layaout Genral, Menu Lateral, 2 Tarjetas KPI, Gráfico y Tabla
 layout = dbc.Container([
@@ -146,21 +110,22 @@ layout = dbc.Container([
                         ])
                     ], className="p-3")
                 ]),
-            ], id="tabs-gestion", active_tab="tab-ingreso"), # fin tabla configuracion
+            ], id="tabs-gestion", active_tab="tab-ingreso", className="shadow-sm bg-white rounded"), # fin tabla configuracion
 
-        html.Div([
-        html.H1("Panel Principal de Control"),
-        html.P("Resultado de la operación en el DataFrame:"),
-        
-        # Aquí mostraremos el resultado devuelto por tu función
-        html.Pre(id="salida-dataframe", style={"backgroundColor": "#f4f4f4", "padding": "15px", "borderRadius": "5px"})
-    ], style={"marginLeft": "360px", "padding": "20px"}),
+         # CORREGIDO: Sección de Pruebas sin márgenes disruptivos
+            html.Div([
+                html.H5("Consola de Verificación del DataFrame (Modo Test)", className="fw-bold text-secondary mt-4"),
+                html.Pre(id="salida-dataframe", style={
+                    "backgroundColor": "#212529", 
+                    "color": "#00ff66", 
+                    "padding": "15px", 
+                    "borderRadius": "5px",
+                    "fontFamily": "monospace",
+                    "fontSize": "12px"
+                })
+            ], className="mt-3"),
 
-
-
-
-
-        ], width=8) # Fin columna diagrama genreral
+        ], width=8) # Fin columna diagrama general
     ])
 ], fluid=True) # Fin Layaout para leer en aap.py
 
@@ -211,25 +176,19 @@ def gestionar_tabla_auditoria(n_guardar, n_anadir, filas_tabla, contador_dispara
     Output("grafico-dinamico-completo", "figure"),
     Output("contenedor-kpis", "children"), # Inyecta las tarjetas aquí
     Output("salida-dataframe", "children"), # salida slider en una tabla
-    Input("sl-retencion", "value"),
-    Input("sl-captacion", "value"),
-    Input({"type": "slider-retencion", "id": ALL}, "value"), # Lista de 10 porcentajes
+    Input({"type": "slider-retencion", "id": ALL}, "value"), # Lista de 10 porcentajes para retención
     Input({"type": "slider-nuevos", "id": ALL}, "value"),    # Lista de 10 cantidades de alumnos
     Input("store-disparador-cambio", "data"),
 
 )
-def actualizar_interfaz_proyeccion(retencion, captacion, lista_retencion, lista_nuevos, _):
+def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, _):
     
-    # Nuevo valores slider para cada nivel 
-    
-      # 1. Control de seguridad para que Dash no intente calcular con listas vacías
+    # 1. Control de seguridad para que Dash no intente calcular con listas vacías
     if not lista_retencion or not lista_nuevos:
         raise dash.exceptions.PreventUpdate
     
     # Enviamos la lista completa a tu función del módulo especializado
     resultado_texto = test_multiple_slider(lista_retencion)
-    
-    
     
     df, ultimo_anio_real_str= calcular_proyeccion_completa(lista_retencion, lista_nuevos)
     
