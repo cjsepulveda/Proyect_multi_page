@@ -10,9 +10,9 @@ from pages.modulos.calculation_projection import (
     cargar_datos_consolidados, 
     guardar_datos_reales, 
     test_multiple_slider,
-    guardar_escenario_simulacion,      # 👈 NUEVO
-    listar_escenarios_por_unidad,      # 👈 NUEVO
-    cargar_datos_escenario             # 👈 NUEVO
+    guardar_escenario_simulacion,      
+    listar_escenarios_por_unidad,      
+    cargar_datos_escenario             
 )
 from pages.modulos.slider_creation import crear_grupo_sliders 
 
