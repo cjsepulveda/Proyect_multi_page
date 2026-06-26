@@ -17,8 +17,35 @@ register_page(
 
 UMBRAL_CRITICO = 600
 
+# Diccionario de Unidades Educativas
+ue_options = {
+                #'CORPORACIÓN': 'Corporacion',
+                'BÁSICA 1':'BÁSICA 1',
+                'BÁSICA 2':'BÁSICA 2',
+                'BÁSICA SAN FELIPE':'BÁSICA SF',
+                'MEDIA LOS ANDES':'MEDIA LOS ANDES',
+                'MEDIA SAN FELIPE':'MEDIA SAN FELIPE'}
+
+# Lista de diccionarios para 'options' usando una lista por comprensión
+ue_options_dropdown = [{'label': k, 'value': v} for k, v in ue_options.items()]
+
+
 # Menu Lateral
 menu_lateral = dbc.Card([
+
+    # Lista despegable de UNIDAD EDUCATIVA
+    html.Div(
+        children=[
+            html.H5('Unidad Educativa', className="text-primary fw-bold mb-3"),
+            dcc.Dropdown(
+                id='unidades_educativas', 
+                options=ue_options_dropdown,
+                value='BÁSICA 1',
+                clearable=False,
+                className='dropdown'
+            ),
+        ]),
+    html.Br(),
     html.H5("Configuración", className="text-primary fw-bold mb-3"),
     html.Hr(),
     
@@ -31,9 +58,8 @@ menu_lateral = dbc.Card([
                     html.Label(" Tasa de retencion (%):", className="fw-bold text-secondary me-1"),
                     html.Hr(),
                     # Crear slider con funcion crear_grupo_sliders para retencion
-                    crear_grupo_sliders("Prebásica", "grupo-a", tipo_slider='retencion'),
-                    crear_grupo_sliders("Primer Ciclo Básica", "grupo-b", tipo_slider='retencion'),
-                    crear_grupo_sliders("Segundo Ciclo Básica", "grupo-c", tipo_slider='retencion'),
+                    html.Div(id='contenedor-retencion') # contenedor de slider segun unidad educativa elegida
+
                 ], className="pt-2")
              ]),
 
@@ -42,10 +68,8 @@ menu_lateral = dbc.Card([
             html.Div([
                     html.Label(" Nuevos Estudiantes:", className="fw-bold text-secondary me-1"),
                     html.Hr(),
-                    # Crear slider con funcion crear_grupo_sliders para estudiantes nuevos
-                    crear_grupo_sliders("Prebásica", "grupo-a", tipo_slider='nuevos'),
-                    crear_grupo_sliders("Primer Ciclo Básica",  "grupo-b", tipo_slider='nuevos'),
-                    crear_grupo_sliders("Segundo Ciclo Básica",  "grupo-c", tipo_slider='nuevos'),
+                    # Crear slider con funcion crear_grupo_sliders para retencion
+                    html.Div(id='contenedor-captacion') # contenedor de slider segun unidad educativa elegida
 
                 ], className="pt-2")
              ]),
@@ -63,7 +87,47 @@ menu_lateral = dbc.Card([
     
 ], body=True, className="shadow-sm border-0", 
     
-)   
+)
+
+# Callback para crear slider segun la unidad educativa elegida
+@callback(
+    [
+        Output('contenedor-retencion', 'children'), # Primer Output (retencion)
+        Output('contenedor-captacion', 'children')  # Segundo Output (captacion)
+    ],
+    Input('unidades_educativas', 'value')           # Origen: la unidad educativa seleccionada
+)
+
+def actualizar_sliders(unidad_educativa):
+    # Condicional que define por completo cada grupo independiente
+    if unidad_educativa in ['BÁSICA 1', 'BÁSICA 2', 'BÁSICA SF']:
+        # Grupo completamente definido de 3 sliders
+        sliders_retencion = [
+            crear_grupo_sliders("Prebásica", "grupo-a", tipo_slider='retencion'),
+            crear_grupo_sliders("Primer Ciclo Básica", "grupo-b", tipo_slider='retencion'),
+            crear_grupo_sliders("Segundo Ciclo Básica", "grupo-c", tipo_slider='retencion'),
+          ]
+        
+        sliders_capatacion =[
+            crear_grupo_sliders("Prebásica", "grupo-a", tipo_slider='nuevos'),
+            crear_grupo_sliders("Primer Ciclo Básica",  "grupo-b", tipo_slider='nuevos'),
+            crear_grupo_sliders("Segundo Ciclo Básica",  "grupo-c", tipo_slider='nuevos'),
+          ]
+    else:
+        sliders_retencion = [
+            crear_grupo_sliders("Enseñanza Media", "grupo-d", tipo_slider='retencion'),
+            #crear_grupo_sliders("Primer Ciclo Básica", "grupo-b", tipo_slider='retencion'),
+            #crear_grupo_sliders("Segundo Ciclo Básica", "grupo-c", tipo_slider='retencion'),
+          ]
+        
+        sliders_capatacion =[
+            crear_grupo_sliders("Enseñanza Media", "grupo-d", tipo_slider='nuevos'),
+            #crear_grupo_sliders("Primer Ciclo Básica",  "grupo-b", tipo_slider='nuevos'),
+            #crear_grupo_sliders("Segundo Ciclo Básica",  "grupo-c", tipo_slider='nuevos'),
+          ]
+        
+    # Un solo punto de retorno para la variable que contiene el grupo seleccionado
+    return sliders_retencion, sliders_capatacion
 
 # Layaout Genral, Menu Lateral, 2 Tarjetas KPI, Gráfico y Tabla
 layout = dbc.Container([
@@ -113,17 +177,17 @@ layout = dbc.Container([
             ], id="tabs-gestion", active_tab="tab-ingreso", className="shadow-sm bg-white rounded"), # fin tabla configuracion
 
          # CORREGIDO: Sección de Pruebas sin márgenes disruptivos
-            html.Div([
-                html.H5("Consola de Verificación del DataFrame (Modo Test)", className="fw-bold text-secondary mt-4"),
-                html.Pre(id="salida-dataframe", style={
-                    "backgroundColor": "#212529", 
-                    "color": "#00ff66", 
-                    "padding": "15px", 
-                    "borderRadius": "5px",
-                    "fontFamily": "monospace",
-                    "fontSize": "12px"
-                })
-            ], className="mt-3"),
+           # html.Div([
+            #    html.H5("Consola de Verificación del DataFrame (Modo Test)", className="fw-bold text-secondary mt-4"),
+             #   html.Pre(id="salida-dataframe", style={
+              #      "backgroundColor": "#212529", 
+               #     "color": "#00ff66", 
+                #    "padding": "15px", 
+                 #   "borderRadius": "5px",
+                  #  "fontFamily": "monospace",
+                   # "fontSize": "12px"
+                #})
+            #], className="mt-3"),
 
         ], width=8) # Fin columna diagrama general
     ])
@@ -136,18 +200,20 @@ layout = dbc.Container([
     Output("store-disparador-cambio", "data"),
     Input("btn-guardar-tabla", "n_clicks"),
     Input("btn-anadir-fila", "n_clicks"),
+    Input('unidades_educativas', 'value'),
     State("tabla-datos-reales", "data"),
     State("store-disparador-cambio", "data"),
     prevent_initial_call=False
 )
-def gestionar_tabla_auditoria(n_guardar, n_anadir, filas_tabla, contador_disparador):
-    ctx = dash.callback_context
+def gestionar_tabla_auditoria(n_guardar, n_anadir, uni_edu, filas_tabla, contador_disparador):
+    # 1. Usar el nuevo método moderno de Dash para detectar el ID directamente
+    disparador_id = dash.ctx.triggered_id
     
-    # Determinar qué botón gatilló la acción
-    disparador_id = ctx.triggered[0]["component_id"] if ctx.triggered else None
-    
-    # ACCIÓN A: El usuario añade una fila vacía para registrar un año nuevo (ej. a mitad de año)
+    # ACCIÓN A: El usuario añade una fila vacía para registrar un año nuevo
     if disparador_id == "btn-anadir-fila":
+        # Asegúrate de inicializar filas_tabla como lista si llega None
+        if filas_tabla is None:
+            filas_tabla = []
         filas_tabla.append({"Año": "", "Valor Real": ""})
         return filas_tabla, contador_disparador
         
@@ -156,14 +222,18 @@ def gestionar_tabla_auditoria(n_guardar, n_anadir, filas_tabla, contador_dispara
         nuevo_dict_web = {}
         for fila in filas_tabla:
             # Validamos que la fila tenga año y valor numérico antes de guardar en el JSON
-            if fila["Año"] and fila["Valor Real"] is not None and str(fila["Valor Real"]).strip() != "":
+            if fila.get("Año") and fila.get("Valor Real") is not None and str(fila["Valor Real"]).strip() != "":
                 nuevo_dict_web[str(fila["Año"])] = int(fila["Valor Real"])
         
-        guardar_datos_reales(nuevo_dict_web)
-        contador_disparador += 1 # Notifica al gráfico que debe redibujarse
+        guardar_datos_reales(uni_edu, nuevo_dict_web)
         
-    # CARGA INICIAL: Lee los datos consolidados (Excel + JSON) para pintar la tabla completa
-    dict_consolidado = cargar_datos_consolidados()
+        # Aseguramos que el contador sea entero antes de sumarle
+        contador_disparador = (contador_disparador or 0) + 1 
+        
+    # CARGA INICIAL o Cambio de Dropdown ('unidades_educativas'): 
+    # Lee los datos consolidados (Excel + JSON) para pintar la tabla completa
+    dict_consolidado = cargar_datos_consolidados(uni_edu)
+    
     # Ordenamos cronológicamente los años de menor a mayor
     anios_ordenados = sorted(list(dict_consolidado.keys()), key=int)
     
@@ -175,22 +245,25 @@ def gestionar_tabla_auditoria(n_guardar, n_anadir, filas_tabla, contador_dispara
 @callback(
     Output("grafico-dinamico-completo", "figure"),
     Output("contenedor-kpis", "children"), # Inyecta las tarjetas aquí
-    Output("salida-dataframe", "children"), # salida slider en una tabla
+    #Output("salida-dataframe", "children"), # salida slider en una tabla
     Input({"type": "slider-retencion", "id": ALL}, "value"), # Lista de 10 porcentajes para retención
     Input({"type": "slider-nuevos", "id": ALL}, "value"),    # Lista de 10 cantidades de alumnos
+    Input('unidades_educativas', 'value'), # unidad educativa elegida para filtrar excel
     Input("store-disparador-cambio", "data"),
 
 )
-def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, _):
+def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, _):
     
     # 1. Control de seguridad para que Dash no intente calcular con listas vacías
     if not lista_retencion or not lista_nuevos:
         raise dash.exceptions.PreventUpdate
     
     # Enviamos la lista completa a tu función del módulo especializado
-    resultado_texto = test_multiple_slider(lista_retencion)
+    #resultado_texto = test_multiple_slider(lista_retencion)
+
+    # obtener el dataframe para el gráfico y enviar
     
-    df, ultimo_anio_real_str= calcular_proyeccion_completa(lista_retencion, lista_nuevos)
+    df, ultimo_anio_real_str= calcular_proyeccion_completa(lista_retencion, lista_nuevos, unidad_edu)
     
     # CÁLCULO DE MÉTRICAS PARA TARJETAS KPI ---
     # 1. Matricula Máxima
@@ -318,22 +391,25 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, _):
     
     
 
-    return magtricula_corp_graph, kpis_layout, resultado_texto
+    return magtricula_corp_graph, kpis_layout
 
 
 
-# Callback para descargar el archivo Excel
+# CORREGIDO: Callback para descargar el archivo Excel vinculando los componentes reales
 @callback(
     Output("descarga-excel", "data"),
     Input("btn-exportar-excel", "n_clicks"),
-    State("sl-retencion", "value"),
-    State("sl-captacion", "value"),
-    State("sl-crecimiento", "value"),
+    State({"type": "slider-retencion", "id": ALL}, "value"),
+    State({"type": "slider-nuevos", "id": ALL}, "value"),
+    State('unidades_educativas', 'value'),
     prevent_initial_call=True
 )
-def exportar_a_excel(n_clicks, retencion, captacion, crecimiento):
-    if n_clicks is None:
+def exportar_a_excel(n_clicks, lista_retencion, lista_nuevos, unidad_edu):
+    if not n_clicks or not lista_retencion or not lista_nuevos:
         return dash.no_update
-    df, _ = calcular_proyeccion_completa(retencion, captacion, crecimiento)
-    df_excel = df.rename(columns={"Valor": "Matrícula (Alumnos)", "Tipo": "Estado del Dato"})
+        
+    # Ejecutamos el motor analítico con los mismos datos actuales de la pantalla
+    df, _ = calcular_proyeccion_completa(lista_retencion, lista_nuevos, unidad_edu)
+    df_excel = df.rename(columns={"Año": "Año Académico", "Valor": "Matrícula (Alumnos)", "Tipo": "Estado del Dato"})
+    
     return dcc.send_data_frame(df_excel.to_excel, filename="Reporte_Proyeccion_Matriculas.xlsx", sheet_name="Matrículas", index=False)
