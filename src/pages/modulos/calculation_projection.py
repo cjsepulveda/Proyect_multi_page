@@ -40,37 +40,34 @@ def cargar_datos_consolidados(uni_edu):
         df_excel = pd.read_excel(data_corp_projection_path, sheet_name="data_mat_proj")
         df_excel_filtrado =  df_excel.query("UNIDAD_ACADEMICA == @uni_edu").copy()
         df_filtrado_final = df_excel_filtrado.drop(columns=['UNIDAD_ACADEMICA'])
-
-
-
-
-
-
         # Convertimos a diccionario string-int para procesarlo igual: {'2024': 2400, '2025': 2520}
         datos_finales = dict(zip(df_filtrado_final['PERIODO'].astype(str), df_filtrado_final['MATRICULA'].astype(int)))
     else:
         # Respaldo por si el Excel no está en la carpeta
         datos_finales = {"2024": 664, "2025": 652, "2026": 635}
 
+    # 2. COMENTADO POR SEGURIDAD PARA PRUEBAS (Ignoramos el JSON):
     # 2. Leer si hay datos nuevos ingresados desde la interfaz web (Aislado por unidad)
-    if ruta_json_especifica.exists():
-        with open(ruta_json_especifica, "r") as f:
-            datos_web = json.load(f)
+    #if ruta_json_especifica.exists():
+     #   with open(ruta_json_especifica, "r") as f:
+      #      datos_web = json.load(f)
         # Combinar ambos: el JSON de esta unidad sobreescribe o añade años al del Excel
-        datos_finales.update(datos_web)
+       # datos_finales.update(datos_web)
         
      
     return datos_finales
 
 def guardar_datos_reales(uni_edu, datos_dict):
     """Guarda en un JSON exclusivo de la unidad lo que el usuario edita en la interfaz web."""
-    ruta_json_especifica = obtener_ruta_json_dinamica(uni_edu)
+    # COMENTADO POR SEGURIDAD PARA PRUEBAS:
+    #ruta_json_especifica = obtener_ruta_json_dinamica(uni_edu)
     
     # Asegura que la carpeta contenedora exista por precaución
-    ruta_json_especifica.parent.mkdir(parents=True, exist_ok=True)
+    #ruta_json_especifica.parent.mkdir(parents=True, exist_ok=True)
     
-    with open(ruta_json_especifica, "w") as f:
-        json.dump(datos_dict, f, indent=4)
+    #with open(ruta_json_especifica, "w") as f:
+    #    json.dump(datos_dict, f, indent=4)
+    pass # 👈 Obligatorio aquí para que Python no arroje un error de sintaxis al dejar la función vacía
 
 def calcular_proyeccion_completa(lista_retencion, lista_nuevos, unidad_educativa):
     """Genera el DataFrame usando el Excel mapeado como historial base."""
@@ -121,7 +118,6 @@ def calcular_proyeccion_completa(lista_retencion, lista_nuevos, unidad_educativa
     
     return pd.DataFrame(registros), str(ultimo_anio_real)
 
-   
 def proyeccion_por_nivel(lista_retencion, lista_nuevos, unidad_educativa):
 
     """
@@ -130,109 +126,130 @@ def proyeccion_por_nivel(lista_retencion, lista_nuevos, unidad_educativa):
     lista_nuevos: 10 cantidades de alumnos nuevos desde Pre-Kinder hasta 8° Básico.
     """
 
-
+    # Data frame Original
     df_nivel = pd.read_excel(data_corp_projection_path, sheet_name="data_proj")
 
-    # Filtra donde el valor de la columna 'Nombre' sea exactamente 'Juan'
-
+    # Data frame filtrado segun Unidad académica
     df_nivel_filtrado = df_nivel.query("UNIDAD_ACADEMICA == @unidad_educativa").copy()
 
-    #df_nivel_filtrado = df_nivel[df_nivel['UNIDAD_ACADEMICA'] == 'BÁSICA 1']
-    
-    # SOLUCIÓN: Convertimos absolutamente todas las columnas a texto (str)
-    # Esto transforma el número 2026 en texto '2026' de inmediato
+    # Asegurar que las columnas de años sean string de inmediato
     df_nivel_filtrado.columns = df_nivel_filtrado.columns.astype(str)
+    
+    # 1. OPTIMIZACIÓN: Vectorizar tasas de sliders antes de los ciclos for
+    tasas_decimales = [r / 100 if r > 1 else r for r in lista_retencion]
 
-    # Inicializar columnas futuras
+    # Inicializar columnas del horizonte de proyección
     for year in range(2027, 2036):
         df_nivel_filtrado[str(year)] = 0.0
 
-    # 1. Convertimos el porcentaje de retención a decimal (ej: de 85 a 0.85)
-    # Si tus sliders ya envían decimales (ej: 0.85), usa directamente: tasa_ret = retención
-    #tasa_ret = retención / 100 if retención > 1 else retención
-    
-    # 2. Cantidad fija de alumnos nuevos que entran por nivel cada año
-    # Usamos la variable 'captacion' como el valor fijo de nuevos ingresos
-    #nuevos_estudiantes_por_nivel = captacion 
+    # Determinar el total de niveles reales que tiene este establecimiento
+    total_niveles = len(df_nivel_filtrado)
 
+    # Control de seguridad: Si Dash mandó menos sliders de las filas que tiene el Excel, cortamos el error
+    if len(tasas_decimales) < total_niveles:
+        raise ValueError(f"Error de consistencia: El Excel tiene {total_niveles} cursos, pero se recibieron {len(tasas_decimales)} sliders.")
 
+    # 2. CORRECCIÓN: Ciclo dinámico basado en la estructura real del colegio
     for periodo in range(2027, 2036):
-        j = df_nivel_filtrado.columns.get_loc(str(periodo)) # Columna actual
-        j_anterior = df_nivel_filtrado.columns.get_loc(str(periodo - 1)) # Columna año anterior(ej: 2026)
+        j = df_nivel_filtrado.columns.get_loc(str(periodo)) 
+        j_anterior = df_nivel_filtrado.columns.get_loc(str(periodo - 1)) 
 
-          # 🔄 CICLO POR NIVEL EDUCATIVO (Filas: 0 a 9)
-        for nivel in range (len(df_nivel_filtrado)):
-            
-            # 🌟 EXTRAER VALORES DEL SLIDER CORRESPONDIENTES A ESTA FILA (NIVEL) SPECÍFICA
-            # Convertimos el porcentaje del slider actual a decimal (ej: 95 -> 0.95)
-            tasa_ret_nivel = lista_retencion[nivel] / 100 if lista_retencion[nivel] > 1 else lista_retencion[nivel]
+        for nivel in range(total_niveles):
+            tasa_ret_nivel = tasas_decimales[nivel]
             alumnos_nuevos_nivel = lista_nuevos[nivel]
-            
-
 
             if nivel == 0:
-                # Pre-Kinder (Primer nivel, no viene de un nivel anterior). 
-                # Se mantiene tu regla base pero sumando sus alumnos nuevos correspondientes del slider
-                 # SOLUCIÓN: Buscamos la posición numérica de la columna '2026'
-                j_2026 = df_nivel_filtrado.columns.get_loc('2026')
-
-                df_nivel_filtrado.iloc[nivel, j] = df_nivel_filtrado.iloc[nivel, j_2026] + alumnos_nuevos_nivel
-
+                # Pre-Kinder (o 1° Medio en colegios de pura Media)
+                # Reemplazamos la búsqueda de '2026' fija por la columna inmediatamente anterior dinámicamente
+                df_nivel_filtrado.iloc[nivel, j] = df_nivel_filtrado.iloc[nivel, j_anterior] + alumnos_nuevos_nivel
             else:
-                
-                # Cohorte: Los que estaban el año pasado en el nivel anterior (nivel - 1) 
-                # se multiplican por la tasa de retención del nivel actual
+                # Flujo de cohorte tradicional (alumnos del año pasado en curso inferior * tasa de retención)
                 alumnos_que_pasan = df_nivel_filtrado.iloc[nivel - 1, j_anterior] * tasa_ret_nivel
-
-                # Sumamos los estudiantes nuevos destinados específicamente a este nivel
                 total_calculado = alumnos_que_pasan + alumnos_nuevos_nivel
-
-                 # Calculamos el flujo con decimales primero
-                #alumnos_que_pasan = df_nivel.iloc[nivel - 1, j_anterior] * tasa_ret
-                #total_calculado = alumnos_que_pasan + nuevos_estudiantes_por_nivel
-                
-                # APLICACIÓN DEL ROUND: Redondeamos a 0 decimales el total antes de asignarlo
                 df_nivel_filtrado.iloc[nivel, j] = int(round(total_calculado, 0))
     
-    # --- AGREGA ESTAS LÍNEAS AQUÍ (FUERA DE LOS CICLOS FOR) ---
-    # Convertimos las columnas proyectadas a tipo entero antes de retornar
+    # --- PROCESAMIENTO DE TOTALES Y PIVOT (Tu sección final limpia) ---
     columnas_proyeccion = [str(y) for y in range(2027, 2036)]
     df_nivel_filtrado[columnas_proyeccion] = df_nivel_filtrado[columnas_proyeccion].astype(int)
 
-     # =====================================================================
-    # NUEVO: AGREGAR FILA DE TOTALES ANTES DE SALIR DE LA FUNCIÓN
-    # =====================================================================
-    # 1. Sumamos verticalmente solo las columnas numéricas de los años
     totales_años = df_nivel_filtrado.sum(numeric_only=True)
     
-    # 2. Creamos la estructura de la fila final combinando texto y sumas
     fila_total = {
-        'UNIDAD_ACADEMICA': df_nivel_filtrado['UNIDAD_ACADEMICA'].iloc[0], # Copia "BÁSICA 1"
-        'NIVEL': 'TOTAL UNIDAD'                                   # Nombre de la fila
+        'UNIDAD_ACADEMICA': df_nivel_filtrado['UNIDAD_ACADEMICA'].iloc[0],
+        'NIVEL': 'TOTAL UNIDAD'
     }
-    
-    # Rellenamos el diccionario con los resultados de las sumas anuales
     for col, suma in totales_años.items():
         fila_total[col] = suma
 
-    # 3. Insertamos la fila de totales al final del DataFrame original
     df_total_fila = pd.DataFrame([fila_total])
     df_nivel_filtrado = pd.concat([df_nivel_filtrado, df_total_fila], ignore_index=True)
 
-    # 4. Homogeneizamos todo el bloque de años (incluyendo el TOTAL) a números enteros
     columnas_años = [str(y) for y in range(2026, 2036)]
     df_nivel_filtrado[columnas_años] = df_nivel_filtrado[columnas_años].astype(int)
 
-    df_totales_proyectados =df_nivel_filtrado.iloc[[-1]] # última fila
-
-    # 1. Seleccionamos solo las columnas que no son de texto (las de los años)
+    df_totales_proyectados = df_nivel_filtrado.iloc[[-1]]
     df_totales_proyectados = df_totales_proyectados.drop(columns=['UNIDAD_ACADEMICA', 'NIVEL'])
-
-# 2. Pivoteamos para que queden solo las dos columnas deseadas
     df_totales_proyectados = df_totales_proyectados.melt(var_name='PERIODO', value_name='MATRICULA')
     df_totales_proyectados = df_totales_proyectados[df_totales_proyectados['PERIODO'] != '2026']
+    # el data frame final está forma por dos columnas una llamada PERIODO y otra MATRICULA, parte desde 2027
 
     return df_totales_proyectados
+
+
+# funciones especializadas en gestionar escenarios
+def asegurar_carpeta_escenarios():
+    """Crea la subcarpeta de escenarios si no existe."""
+    ruta_escenarios = data_corp_projection_path.parent / "escenarios"
+    ruta_escenarios.mkdir(parents=True, exist_ok=True)
+    return ruta_escenarios
+
+def guardar_escenario_simulacion(unidad_edu, nombre_escenario, lista_ret, lista_nuevos, df_resultado):
+    """Guarda el escenario completo en un archivo JSON estructurado."""
+    if not nombre_escenario:
+        return False, "Por favor, ingresa un nombre válido para el escenario."
+        
+    carpeta = asegurar_carpeta_escenarios()
+    # Limpiamos el nombre para que sea un nombre de archivo válido
+    nombre_archivo = f"{unidad_edu}_{nombre_escenario}.json".replace(" ", "_")
+    ruta_final = carpeta / nombre_archivo
+    
+    # Convertimos el DataFrame a un formato de lista de diccionarios para JSON
+    tabla_datos = df_resultado.to_dict(orient="records")
+    
+    escenario_dict = {
+        "nombre_escenario": nombre_escenario,
+        "unidad_educativa": unidad_edu,
+        "valores_retencion": lista_ret,
+        "valores_nuevos": lista_nuevos,
+        "tabla_proyeccion": tabla_datos
+    }
+    
+    with open(ruta_final, "w", encoding="utf-8") as f:
+        json.dump(escenario_dict, f, indent=4, ensure_ascii=False)
+        
+    return True, f"Escenario '{nombre_escenario}' guardado con éxito."
+
+def listar_escenarios_por_unidad(unidad_edu):
+    """Busca todos los JSON guardados que correspondan a la unidad educativa actual."""
+    carpeta = asegurar_carpeta_escenarios()
+    archivos = carpeta.glob(f"{unidad_edu.replace(' ', '_')}_*.json")
+    
+    opciones = []
+    for archivo in archivos:
+        with open(archivo, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            # Guardamos la ruta del archivo como valor y el nombre lindo como etiqueta
+            opciones.append({"label": data["nombre_escenario"], "value": str(archivo)})
+    return opciones
+
+def cargar_datos_escenario(ruta_archivo):
+    """Lee el archivo JSON seleccionado y devuelve sus parámetros."""
+    if not os.path.exists(ruta_archivo):
+        return None
+    with open(ruta_archivo, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
 
 def test_multiple_slider(retencion_por_nivel):
     """
