@@ -9,21 +9,17 @@ def crear_grupo_sliders(titulo_grupo, prefijo_id, tipo_slider='retencion'):
     sliders = []
 
     # Estructura limpia: la clave coincide exactamente con el prefijo_id que le pases
-    niveles_basica = {
+    niveles_corporacion = {
         'grupo-a': ['PRE-KINDER', 'KINDER'],
         'grupo-b': ['1BÁSICO', '2BÁSICO', '3BÁSICO', '4BÁSICO'],
-        'grupo-c': ['5BÁSICO', '6BÁSICO', '7BÁSICO', '8BÁSICO']
+        'grupo-c': ['5BÁSICO', '6BÁSICO', '7BÁSICO', '8BÁSICO'],
+        'grupo-d':['1MEDIO','2MEDIO','3MEDIO','4MEDIO']
     }
         
     # Obtenemos la lista de cursos para este grupo específico
-    cursos = niveles_basica[prefijo_id]
+    cursos = niveles_corporacion[prefijo_id]
 
-    # Obtenemos la configuración del grupo actual
-    #grupo_actual = configuracion[prefijo_id]
-    #clave_ciclo = grupo_actual["clave"]
-    #limite_rango = grupo_actual["cantidad"] + 1
-    
-     # Iteramos directamente sobre los cursos obteniendo su índice (i) y su nombre (curso)
+    # Iteramos directamente sobre los cursos obteniendo su índice (i) y su nombre (curso)
     for i, curso in enumerate(cursos, start=1):
         
         # CLAVE: El type del ID ahora incluye el tipo de slider para que el Callback no los mezcle
