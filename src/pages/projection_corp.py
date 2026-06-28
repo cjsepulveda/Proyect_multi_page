@@ -12,7 +12,10 @@ from pages.modulos.calculation_projection import (
     test_multiple_slider,
     guardar_escenario_simulacion,      
     listar_escenarios_por_unidad,      
-    cargar_datos_escenario             
+    cargar_datos_escenario,
+    eliminar_archivo_escenario,
+    proyeccion_corporativa,
+                 
 )
 from pages.modulos.slider_creation import crear_grupo_sliders 
 
@@ -184,8 +187,17 @@ layout = dbc.Container([
                 dbc.CardBody(dcc.Graph(config={"displayModeBar": False}, id="grafico-dinamico-completo"))
             ], className="shadow-sm mb-4"),
             
+            # Gráfico en formato tarjeta, CORPORACION
+            dbc.Card([                                        
+                dbc.CardHeader(html.H6("Modelación Escenarios Matrículas Corporativas", className="m-0 text-dark")),
+                dbc.CardBody(dcc.Graph(config={"displayModeBar": False}, id="grafico-corp"))
+            ], className="shadow-sm mb-4"),
+
+
             # Tabla para mostrar el resultado de la proyección
             dbc.Tabs([
+                
+                 # Pestaña 1: Resumen de Matrícula Total por Año real y proyectado
                 dbc.Tab(label="Tabla de Proyecciones", tab_id="tab-ingreso", children=[
                     html.Div([
                         html.P("La siguiente tabla muestra el desglose numérico detallado de la proyección según los valores actuales de los sliders.", className="text-muted small"),
@@ -217,6 +229,33 @@ layout = dbc.Container([
                         ),
                     ], className="p-3")
                 ]),
+
+                # Pestaña 2: Desagregado por Niveles Educativos
+                dbc.Tab(label="Tabla desagregada po Niveles", tab_id="tab-matriz-desglose", children=[
+                    html.Div([
+                        html.P("Desglose detallado por nivel de enseñanza. Visualiza la transferencia secuencial de alumnos año tras año.", className="text-muted small"),
+                        dash_table.DataTable(
+                            id="tabla-matriz-desglose-cursos", # 🚀 ID único para la segunda tabla
+                            style_cell={"textAlign": "center", "padding": "6px", "fontFamily": "Roboto mono", "fontSize": "12px"},
+                            style_header={"backgroundColor": "#f8f9fa", "fontWeight": "bold"},
+                            style_table={"marginBottom": "1rem", "overflowX": "auto"}, # overflowX permite scroll horizontal si hay muchos años
+                            # Destacamos visualmente la fila de TOTAL UNIDAD para diferenciarla de los cursos individuales
+                            style_data_conditional=[
+                                {
+                                    'if': {
+                                        'filter_query': '{NIVEL} eq "TOTAL UNIDAD"' # 👈 Cambiado de row_index a filter_query
+                                    },
+                                    'backgroundColor': '#e8f4fd', # Azul muy suave corporativo
+                                    'color': '#0056b3',
+                                    'fontWeight': 'bold',
+                                }
+                            ]
+                        ),
+                    ], className="p-3")
+                ]),
+
+
+
             ], id="tabs-gestion", active_tab="tab-ingreso", className="shadow-sm bg-white rounded"),
  # fin tabla configuracion
 
@@ -224,61 +263,14 @@ layout = dbc.Container([
     ])
 ], fluid=True) # Fin Layaout para leer en aap.py
 
-
-# Callback para cargar el Historial desde Excel y Gestiona las Ediciones del Usuario
-#@callback(
- #   Output("tabla-datos-reales", "data"),
-    #Output("store-disparador-cambio", "data"),
-    # COMENTADOS POR SEGURIDAD (Ya no existen en el Layout):
-    #Input("btn-guardar-tabla", "n_clicks"),
-    #Input("btn-anadir-fila", "n_clicks"),
-  #  Input('unidades_educativas', 'value'),
-    #State("tabla-datos-reales", "data"),
-    #State("store-disparador-cambio", "data"),
-    #prevent_initial_call=False
-#)
-#def gestionar_tabla_auditoria(uni_edu):
-    # 1. Usar el nuevo método moderno de Dash para detectar el ID directamente
-    #disparador_id = dash.ctx.triggered_id
-    
-    # ACCIÓN A: El usuario añade una fila vacía para registrar un año nuevo
-    #if disparador_id == "btn-anadir-fila":
-        # Asegúrate de inicializar filas_tabla como lista si llega None
-     #   if filas_tabla is None:
-      #      filas_tabla = []
-       # filas_tabla.append({"Año": "", "Valor Real": ""})
-        #return filas_tabla, contador_disparador
-        
-    # ACCIÓN B: El usuario presiona Guardar Cambios
-    #if disparador_id == "btn-guardar-tabla" and filas_tabla:
-     #   nuevo_dict_web = {}
-      #  for fila in filas_tabla:
-            # Validamos que la fila tenga año y valor numérico antes de guardar en el JSON
-       #     if fila.get("Año") and fila.get("Valor Real") is not None and str(fila["Valor Real"]).strip() != "":
-        #        nuevo_dict_web[str(fila["Año"])] = int(fila["Valor Real"])
-        
-        #guardar_datos_reales(uni_edu, nuevo_dict_web)
-        
-        # Aseguramos que el contador sea entero antes de sumarle
-        #contador_disparador = (contador_disparador or 0) + 1 
-        
-    # CARGA INICIAL o Cambio de Dropdown ('unidades_educativas'): 
-    # Lee los datos consolidados (Excel + JSON) para pintar la tabla completa
-    #dict_consolidado = cargar_datos_consolidados(uni_edu)
-    
-    # Ordenamos cronológicamente los años de menor a mayor
-    #anios_ordenados = sorted(list(dict_consolidado.keys()), key=int)
-    
-    #tabla_data = [{"Año": anio, "Valor Real": dict_consolidado[anio]} for anio in anios_ordenados]
-    
-    #return tabla_data
-
 # Callback para actualizar Gráfico y Generar Tarjetas KPI de Forma Simultánea
 @callback(
     Output("grafico-dinamico-completo", "figure"),
     Output("contenedor-kpis", "children"), # Inyecta las tarjetas aquí
-    #Output("salida-dataframe", "children"), # salida slider en una tabla
     Output("tabla-datos-reales", "data"), # 🚀 NUEVO OUTPUT AGREGADO AQUÍ
+    Output("tabla-matriz-desglose-cursos", "data"),    # 🚀 NUEVO OUTPUT DATA
+    Output("tabla-matriz-desglose-cursos", "columns"), # 🚀 NUEVO OUTPUT COLUMNS DINÁMICAS
+    Output("grafico-corp", "figure"), # 🚀 Grafico CORPORACION
     Input({"type": "slider-retencion", "id": ALL}, "value"), # Lista de 10 porcentajes para retención
     Input({"type": "slider-nuevos", "id": ALL}, "value"),    # Lista de 10 cantidades de alumnos
     Input('unidades_educativas', 'value'), # unidad educativa elegida para filtrar excel
@@ -291,12 +283,10 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu):
     if not lista_retencion or not lista_nuevos:
         raise dash.exceptions.PreventUpdate
     
-    # Enviamos la lista completa a tu función del módulo especializado
-    #resultado_texto = test_multiple_slider(lista_retencion)
-
     # obtener el dataframe para el gráfico y enviar
     
-    df, ultimo_anio_real_str= calcular_proyeccion_completa(lista_retencion, lista_nuevos, unidad_edu)
+    df_corporacion = proyeccion_corporativa()
+    df, ultimo_anio_real_str, df_matriz_desglose= calcular_proyeccion_completa(lista_retencion, lista_nuevos, unidad_edu)
     
     # CÁLCULO DE MÉTRICAS PARA TARJETAS KPI ---
     # 1. Matricula Máxima
@@ -389,6 +379,18 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu):
 
     ], className="g-3", style={"marginTop": "5px"}) # Cierre fila con dos tarjetas
     
+        
+    # 1. 🚀 CALCULAR RANGO DINÁMICO SEGÚN LOS DATOS ACTUALES DE ESTA ESCUELA
+    # Buscamos el valor máximo y mínimo dentro del DataFrame generado
+    valor_maximo = int(df["Valor"].max())
+    valor_minimo = int(df["Valor"].min())
+    
+    # Dejamos un 15% de holgura hacia arriba y hacia abajo para que la línea respire
+    techo_eje_y = int(valor_maximo * 1.15)
+    piso_eje_y = max(0, int(valor_minimo * 0.85)) # El 'max' evita que baje de 0 alumnos si hay valores muy chicos
+
+
+
     # DISEÑO DEL GRÁFICO ---
     magtricula_corp_graph = graph_objects.Figure()
     
@@ -420,12 +422,46 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu):
         font_family='Roboto mono',
     )
     magtricula_corp_graph.update_xaxes(showgrid=True, gridcolor="#EAEAEA")
-    magtricula_corp_graph.update_yaxes(showgrid=True, gridcolor="#EAEAEA",range=[200, 2000])
     
-    # 🚀 PASO FINAL: Convertimos el DataFrame actual a diccionario para la tabla visual
-    tabla_data = df.to_dict(orient="records")
+     # 3. CORRECCIÓN DEL EJE Y: Reemplazamos los números fijos por tus variables dinámicas
+    magtricula_corp_graph.update_yaxes(
+                    showgrid=True, 
+                    gridcolor="#EAEAEA",
+                    range=[piso_eje_y, techo_eje_y]
+                    )
+    
+    # GRAFICO TOTAL CORPORACION
+    corp_graph = graph_objects.Figure()
+    corp_graph.add_trace(graph_objects.Scatter(
+        x=df_corporacion["PERIODO"], y=df_corporacion["MATRICULA"], name="Datos Reales",
+        mode="lines+markers", 
+        marker=dict(color= "#af0000", size=8),
+        line=dict(color="#4B4B4B", width=2)
+    ))
 
-    return magtricula_corp_graph, kpis_layout, tabla_data
+
+    # 1. Preparación de datos para la Tabla 1 (Consolidada)
+    tabla_consolidada_data = df.to_dict(orient="records") 
+
+    
+    # 2. Preparación dinámica para la Tabla 2 (Matriz por Niveles)
+    # Creamos las columnas dinámicamente basándonos en las columnas reales que trae el DataFrame
+    columnas_matriz = [{"name": "Curso / Nivel", "id": "NIVEL"}] + [
+        {"name": col, "id": col} for col in df_matriz_desglose.columns if col != "NIVEL"
+    ]
+
+    # Sólo datos, Lista de diccionarios, cada diccionario es un nivel con años y matrícula
+    tabla_matriz_data = df_matriz_desglose.to_dict(orient="records") 
+
+     # Retornamos los cinco elementos alineados con la cabecera
+    return (
+        magtricula_corp_graph, 
+        kpis_layout, 
+        tabla_consolidada_data, 
+        tabla_matriz_data,  # Inyecta las filas desglosadas
+        columnas_matriz, # Inyecta los nombres de las columnas de años
+        corp_graph     # GRAFICO TOTAL CORPORACION
+    )
 
 
 
@@ -443,7 +479,7 @@ def exportar_a_excel(n_clicks, lista_retencion, lista_nuevos, unidad_edu):
         return dash.no_update
         
     # Ejecutamos el motor analítico con los mismos datos actuales de la pantalla
-    df, _ = calcular_proyeccion_completa(lista_retencion, lista_nuevos, unidad_edu)
+    df, _, _ = calcular_proyeccion_completa(lista_retencion, lista_nuevos, unidad_edu)
     df_excel = df.rename(columns={"Año": "Año Académico", "Valor": "Matrícula (Alumnos)", "Tipo": "Estado del Dato"})
     
     return dcc.send_data_frame(df_excel.to_excel, filename="Reporte_Proyeccion_Matriculas.xlsx", sheet_name="Matrículas", index=False)
@@ -469,7 +505,7 @@ def ejecutar_guardado_escenario(n_clicks, unidad_edu, nombre_escenario, lista_re
         return "⚠️ Por favor, ingresa un nombre para el escenario antes de guardar.", opciones_actuales
 
     # Ejecutamos el motor analítico para obtener el DataFrame que queremos respaldar
-    df, _ = calcular_proyeccion_completa(lista_ret, lista_nuevos, unidad_edu)
+    df, _, _= calcular_proyeccion_completa(lista_ret, lista_nuevos, unidad_edu)
     
     # Llamamos a tu función del módulo especializado
     exito, mensaje = guardar_escenario_simulacion(unidad_edu, nombre_escenario.strip(), lista_ret, lista_nuevos, df)
@@ -503,3 +539,26 @@ def ejecutar_carga_en_sliders(n_clicks, ruta_archivo_escenario):
     
     # Retornamos los arreglos directos. Dash se encargará de posicionarlos en orden en los sliders
     return valores_retencion_guardados, valores_nuevos_guardados
+
+# Callback para ELIMINAR un escenario en los Sliders
+@callback(
+    Output("mensaje-alerta-escenario", "children", allow_duplicate=True),
+    Output("dropdown-escenarios-guardados", "options", allow_duplicate=True),
+    Output("dropdown-escenarios-guardados", "value"), # Resetea el selector visual a vacío
+    Input("btn-eliminar-escenario", "n_clicks"),
+    State("unidades_educativas", "value"),
+    State("dropdown-escenarios-guardados", "value"),
+    prevent_initial_call=True
+)
+def ejecutar_eliminacion_escenario(n_clicks, unidad_edu, ruta_archivo_escenario):
+    if not n_clicks or not ruta_archivo_escenario:
+        raise dash.exceptions.PreventUpdate
+        
+    # 1. Borramos el archivo del disco
+    _, mensaje = eliminar_archivo_escenario(ruta_archivo_escenario)
+    
+    # 2. Listamos nuevamente los escenarios vigentes de esta escuela
+    nuevas_opciones = listar_escenarios_por_unidad(unidad_edu)
+    
+    # 3. Retornamos el mensaje, las nuevas opciones y limpiamos la selección
+    return mensaje, nuevas_opciones, None

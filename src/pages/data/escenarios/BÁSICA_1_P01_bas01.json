@@ -1,5 +1,5 @@
 {
-    "nombre_escenario": "Proyeccion_bas01_01",
+    "nombre_escenario": "P01_bas01",
     "unidad_educativa": "BÁSICA 1",
     "valores_retencion": [
         95,
@@ -14,16 +14,16 @@
         95
     ],
     "valores_nuevos": [
-        29,
-        39,
-        10,
-        10,
-        10,
-        10,
-        8,
-        10,
-        10,
-        10
+        0,
+        7,
+        14,
+        6,
+        12,
+        12,
+        11,
+        16,
+        12,
+        14
     ],
     "tabla_proyeccion": [
         {
@@ -43,47 +43,47 @@
         },
         {
             "Año": "2027",
-            "Valor": 684,
+            "Valor": 642,
             "Tipo": "Proyección"
         },
         {
             "Año": "2028",
-            "Valor": 775,
+            "Valor": 657,
             "Tipo": "Proyección"
         },
         {
             "Año": "2029",
-            "Valor": 853,
+            "Valor": 632,
             "Tipo": "Proyección"
         },
         {
             "Año": "2030",
-            "Valor": 974,
+            "Valor": 622,
             "Tipo": "Proyección"
         },
         {
             "Año": "2031",
-            "Valor": 1127,
+            "Valor": 618,
             "Tipo": "Proyección"
         },
         {
             "Año": "2032",
-            "Valor": 1299,
+            "Valor": 609,
             "Tipo": "Proyección"
         },
         {
             "Año": "2033",
-            "Valor": 1499,
+            "Valor": 606,
             "Tipo": "Proyección"
         },
         {
             "Año": "2034",
-            "Valor": 1706,
+            "Valor": 595,
             "Tipo": "Proyección"
         },
         {
             "Año": "2035",
-            "Valor": 1938,
+            "Valor": 585,
             "Tipo": "Proyección"
         }
     ]
