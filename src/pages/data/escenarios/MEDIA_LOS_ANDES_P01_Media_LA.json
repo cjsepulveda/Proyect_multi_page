@@ -1,0 +1,78 @@
+{
+    "nombre_escenario": "P01_Media_LA",
+    "unidad_educativa": "MEDIA LOS ANDES",
+    "valores_retencion": [
+        95,
+        95,
+        95,
+        95
+    ],
+    "valores_nuevos": [
+        10,
+        200,
+        10,
+        10
+    ],
+    "tabla_proyeccion": [
+        {
+            "Año": "2024",
+            "Valor": 1058,
+            "Tipo": "Real"
+        },
+        {
+            "Año": "2025",
+            "Valor": 1125,
+            "Tipo": "Real"
+        },
+        {
+            "Año": "2026",
+            "Valor": 1285,
+            "Tipo": "Real"
+        },
+        {
+            "Año": "2027",
+            "Valor": 1644,
+            "Tipo": "Proyección"
+        },
+        {
+            "Año": "2028",
+            "Valor": 1852,
+            "Tipo": "Proyección"
+        },
+        {
+            "Año": "2029",
+            "Valor": 2001,
+            "Tipo": "Proyección"
+        },
+        {
+            "Año": "2030",
+            "Valor": 1921,
+            "Tipo": "Proyección"
+        },
+        {
+            "Año": "2031",
+            "Valor": 1851,
+            "Tipo": "Proyección"
+        },
+        {
+            "Año": "2032",
+            "Valor": 1805,
+            "Tipo": "Proyección"
+        },
+        {
+            "Año": "2033",
+            "Valor": 1785,
+            "Tipo": "Proyección"
+        },
+        {
+            "Año": "2034",
+            "Valor": 1766,
+            "Tipo": "Proyección"
+        },
+        {
+            "Año": "2035",
+            "Valor": 1738,
+            "Tipo": "Proyección"
+        }
+    ]
+}

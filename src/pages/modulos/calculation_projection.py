@@ -12,6 +12,23 @@ data_corp_projection_path = ruta_actual.parent.parent / "data" / "data_corp_proj
 # NOTA: Dejamos la ruta original aquí por trazabilidad, pero abajo generamos la ruta específica por unidad.
 json_data_web_path = ruta_actual.parent.parent / "data" / "data_web_user.json"
 
+matriculas_iniciales_default = {
+        'BÁSICA 1':         {'2027':24,'2028':22, '2029':21, '2030':20,'2031':20,
+                            '2032':19,'2033':18,'2034':18,'2035':17,'2036':17},
+
+        'BÁSICA 2':         {'2027':40,'2028':39, '2029':38, '2030':37,'2031':36,
+                            '2032':32,'2033':30,'2034':29,'2035':28,'2036':24},
+
+        'BÁSICA SF':        {'2027':36,'2028':35, '2029':34, '2030':33,'2031':30,
+                            '2032':30,'2033':28,'2034':28,'2035':26,'2036':24},
+
+        'MEDIA LOS ANDES':  {'2027':400,'2028':350, '2029':320, '2030':320,'2031':320,
+                            '2032':300,'2033':300,'2034':300,'2035':290,'2036':280},
+
+        'MEDIA SAN FELIPE': {'2027':257,'2028':250, '2029':240, '2030':240,'2031':240,
+                            '2032':200,'2033':200,'2034':190,'2035':190,'2036':180},   
+     }
+
 def obtener_ruta_json_dinamica(uni_edu):
     """
     Toma la carpeta 'data' original del proyecto y construye una ruta
@@ -29,7 +46,7 @@ def cargar_datos_consolidados(uni_edu):
     """
 
     # Usamos la ruta dinámica construida a partir de la ubicación original
-    ruta_json_especifica = obtener_ruta_json_dinamica(uni_edu)
+    # ruta_json_especifica = obtener_ruta_json_dinamica(uni_edu)
 
     # 1. Leer datos base desde tu archivo Excel
     if data_corp_projection_path.exists():
@@ -45,31 +62,9 @@ def cargar_datos_consolidados(uni_edu):
         # Respaldo por si el Excel no está en la carpeta
         datos_finales = {"2024": 664, "2025": 652, "2026": 635}
 
-    # 2. COMENTADO POR SEGURIDAD PARA PRUEBAS (Ignoramos el JSON):
-    # 2. Leer si hay datos nuevos ingresados desde la interfaz web (Aislado por unidad)
-    #if ruta_json_especifica.exists():
-     #   with open(ruta_json_especifica, "r") as f:
-      #      datos_web = json.load(f)
-        # Combinar ambos: el JSON de esta unidad sobreescribe o añade años al del Excel
-       # datos_finales.update(datos_web)
-        
-     
     return datos_finales
 
-#funcion no utilizada
-def guardar_datos_reales(uni_edu, datos_dict):
-    """Guarda en un JSON exclusivo de la unidad lo que el usuario edita en la interfaz web."""
-    # COMENTADO POR SEGURIDAD PARA PRUEBAS:
-    #ruta_json_especifica = obtener_ruta_json_dinamica(uni_edu)
-    
-    # Asegura que la carpeta contenedora exista por precaución
-    #ruta_json_especifica.parent.mkdir(parents=True, exist_ok=True)
-    
-    #with open(ruta_json_especifica, "w") as f:
-    #    json.dump(datos_dict, f, indent=4)
-    pass # 👈 Obligatorio aquí para que Python no arroje un error de sintaxis al dejar la función vacía
-
-def calcular_proyeccion_completa(lista_retencion, lista_nuevos, unidad_educativa):
+def calcular_proyeccion_completa(lista_retencion, lista_nuevos, unidad_educativa, data_diccionario):
     """Genera el DataFrame usando el Excel mapeado como historial base."""
     #  Aquí cargamos datos excel
     reales_dict = cargar_datos_consolidados(unidad_educativa) 
@@ -77,7 +72,7 @@ def calcular_proyeccion_completa(lista_retencion, lista_nuevos, unidad_educativa
     anios = [str(a) for a in range(2024, 2036)]
     registros = []
     
-    # Identificar cuál es el último año real disponible (venga de Excel o Web)
+    # Identificar cuál es el último año real disponible (venga de Excel)
     if reales_dict:
         ultimo_anio_real = max([int(k) for k in reales_dict.keys()])
     else:
@@ -90,10 +85,7 @@ def calcular_proyeccion_completa(lista_retencion, lista_nuevos, unidad_educativa
     # 2. Generar la proyección (esto te devuelve un DataFrame con columnas PERIODO y MATRICULA)
      # 🌟 PASO CLAVE: Pasamos las dos listas al motor por niveles
      # 🚀 Ajustamos la recepción de las dos variables desde el motor por nivel
-    df_proj_corp, df_matriz_desglose = proyeccion_por_nivel(lista_retencion, lista_nuevos, unidad_educativa)
-    
-    
-    #df_proj_corp = proyeccion_por_nivel(retencion, captacion)
+    df_proj_corp, df_matriz_desglose = proyeccion_por_nivel(lista_retencion, lista_nuevos, unidad_educativa, data_diccionario)
     
     for anio in anios:
         anio_int = int(anio)
@@ -103,9 +95,6 @@ def calcular_proyeccion_completa(lista_retencion, lista_nuevos, unidad_educativa
             val = reales_dict.get(anio, None)
             registros.append({"Año": anio, "Valor": val, "Tipo": "Real"})
         else:
-            # Si es un año futuro, aplicamos el modelo predictivo matemático
-            
-
             # OPTIMIZACIÓN: Buscamos directamente el año en el DataFrame sin usar un ciclo 'for'
             fila_anio = df_proj_corp[df_proj_corp['PERIODO'] == anio]
             
@@ -120,13 +109,19 @@ def calcular_proyeccion_completa(lista_retencion, lista_nuevos, unidad_educativa
     return pd.DataFrame(registros), str(ultimo_anio_real), df_matriz_desglose
 
 
-def proyeccion_por_nivel(lista_retencion, lista_nuevos, unidad_educativa):
+def proyeccion_por_nivel(lista_retencion, lista_nuevos, unidad_educativa, diccionario_matriculas=None):
 
     """
     Motor analítico por niveles de enseñanza básica de Chile.
     lista_retencion: 10 porcentajes desde Pre-Kinder hasta 8° Básico.
     lista_nuevos: 10 cantidades de alumnos nuevos desde Pre-Kinder hasta 8° Básico.
     """
+    if diccionario_matriculas is None:
+        diccionario_matriculas = matriculas_iniciales_default
+        
+    # Obtener los datos específicos de la unidad seleccionada
+    valores_inicales_uni_acad = diccionario_matriculas.get(unidad_educativa, {})
+
 
     # Data frame Original
     df_nivel = pd.read_excel(data_corp_projection_path, sheet_name="data_proj")
@@ -140,24 +135,7 @@ def proyeccion_por_nivel(lista_retencion, lista_nuevos, unidad_educativa):
     # 1. OPTIMIZACIÓN: Vectorizar tasas de sliders antes de los ciclos for
     tasas_decimales = [r / 100 if r > 1 else r for r in lista_retencion]
 
-    matriculas_iniciales = {
-        'BÁSICA 1':         {'2027':24,'2028':22, '2029':21, '2030':20,'2031':20,
-                            '2032':19,'2033':18,'2034':18,'2035':17,'2036':17},
-
-        'BÁSICA 2':         {'2027':40,'2028':39, '2029':38, '2030':37,'2031':36,
-                            '2032':32,'2033':30,'2034':29,'2035':28,'2036':24},
-
-        'BÁSICA SF':        {'2027':36,'2028':35, '2029':34, '2030':33,'2031':30,
-                            '2032':30,'2033':28,'2034':28,'2035':26,'2036':24},
-
-        'MEDIA LOS ANDES':  {'2027':400,'2028':350, '2029':320, '2030':320,'2031':320,
-                            '2032':300,'2033':300,'2034':300,'2035':290,'2036':280},
-
-        'MEDIA SAN FELIPE': {'2027':257,'2028':250, '2029':240, '2030':240,'2031':240,
-                            '2032':200,'2033':200,'2034':190,'2035':190,'2036':180},   
-     }
-
-    matricula_inicial_uni_edu = matriculas_iniciales[unidad_educativa]
+    
 
 
 
@@ -176,7 +154,7 @@ def proyeccion_por_nivel(lista_retencion, lista_nuevos, unidad_educativa):
     for periodo in range(2027, 2036):
         j = df_nivel_filtrado.columns.get_loc(str(periodo)) 
         j_anterior = df_nivel_filtrado.columns.get_loc(str(periodo - 1)) 
-        estudiantes_carga_inicial = matricula_inicial_uni_edu[str(periodo)]
+        estudiantes_carga_inicial = valores_inicales_uni_acad[str(periodo)]
 
         for nivel in range(total_niveles):
             tasa_ret_nivel = tasas_decimales[nivel]
@@ -225,12 +203,20 @@ def proyeccion_por_nivel(lista_retencion, lista_nuevos, unidad_educativa):
     return df_totales_proyectados, df_matriz_desglose
 
 
-def proyeccion_corporativa():
+def proyeccion_corporativa(diccionario_matriculas=None, 
+                           unidad_activa=None, 
+                           lista_retencion_activa=None, 
+                           lista_nuevos_activa=None):
     """
     backend para calcular proyección de toda la corporacion
     Incluye 5 unidades educativas
     Período 2027 - 2035.
     """
+
+    if diccionario_matriculas is None:
+        diccionario_matriculas = matriculas_iniciales_default
+        
+
     lista_data_corp=[]
     
     # Diccionario de unidades educativas
@@ -242,38 +228,22 @@ def proyeccion_corporativa():
     # Asegurar que las columnas de años sean string de inmediato
     df_nivel_corp.columns = df_nivel_corp.columns.astype(str)
    
-    # Diccionario con matriculas iniciales
-    matriculas_iniciales = {
-            'BÁSICA 1':         {'2027':24,'2028':22, '2029':21, '2030':20,'2031':20,
-                                '2032':19,'2033':18,'2034':18,'2035':17,'2036':17},
-
-            'BÁSICA 2':         {'2027':40,'2028':39, '2029':38, '2030':37,'2031':36,
-                                '2032':32,'2033':30,'2034':29,'2035':28,'2036':24},
-
-            'BÁSICA SF':        {'2027':36,'2028':35, '2029':34, '2030':33,'2031':30,
-                                '2032':30,'2033':28,'2034':28,'2035':26,'2036':24},
-
-            'MEDIA LOS ANDES':  {'2027':400,'2028':350, '2029':320, '2030':320,'2031':320,
-                                '2032':300,'2033':300,'2034':300,'2035':290,'2036':280},
-
-            'MEDIA SAN FELIPE': {'2027':257,'2028':250, '2029':240, '2030':240,'2031':240,
-                                '2032':200,'2033':200,'2034':190,'2035':190,'2036':180},   
-        }
-
-
-    # Asegurar que las llaves internas de matriculas_iniciales sean strings
-    matriculas_iniciales = {k: {str(year): val for year, val in v.items()} for k, v in matriculas_iniciales.items()}
+    
+   
 
     for unidad in ue_corp: 
     
-        if unidad in ['BÁSICA 1','BÁSICA 2','BÁSICA SF']:
-
-            lista_retencion_corp=[95, 95, 95, 95, 95, 95, 95, 95, 95, 95]
-            lista_nuevos_corp=[10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
-        
+        # Después — usa sliders reales solo para la unidad activa
+        if unidad == unidad_activa and lista_retencion_activa and lista_nuevos_activa:
+            lista_retencion_corp = lista_retencion_activa
+            lista_nuevos_corp = lista_nuevos_activa
+            
+        elif unidad in ['BÁSICA 1','BÁSICA 2','BÁSICA SF']:
+            lista_retencion_corp = [95, 95, 95, 95, 95, 95, 95, 95, 95, 95]
+            lista_nuevos_corp = [10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
         else:
-            lista_retencion_corp=[95, 95, 95, 95]
-            lista_nuevos_corp=[10, 10, 10, 10]
+            lista_retencion_corp = [95, 95, 95, 95]
+            lista_nuevos_corp = [10, 10, 10, 10]
 
         
 
@@ -286,8 +256,12 @@ def proyeccion_corporativa():
         
         # 1. OPTIMIZACIÓN: Vectorizar tasas de sliders antes de los ciclos for
         tasas_decimales = [r / 100 if r > 1 else r for r in lista_retencion_corp]
-        matricula_inicial_uni_edu = matriculas_iniciales[unidad]
-
+        
+        # Matricula inicial extraida del diccionario, segun unidad educativa ciclo for
+         #matricula_inicial_uni_edu = matriculas_iniciales[unidad]
+        
+        # Obtener los datos específicos de la unidad seleccionada
+        matricula_inicial_uni_edu = diccionario_matriculas.get(unidad, {})
 
 
         # Inicializar columnas del horizonte de proyección
@@ -349,16 +323,16 @@ def proyeccion_corporativa():
         # Data frame agregado como lista a la lista llamada lista_data_corp
         lista_data_corp.append(df_totales_proyectados_uni_edu)
 
-    # 1.1 Unir los data frame almacenados como lista
+    # 1.1 Unir los data frame de cada unidad educativa almacenados como lista
     df_totales_proyectados_corp = pd.concat(lista_data_corp, ignore_index=True)
 
     # 1.2 Eliminamos columnas de texto para poder operar matemáticamente
     df_totales_proyectados_corp = df_totales_proyectados_corp.drop(columns=['UNIDAD_ACADEMICA', 'NIVEL'])
 
-    # 1.3. NUEVO: Sumamos todas las filas para consolidar la corporación en una única fila
+    # 1.3. Sumamos todas las filas para consolidar la corporación en una única fila
     df_consolidado_fila = df_totales_proyectados_corp.sum(numeric_only=True).to_frame().T
 
-     # 1.4. Aplicamos el melt para transponer los años a filas
+     # 1.4. Aplicamos el melt (pivotear) para transponer los años a filas
     df_final_corp = df_consolidado_fila.melt(var_name='PERIODO', value_name='MATRICULA')
     
     # 1.5. Filtramos para quitar el año 2026 y asegurar tipos de datos correctos
@@ -366,9 +340,42 @@ def proyeccion_corporativa():
     df_final_corp['MATRICULA'] = df_final_corp['MATRICULA'].astype(int)
 
     # el data frame final está forma por dos columnas una llamada PERIODO y otra MATRICULA, 
-    # parte desde 2027 yllega hasta 2035
+    # parte desde 2027 y llega hasta 2035
 
-    return df_final_corp
+    # Agregar una columna al dataframe llamada Tipo, con el valor Proyectado
+    df_final_corp["Tipo"]="Proyección"
+
+
+    # Tomar el dataframe de excel sumar las filas del mismo año y genera un data frame histórico
+    # de la corporacion
+    # Data frame Original, la hoja data_mat_proj tiene matriculas históricas
+    # desde 2024 hasta 2026 de cada unidad académica
+    df_historicos_corp = pd.read_excel(data_corp_projection_path, sheet_name="data_mat_proj")
+
+    # Eliminar columna UNIDAD ACADEMICA
+    df_filtrado_historico_corp = df_historicos_corp.drop(columns=['UNIDAD_ACADEMICA'])
+
+    # Sumar matrícula por año para tener el total de la corporación por año
+    df_suma_historico_corp = df_filtrado_historico_corp.groupby('PERIODO')['MATRICULA'].sum().reset_index()
+
+    # Agregar una columna llamada Tipo con el valor "Real"
+    df_suma_historico_corp["Tipo"] = "Real"
+
+
+    # Unir los dataframe: df_suma_historico_corp con df_final_corp
+    df_completo_corp = pd.concat([df_suma_historico_corp, df_final_corp], ignore_index=True)
+
+    # Convertir la columna 'periodo' a entero (int)
+    df_completo_corp["PERIODO"] = df_completo_corp["PERIODO"].astype(int)
+    
+    # Ordenar por la columna 'PERIODO' de menor a mayor
+    df_completo_corp = df_completo_corp.sort_values(by="PERIODO", ascending=True)
+
+    # Reiniciar el índice final para que quede limpio
+    df_completo_corp = df_completo_corp.reset_index(drop=True)
+
+
+    return df_completo_corp
 
 
 # funciones especializadas en gestionar escenarios
@@ -434,53 +441,4 @@ def eliminar_archivo_escenario(ruta_archivo):
         return True, "🗑️ Escenario eliminado con éxito del sistema."
     except Exception as e:
         return False, f"❌ Error al intentar eliminar el archivo: {str(e)}"
-    
-
-def test_multiple_slider(retencion_por_nivel):
-    """
-    Recibe una lista de 10 valores de los sliders 
-    y multiplica una columna de un DataFrame de ejemplo.
-    """
-    # Creamos un DataFrame de prueba con una columna base de unos
-    df_original = pd.DataFrame({"Valores_Base": [10, 20, 30, 40, 50, 60, 70, 80,90, 100]})
-    
-    # Supongamos que multiplicas la fila i del DF por el valor del slider i
-    # (Aquí va tu lógica real de multiplicación)
-    df_original["Resultado"] = df_original["Valores_Base"] * retencion_por_nivel/100
-    df_original=df_original.round(0).astype(int)
-    
-    # Retornamos el resultado formateado como texto para el ejemplo
-    return df_original.to_string()
-# =====================================================================
-# BLOQUE DE PRUEBA EXCLUSIVO PARA LA ÚLTIMA FUNCIÓN
-# =====================================================================
-if __name__ == "__main__":
-    print("--- INICIANDO PRUEBA AISLADA: proyeccion_por_nivel ---")
-    print(f"Ruta detectada para el Excel: {data_corp_projection_path}\n")
-    
-    # 1. Valores simulados para los argumentos (Sliders)
-    mi_retencion = 95
-    mi_captacion = 12
-    
-    try:
-        # 2. Invocamos ÚNICAMENTE la última función
-        df_resultado = proyeccion_por_nivel(mi_retencion, mi_captacion)
-        df_previo = calcular_proyeccion_completa(mi_retencion,mi_captacion)
-        
-        # 3. Verificamos que se hayan agregado correctamente las 9 columnas
-        print("¡Éxito! El archivo se leyó correctamente.")
-        print("\nLista completa de columnas generadas en el DataFrame:")
-        print(list(df_resultado.columns))
-        
-        pd.set_option('display.max_columns', None)       # Muestra todas las columnas
-        pd.set_option('display.expand_frame_repr', False) # Evita saltos de línea feos
-        
-        print("\n=== DATAFRAME COMPLETO (11 FILAS Y TODAS LAS COLUMNAS) ===")
-        print(df_resultado) # Imprime las 11 filas completas sin recortar nada
-        print(df_previo)
-        
-    except FileNotFoundError:
-        print("❌ ERROR: No se encontró el archivo Excel.")
-        print(f"Verifica que exista un archivo llamado 'data_corp_projection.xlsx' dentro de la carpeta: {data_corp_projection_path.parent}")
-    except Exception as e:
-        print(f"❌ Ocurrió un error inesperado: {e}")
+ 
