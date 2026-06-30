@@ -1,6 +1,6 @@
 {
-    "nombre_escenario": "P01_Media_LA",
-    "unidad_educativa": "MEDIA LOS ANDES",
+    "nombre_escenario": "P01_Media_SF",
+    "unidad_educativa": "MEDIA SAN FELIPE",
     "valores_retencion": [
         95,
         95,
@@ -9,69 +9,69 @@
     ],
     "valores_nuevos": [
         0,
+        35,
         38,
-        20,
-        5
+        9
     ],
     "tabla_proyeccion": [
         {
             "Año": "2024",
-            "Valor": 1058,
+            "Valor": 802,
             "Tipo": "Real"
         },
         {
             "Año": "2025",
-            "Valor": 1125,
+            "Valor": 859,
             "Tipo": "Real"
         },
         {
             "Año": "2026",
-            "Valor": 1285,
+            "Valor": 914,
             "Tipo": "Real"
         },
         {
             "Año": "2027",
-            "Valor": 1477,
+            "Valor": 1018,
             "Tipo": "Proyección"
         },
         {
             "Año": "2028",
-            "Valor": 1531,
+            "Valor": 1072,
             "Tipo": "Proyección"
         },
         {
             "Año": "2029",
-            "Valor": 1524,
+            "Valor": 1112,
             "Tipo": "Proyección"
         },
         {
             "Año": "2030",
-            "Valor": 1435,
+            "Valor": 1096,
             "Tipo": "Proyección"
         },
         {
             "Año": "2031",
-            "Valor": 1365,
+            "Valor": 1081,
             "Tipo": "Proyección"
         },
         {
             "Año": "2032",
-            "Valor": 1320,
+            "Valor": 1034,
             "Tipo": "Proyección"
         },
         {
             "Año": "2033",
-            "Valor": 1301,
+            "Valor": 996,
             "Tipo": "Proyección"
         },
         {
             "Año": "2034",
-            "Valor": 1283,
+            "Valor": 950,
             "Tipo": "Proyección"
         },
         {
             "Año": "2035",
-            "Valor": 1256,
+            "Valor": 906,
             "Tipo": "Proyección"
         }
     ]

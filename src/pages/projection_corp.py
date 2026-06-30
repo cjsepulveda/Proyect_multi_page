@@ -11,7 +11,8 @@ from pages.modulos.calculation_projection import (
     calcular_proyeccion_completa, 
     cargar_datos_consolidados, 
     guardar_escenario_simulacion,      
-    listar_escenarios_por_unidad,      
+    listar_escenarios_por_unidad,
+    listar_todos_escenarios_agrupados,  # ← agregar      
     cargar_datos_escenario,
     eliminar_archivo_escenario,
     proyeccion_corporativa,
@@ -30,7 +31,7 @@ UMBRAL_CRITICO = 600
 
 # Diccionario de Unidades Educativas
 ue_options = {
-                #'CORPORACIÓN': 'Corporacion',
+                'CORPORACIÓN': 'CORPORACIÓN',  # ← agregar primero
                 'BÁSICA 1':'BÁSICA 1',
                 'BÁSICA 2':'BÁSICA 2',
                 'BÁSICA SAN FELIPE':'BÁSICA SF',
@@ -92,7 +93,23 @@ menu_lateral = dbc.Card([
              ]),
       ], id="tabs-sliders-menu", active_tab="tab-sliders-retencion"),
 
-    # Botones para gestion de escenarios"
+    # Dropdown múltiple para vista corporativa
+    html.Div(
+        id='contenedor-dropdown-corp',
+        children=[
+            html.H5("Escenarios por Unidad", className="text-primary fw-bold mb-2"),
+            html.Hr(),
+            dcc.Dropdown(
+                id='dropdown-escenarios-corp',
+                placeholder="Seleccionar escenarios...",
+                multi=True,  # ← selección múltiple
+                className="mb-3"
+            )
+        ],
+        style={'display': 'none'}  # ← oculto por defecto
+    ),
+
+   # Botones para gestion de escenarios"
     html.Br(),
     html.H5("Gestión de Escenarios Simulados", className="text-primary fw-bold mb-2"),
     html.Hr(),
@@ -127,8 +144,9 @@ menu_lateral = dbc.Card([
     html.Br(),
     html.Br(),
     html.Br(),
+
     # Tabla para ver y modificar valores iniciales
-    html.Label("Ajustar Valores Iniciales:", style={'fontWeight': 'bold'}),
+    html.Label("Valores Iniciales Pre-kinder o 1° Medio:", style={'fontWeight': 'bold'}),
     # Tabla Vertical Interactiva
         dash_table.DataTable(
             id='tabla-matriculas-vertical',
@@ -162,6 +180,11 @@ menu_lateral = dbc.Card([
 )
 def cargar_valores_verticales(unidad_seleccionada):
     # Obtener el diccionario de años de la unidad actual {'2027': 24, '2028': 22, ...}
+    
+    # Si es Corporación, retornar tabla vacía
+    if unidad_seleccionada == 'CORPORACIÓN':
+        return []
+    
     valores_anios = proyecciones.matriculas_iniciales_default[unidad_seleccionada]
     
     # Transformar a formato de lista de filas verticales
@@ -171,9 +194,6 @@ def cargar_valores_verticales(unidad_seleccionada):
         
     return filas_tabla
 
-
-
-
 # Callback para crear slider segun la unidad educativa elegida y buscar escenarios en el output
 # ! el output Output('dropdown-escenarios-guardados', 'options') esta duplicado en el callbac cargar datos
 @callback(
@@ -181,11 +201,18 @@ def cargar_valores_verticales(unidad_seleccionada):
         Output('contenedor-retencion', 'children'), # Primer Output (retencion)
         Output('contenedor-captacion', 'children')  # Segundo Output (captacion)
     ],
-    Output('dropdown-escenarios-guardados', 'options'), # 👈 NUEVO OUTPUT
-    Input('unidades_educativas', 'value')           # Origen: la unidad educativa seleccionada
+    Output('dropdown-escenarios-guardados', 'options'), # 👈 Nuevo para cargar escenarios de slider
+    Output('dropdown-escenarios-corp', 'options'),  
+    Output('contenedor-dropdown-corp', 'style'),          # ← nuevo, escenarios agrupados
+    Input('unidades_educativas', 'value'),  # Origen: la unidad educativa seleccionada
 )
-
 def actualizar_sliders(unidad_educativa):
+    
+    if unidad_educativa == 'CORPORACIÓN':  # ← agregar este bloque primero
+        opciones_dropdown = listar_escenarios_por_unidad(unidad_educativa)
+        escenarios_agrupados = listar_todos_escenarios_agrupados()  # ← cargar escenarios
+        return [], [], opciones_dropdown, escenarios_agrupados, {'display': 'block'}  # ← mostrar dropdown
+    
     # Condicional que define por completo cada grupo independiente
     if unidad_educativa in ['BÁSICA 1', 'BÁSICA 2', 'BÁSICA SF']:
         # Grupo completamente definido de 3 sliders
@@ -213,9 +240,9 @@ def actualizar_sliders(unidad_educativa):
 
     # 🚀 AGREGADO: Buscamos dinámicamente qué escenarios existen en disco para esta unidad educativa
     opciones_dropdown = listar_escenarios_por_unidad(unidad_educativa)
-        
+    
     # Retornamos los tres elementos en el orden exacto de los Outputs de arriba
-    return sliders_retencion, sliders_captacion, opciones_dropdown
+    return sliders_retencion, sliders_captacion, opciones_dropdown, [], {'display': 'none'}
 
 # Layaout Genral, Menu Lateral, 2 Tarjetas KPI, Gráfico y Tabla
 layout = dbc.Container([
@@ -297,7 +324,7 @@ layout = dbc.Container([
                 # Pestaña 2: Desagregado por Niveles Educativos
                 dbc.Tab(label="Tabla desagregada po Niveles", tab_id="tab-matriz-desglose", children=[
                     html.Div([
-                        html.P("Desglose detallado por nivel de enseñanza. Visualiza la transferencia secuencial de alumnos año tras año.", className="text-muted small"),
+                        html.P("Desagregado por nivel de enseñanza. Visualiza la transferencia secuencial de alumnos año tras año.", className="text-muted small"),
                         dash_table.DataTable(
                             id="tabla-matriz-desglose-cursos", # 🚀 ID único para la segunda tabla
                             style_cell={"textAlign": "center", "padding": "6px", "fontFamily": "Roboto mono", "fontSize": "12px"},
@@ -335,264 +362,320 @@ layout = dbc.Container([
     Output("tabla-matriz-desglose-cursos", "data"),    # 🚀 NUEVO OUTPUT DATA
     Output("tabla-matriz-desglose-cursos", "columns"), # 🚀 NUEVO OUTPUT COLUMNS DINÁMICAS
     Output("grafico-corp", "figure"), # 🚀 Grafico CORPORACION
+    
     Input({"type": "slider-retencion", "id": ALL}, "value"), # Lista de 10 porcentajes para retención
     Input({"type": "slider-nuevos", "id": ALL}, "value"),    # Lista de 10 cantidades de alumnos
     Input('unidades_educativas', 'value'), # unidad educativa elegida para filtrar excel
-
-    # --- NUEVO INPUT AGREGADO ---
     Input('tabla-matriculas-vertical', 'data'), # Reacciona si el usuario edita la matrícula inicial
-    
+    Input('dropdown-escenarios-corp', 'value'),  # ← nuevo, escenarios corporativos
 
 )
-def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, data_tabla_matriculas):
+def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, data_tabla_matriculas, escenarios_seleccionados):
     
-      # PASO 1: Clonar el diccionario completo primero 
-      # (usando tu variable 'matriculas_iniciales_deafault')
-    diccionario_completo_actualizado = copy.deepcopy(proyecciones.matriculas_iniciales_default)
-
-
-    # 1. Validación inicial por si la tabla viene vacía en el primer renderizado
-    if not data_tabla_matriculas:
-        # Si está vacía, puedes usar el diccionario default directamente para no romper el flujo
-        valores_modificados = proyecciones.matriculas_iniciales_default.get(unidad_edu, {})
-    else:
-        # 2. Reconstruir el diccionario desde la tabla vertical
-        valores_modificados = {}
-        for fila in data_tabla_matriculas:
-            anio = str(fila["Anio"])
-            valor_matricula = int(fila["Matricula"]) if fila["Matricula"] is not None else 0
-            valores_modificados[anio] = valor_matricula
-
-    # Reemplazamos solo los datos de la unidad modificada dentro del diccionario completo
+        # ← Agregar este bloque al inicio
+    if unidad_edu == 'CORPORACIÓN':
+            # Construir diccionario de escenarios seleccionados
+        escenarios_corp = {}
+        if escenarios_seleccionados:
+            for ruta in escenarios_seleccionados:
+                datos = cargar_datos_escenario(ruta)
+                if datos:
+                    unidad = datos["unidad_educativa"]
+                    escenarios_corp[unidad] = datos
     
-    diccionario_completo_actualizado[unidad_edu] = valores_modificados
-
-    # 1. Control de seguridad para que Dash no intente calcular con listas vacías
-    if not lista_retencion or not lista_nuevos:
-        raise dash.exceptions.PreventUpdate
-    
-    """Importante data frame para generar gráficos de unidad académicay el corporativo"""
-    # Data Frame para unidad Educativa
-    df_corporacion = proyeccion_corporativa(
-            diccionario_matriculas=diccionario_completo_actualizado,
-            unidad_activa=unidad_edu,
-            lista_retencion_activa=lista_retencion,
-            lista_nuevos_activa=lista_nuevos
-            )
-    # Data Frame Corporativo
-    df, ultimo_anio_real_str, df_matriz_desglose= calcular_proyeccion_completa(lista_retencion, lista_nuevos, unidad_edu, diccionario_completo_actualizado)
-    
-    # CÁLCULO DE MÉTRICAS PARA TARJETAS KPI ---
-    # 1. Matricula Máxima
-    fila_max = df.loc[df["Valor"].idxmax()]
-    max_valor = fila_max["Valor"]
-    max_anio = fila_max["Año"]
-    
-    # 2. Estado de Alerta (¿Cae abajo de 500 en algún año proyectado?)
-    df_proy_solo = df[df["Tipo"] == "Proyección"]
-    quiebra_limite = (df_proy_solo["Valor"] < UMBRAL_CRITICO).any()
-
-    # Cálculo matricula año 2035 para mensaje de alerta específico
-    valor_2035 = df[df["Año"] == "2035"]["Valor"].values[0]
-    
-    if quiebra_limite:
-        kpi_alerta_texto = f"Riesgo Crítico {'' if valor_2035 < UMBRAL_CRITICO * 0.8 else ''}"
-        kpi_alerta_color = "danger"
+        # Un solo df_corporacion con escenarios
+        df_corporacion = proyecciones.proyeccion_corporativa(
+        proyecciones.matriculas_iniciales_default,
+        escenarios_corp=escenarios_corp
+        )
         
-    else:
-        kpi_alerta_texto = f"Estable {'' if valor_2035 < UMBRAL_CRITICO * 1.2 else ''}"
-        kpi_alerta_color = "success"
+        #df_corporacion = proyecciones.proyeccion_corporativa(proyecciones.matriculas_iniciales_default)
         
+        # Gráfico corporativo con valores default
+        corp_graph = graph_objects.Figure()
+        df_reales_corp = df_corporacion[df_corporacion["Tipo"] == "Real"]
+        df_proy_corp = df_corporacion[df_corporacion["Tipo"] == "Proyección"]
         
-    
-# 1. DEFINIR TU VARIABLE O CONDICIÓN
-# Ejemplo: si el valor es mayor a 50000 es exitoso, si no, es una alerta.
+        corp_graph.add_trace(graph_objects.Scatter(
+            x=df_reales_corp["PERIODO"], y=df_reales_corp["MATRICULA"], name="Datos Reales",
+            mode="lines+markers",
+            marker=dict(color="#af0000", size=8),
+            line=dict(color="#4B4B4B", width=2)
+        ))
+        
+        punto_conexion_corp = df_reales_corp.tail(1)
+        df_proy_conectado_corp = pd.concat([punto_conexion_corp, df_proy_corp])
+        
+        corp_graph.add_trace(graph_objects.Scatter(
+            x=df_proy_conectado_corp["PERIODO"], y=df_proy_conectado_corp["MATRICULA"], name="Proyección",
+            mode="lines+markers",
+            marker=dict(color="#1d1d1d", size=8),
+            line=dict(color="#ffae00", width=2)
+        ))
+        
+        corp_graph.update_layout(
+            hovermode="x unified", plot_bgcolor="white", height=260,
+            margin=dict(l=40, r=30, t=10, b=10),
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            font_family='Roboto mono',
+        )
+        corp_graph.update_xaxes(showgrid=True, gridcolor="#EAEAEA")
+        corp_graph.update_yaxes(showgrid=True, gridcolor="#EAEAEA")
+        
+        # Retornamos valores vacíos para los outputs que no aplican
+        return corp_graph, [], [], [], [], corp_graph
 
-    valor_condicion = valor_2035
 
-    if valor_condicion > UMBRAL_CRITICO:
-        kpi_bg_1 = "bg-success"  # Fondo verde muy suave
-    else:
-        kpi_bg_1 = "bg-danger"   # Fondo rojo muy suave
+# CODIGO ORIGINAL
+    else: 
+        # PASO 1: Clonar el diccionario completo primero 
+        # (usando tu variable 'matriculas_iniciales_deafault')
+        diccionario_completo_actualizado = copy.deepcopy(proyecciones.matriculas_iniciales_default)
+
+
+        # 1. Validación inicial por si la tabla viene vacía en el primer renderizado
+        if not data_tabla_matriculas:
+            # Si está vacía, puedes usar el diccionario default directamente para no romper el flujo
+            valores_modificados = proyecciones.matriculas_iniciales_default.get(unidad_edu, {})
+        else:
+            # 2. Reconstruir el diccionario desde la tabla vertical
+            valores_modificados = {}
+            for fila in data_tabla_matriculas:
+                anio = str(fila["Anio"])
+                valor_matricula = int(fila["Matricula"]) if fila["Matricula"] is not None else 0
+                valores_modificados[anio] = valor_matricula
+
+        # Reemplazamos solo los datos de la unidad modificada dentro del diccionario completo
+        
+        diccionario_completo_actualizado[unidad_edu] = valores_modificados
+
+        # 1. Control de seguridad para que Dash no intente calcular con listas vacías
+        if not lista_retencion or not lista_nuevos:
+            raise dash.exceptions.PreventUpdate
+        
+        """Importante data frame para generar gráficos de unidad académicay el corporativo"""
+        # Data Frame para unidad Educativa
+        df_corporacion = proyeccion_corporativa(
+                diccionario_matriculas=diccionario_completo_actualizado,
+                unidad_activa=unidad_edu,
+                lista_retencion_activa=lista_retencion,
+                lista_nuevos_activa=lista_nuevos,
+                escenarios_corp=None
+                )
+        # Data Frame Corporativo
+        df, ultimo_anio_real_str, df_matriz_desglose= calcular_proyeccion_completa(lista_retencion, lista_nuevos, unidad_edu, diccionario_completo_actualizado)
+        
+        # CÁLCULO DE MÉTRICAS PARA TARJETAS KPI ---
+        # 1. Matricula Máxima
+        fila_max = df.loc[df["Valor"].idxmax()]
+        max_valor = fila_max["Valor"]
+        max_anio = fila_max["Año"]
+        
+        # 2. Estado de Alerta (¿Cae abajo de 500 en algún año proyectado?)
+        df_proy_solo = df[df["Tipo"] == "Proyección"]
+        quiebra_limite = (df_proy_solo["Valor"] < UMBRAL_CRITICO).any()
+
+        # Cálculo matricula año 2035 para mensaje de alerta específico
+        valor_2035 = df[df["Año"] == "2035"]["Valor"].values[0]
+        
+        if quiebra_limite:
+            kpi_alerta_texto = f"Riesgo Crítico {'' if valor_2035 < UMBRAL_CRITICO * 0.8 else ''}"
+            kpi_alerta_color = "danger"
+            
+        else:
+            kpi_alerta_texto = f"Estable {'' if valor_2035 < UMBRAL_CRITICO * 1.2 else ''}"
+            kpi_alerta_color = "success"
+            
+            
+        
+    # 1. DEFINIR TU VARIABLE O CONDICIÓN
+    # Ejemplo: si el valor es mayor a 50000 es exitoso, si no, es una alerta.
+
+        valor_condicion = valor_2035
+
+        if valor_condicion > UMBRAL_CRITICO:
+            kpi_bg_1 = "bg-success"  # Fondo verde muy suave
+        else:
+            kpi_bg_1 = "bg-danger"   # Fondo rojo muy suave
 
 
 
-# CONSTRUCCIÓN VISUAL DE LAS TARJETAS KPI (Bootstrap)
-    kpis_layout = dbc.Row([
-        # 1. Primera Columna 
-        dbc.Col(dbc.Card([
-            dbc.CardBody([
-                dbc.Row([ # Fila con dos columnas una texto y otra numérica
-                    # Columna de texto
-                    dbc.Col([
-                            html.H6("Máxima Matrícula", className="text-muted card-subtitle small"),
-                            html.Span(f"Año Académico: {max_anio}", className="text-secondary small"),
+    # CONSTRUCCIÓN VISUAL DE LAS TARJETAS KPI (Bootstrap)
+        kpis_layout = dbc.Row([
+            # 1. Primera Columna 
+            dbc.Col(dbc.Card([
+                dbc.CardBody([
+                    dbc.Row([ # Fila con dos columnas una texto y otra numérica
+                        # Columna de texto
+                        dbc.Col([
+                                html.H6("Máxima Matrícula", className="text-muted card-subtitle small"),
+                                html.Span(f"Año Académico: {max_anio}", className="text-secondary small"),
+                        ],
+                        width=8,
+                        className="d-flex flex-column justify-content-center"
+                        ), # Cierre columna Texto
+
+                        # Columna Numérica
+                        dbc.Col([
+                                html.H6(f"{max_valor:,}", className="text-white fw-bold my-1 fs-2"),
+                        ],
+                        width=4,
+                        className="d-flex flex-column justify-content-center bg-primary text-white py-3 px-1 text-center rounded"
+                        ), # Cierre columna numérica
                     ],
-                    width=8,
-                    className="d-flex flex-column justify-content-center"
-                    ), # Cierre columna Texto
-
-                    # Columna Numérica
-                    dbc.Col([
-                            html.H6(f"{max_valor:,}", className="text-white fw-bold my-1 fs-2"),
+                    className="h-100 g-0" # Alinea verticalmente y quita márgenes (gutters)
+                    ) # Cierre de la fila
+                ]) # Cierre cuerpo tarjeta
+            ],className="border-start border-primary border-2 shadow-sm h-100"), width=5), # Cierre borde tarjeta numero 1
+            
+            # 2. Segunda Columna 
+            dbc.Col(dbc.Card([
+                dbc.CardBody([
+                    dbc.Row([ # Filas con dos columnas, una de texto y otra numérica
+                        # Columna de texto
+                        dbc.Col([
+                                html.H6("Estado matrícula al 2035", className="text-muted card-subtitle small"),
+                                html.H6(kpi_alerta_texto, className=f"text-{kpi_alerta_color} fw-bold my-0 me-2"),
+                            ],
+                        width=8,
+                        className="d-flex flex-column justify-content-center"
+                        ), # Cierre columna Texto
+                        # Columna numérica
+                        dbc.Col([
+                                html.Span(f"{valor_2035:,} ", className="text-white fw-bold fs-2"),
+                        ],
+                        width=4,
+                        className= f"{kpi_bg_1} d-flex flex-column justify-content-center text-white py-3 px-1 text-center rounded"
+                        ), # Cierre columna numérica
                     ],
-                    width=4,
-                    className="d-flex flex-column justify-content-center bg-primary text-white py-3 px-1 text-center rounded"
-                    ), # Cierre columna numérica
-                ],
-                className="h-100 g-0" # Alinea verticalmente y quita márgenes (gutters)
-                ) # Cierre de la fila
-            ]) # Cierre cuerpo tarjeta
-        ],className="border-start border-primary border-2 shadow-sm h-100"), width=5), # Cierre borde tarjeta numero 1
+                    className="h-100 g-0" # Alinea verticalmente y quita márgenes (gutters)
+                    ) # Cierre de la fila
+                ]) # Cierre cuerpo segunda tarjeta          
+            ], className=f"border-start border-{kpi_alerta_color} border-2 shadow-sm h-100"), width=5), # Cierre borde segunda tarjeta
+                    
+
+        ], className="g-3", style={"marginTop": "5px"}) # Cierre fila con dos tarjetas
         
-        # 2. Segunda Columna 
-        dbc.Col(dbc.Card([
-            dbc.CardBody([
-                dbc.Row([ # Filas con dos columnas, una de texto y otra numérica
-                    # Columna de texto
-                    dbc.Col([
-                            html.H6("Estado matrícula al 2035", className="text-muted card-subtitle small"),
-                            html.H6(kpi_alerta_texto, className=f"text-{kpi_alerta_color} fw-bold my-0 me-2"),
-                         ],
-                    width=8,
-                    className="d-flex flex-column justify-content-center"
-                    ), # Cierre columna Texto
-                    # Columna numérica
-                    dbc.Col([
-                            html.Span(f"{valor_2035:,} ", className="text-white fw-bold fs-2"),
-                      ],
-                      width=4,
-                    className= f"{kpi_bg_1} d-flex flex-column justify-content-center text-white py-3 px-1 text-center rounded"
-                    ), # Cierre columna numérica
-                ],
-                className="h-100 g-0" # Alinea verticalmente y quita márgenes (gutters)
-                ) # Cierre de la fila
-            ]) # Cierre cuerpo segunda tarjeta          
-        ], className=f"border-start border-{kpi_alerta_color} border-2 shadow-sm h-100"), width=5), # Cierre borde segunda tarjeta
-                 
+            
+        # 1. 🚀 CALCULAR RANGO DINÁMICO SEGÚN LOS DATOS ACTUALES DE ESTA ESCUELA
+        # Buscamos el valor máximo y mínimo dentro del DataFrame generado
+        valor_maximo = int(df["Valor"].max())
+        valor_minimo = int(df["Valor"].min())
 
-    ], className="g-3", style={"marginTop": "5px"}) # Cierre fila con dos tarjetas
-    
+        valor_maximo_corp = int(df_corporacion["MATRICULA"].max())
+        valor_minimo_corp = int(df_corporacion["MATRICULA"].min())
         
-    # 1. 🚀 CALCULAR RANGO DINÁMICO SEGÚN LOS DATOS ACTUALES DE ESTA ESCUELA
-    # Buscamos el valor máximo y mínimo dentro del DataFrame generado
-    valor_maximo = int(df["Valor"].max())
-    valor_minimo = int(df["Valor"].min())
 
-    valor_maximo_corp = int(df_corporacion["MATRICULA"].max())
-    valor_minimo_corp = int(df_corporacion["MATRICULA"].min())
-    
+        
+        # Dejamos un 15% de holgura hacia arriba y hacia abajo para que la línea respire
+        techo_eje_y = int(valor_maximo * 1.15)
+        piso_eje_y = max(0, int(valor_minimo * 0.85)) # El 'max' evita que baje de 0 alumnos si hay valores muy chicos
 
-    
-    # Dejamos un 15% de holgura hacia arriba y hacia abajo para que la línea respire
-    techo_eje_y = int(valor_maximo * 1.15)
-    piso_eje_y = max(0, int(valor_minimo * 0.85)) # El 'max' evita que baje de 0 alumnos si hay valores muy chicos
-
-    techo_eje_y_corp = int(valor_maximo_corp * 1.15)
-    piso_eje_y_corp = max(0, int(valor_minimo_corp * 0.85))
+        techo_eje_y_corp = int(valor_maximo_corp * 1.15)
+        piso_eje_y_corp = max(0, int(valor_minimo_corp * 0.85))
 
 
-    # Grafico para unidad educativa seleccionada
-    unidad_edu_graph = graph_objects.Figure()
-    
-    df_reales = df[df["Tipo"] == "Real"]
-    df_proy = df[df["Tipo"] == "Proyección"]
-    
-    unidad_edu_graph.add_trace(graph_objects.Scatter(
-        x=df_reales["Año"], y=df_reales["Valor"], name="Datos Reales",
-        mode="lines+markers", 
-        marker=dict(color= "#af0000", size=8),
-        line=dict(color="#4B4B4B", width=2)
-    ))
-    
-    punto_conexion = df_reales.tail(1)
-    df_proy_conectado = pd.concat([punto_conexion, df_proy])
-    
-    unidad_edu_graph.add_trace(graph_objects.Scatter(
-        x=df_proy_conectado["Año"], y=df_proy_conectado["Valor"], name="Proyección",
-        mode="lines+markers",
-        marker=dict(color= "#1d1d1d", size=8), 
-        line=dict(color="#ffae00", width=2)
-    ))
-    
-    unidad_edu_graph.update_layout(
-        hovermode="x unified", plot_bgcolor="white", height=260,
-        margin=dict(l=40, r=30, t=10, b=10),
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        hoverlabel_font=dict(family='Roboto mono', weight='bold', size=14, color='black'),
-        font_family='Roboto mono',
-    )
-    unidad_edu_graph.update_xaxes(showgrid=True, gridcolor="#EAEAEA")
-    
-     # CORRECCIÓN DEL EJE Y: Reemplazamos los números fijos por tus variables dinámicas
-    unidad_edu_graph.update_yaxes(
-                    showgrid=True, 
-                    gridcolor="#EAEAEA",
-                    range=[piso_eje_y, techo_eje_y]
-                    )
-    
-    # Grafico para la CORPORACION completa
-    corp_graph = graph_objects.Figure()
+        # Grafico para unidad educativa seleccionada
+        unidad_edu_graph = graph_objects.Figure()
+        
+        df_reales = df[df["Tipo"] == "Real"]
+        df_proy = df[df["Tipo"] == "Proyección"]
+        
+        unidad_edu_graph.add_trace(graph_objects.Scatter(
+            x=df_reales["Año"], y=df_reales["Valor"], name="Datos Reales",
+            mode="lines+markers", 
+            marker=dict(color= "#af0000", size=8),
+            line=dict(color="#4B4B4B", width=2)
+        ))
+        
+        punto_conexion = df_reales.tail(1)
+        df_proy_conectado = pd.concat([punto_conexion, df_proy])
+        
+        unidad_edu_graph.add_trace(graph_objects.Scatter(
+            x=df_proy_conectado["Año"], y=df_proy_conectado["Valor"], name="Proyección",
+            mode="lines+markers",
+            marker=dict(color= "#1d1d1d", size=8), 
+            line=dict(color="#ffae00", width=2)
+        ))
+        
+        unidad_edu_graph.update_layout(
+            hovermode="x unified", plot_bgcolor="white", height=260,
+            margin=dict(l=40, r=30, t=10, b=10),
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            hoverlabel_font=dict(family='Roboto mono', weight='bold', size=14, color='black'),
+            font_family='Roboto mono',
+        )
+        unidad_edu_graph.update_xaxes(showgrid=True, gridcolor="#EAEAEA")
+        
+        # CORRECCIÓN DEL EJE Y: Reemplazamos los números fijos por tus variables dinámicas
+        unidad_edu_graph.update_yaxes(
+                        showgrid=True, 
+                        gridcolor="#EAEAEA",
+                        range=[piso_eje_y, techo_eje_y]
+                        )
+        
+        # Grafico para la CORPORACION completa
+        corp_graph = graph_objects.Figure()
 
-    df_reales_corp = df_corporacion[df_corporacion["Tipo"] == "Real"]
-    df_proy_corp = df_corporacion[df_corporacion["Tipo"] == "Proyección"]
+        df_reales_corp = df_corporacion[df_corporacion["Tipo"] == "Real"]
+        df_proy_corp = df_corporacion[df_corporacion["Tipo"] == "Proyección"]
 
-    corp_graph.add_trace(graph_objects.Scatter(
-        x=df_reales_corp["PERIODO"], y=df_reales_corp["MATRICULA"], name="Datos Reales",
-        mode="lines+markers", 
-        marker=dict(color= "#af0000", size=8),
-        line=dict(color="#4B4B4B", width=2)
-    ))
+        corp_graph.add_trace(graph_objects.Scatter(
+            x=df_reales_corp["PERIODO"], y=df_reales_corp["MATRICULA"], name="Datos Reales",
+            mode="lines+markers", 
+            marker=dict(color= "#af0000", size=8),
+            line=dict(color="#4B4B4B", width=2)
+        ))
 
-    punto_conexion_corp = df_reales_corp.tail(1)
-    df_proy_conectado_corp = pd.concat([punto_conexion_corp, df_proy_corp])
+        punto_conexion_corp = df_reales_corp.tail(1)
+        df_proy_conectado_corp = pd.concat([punto_conexion_corp, df_proy_corp])
 
-    corp_graph.add_trace(graph_objects.Scatter(
-        x=df_proy_conectado_corp["PERIODO"], y=df_proy_conectado_corp["MATRICULA"], name="Proyección",
-        mode="lines+markers",
-        marker=dict(color= "#1d1d1d", size=8), 
-        line=dict(color="#ffae00", width=2)
-    ))
+        corp_graph.add_trace(graph_objects.Scatter(
+            x=df_proy_conectado_corp["PERIODO"], y=df_proy_conectado_corp["MATRICULA"], name="Proyección",
+            mode="lines+markers",
+            marker=dict(color= "#1d1d1d", size=8), 
+            line=dict(color="#ffae00", width=2)
+        ))
 
-    corp_graph.update_layout(
-        hovermode="x unified", plot_bgcolor="white", height=260,
-        margin=dict(l=40, r=30, t=10, b=10),
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        hoverlabel_font=dict(family='Roboto mono', weight='bold', size=14, color='black'),
-        font_family='Roboto mono',
-    )
+        corp_graph.update_layout(
+            hovermode="x unified", plot_bgcolor="white", height=260,
+            margin=dict(l=40, r=30, t=10, b=10),
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            hoverlabel_font=dict(family='Roboto mono', weight='bold', size=14, color='black'),
+            font_family='Roboto mono',
+        )
 
-    corp_graph.update_xaxes(showgrid=True, gridcolor="#EAEAEA")
-    
-    # CORRECCIÓN DEL EJE Y: Reemplazamos los números fijos por tus variables dinámicas
-    corp_graph.update_yaxes(
-                    showgrid=True, 
-                    gridcolor="#EAEAEA",
-                    range=[piso_eje_y_corp, techo_eje_y_corp]
-                    )
+        corp_graph.update_xaxes(showgrid=True, gridcolor="#EAEAEA")
+        
+        # CORRECCIÓN DEL EJE Y: Reemplazamos los números fijos por tus variables dinámicas
+        corp_graph.update_yaxes(
+                        showgrid=True, 
+                        gridcolor="#EAEAEA",
+                        range=[piso_eje_y_corp, techo_eje_y_corp]
+                        )
 
-    # 1. Datos para tabla resumen por año
-    tabla_consolidada_data = df.to_dict(orient="records") 
+        # 1. Datos para tabla resumen por año
+        tabla_consolidada_data = df.to_dict(orient="records") 
 
-    
-    # 2. Preparación para la Tabla 2 (Matricula por nivel y año)
-    # Creamos las columnas dinámicamente basándonos en las columnas reales que trae el DataFrame
-    columnas_matriz = [{"name": "Curso / Nivel", "id": "NIVEL"}] + [
-        {"name": col, "id": col} for col in df_matriz_desglose.columns if col != "NIVEL"
-    ]
+        
+        # 2. Preparación para la Tabla 2 (Matricula por nivel y año)
+        # Creamos las columnas dinámicamente basándonos en las columnas reales que trae el DataFrame
+        columnas_matriz = [{"name": "Curso / Nivel", "id": "NIVEL"}] + [
+            {"name": col, "id": col} for col in df_matriz_desglose.columns if col != "NIVEL"
+        ]
 
-    # Sólo datos, Lista de diccionarios, cada diccionario es un nivel con años y matrícula
-    tabla_matriz_data = df_matriz_desglose.to_dict(orient="records") 
+        # Sólo datos, Lista de diccionarios, cada diccionario es un nivel con años y matrícula
+        tabla_matriz_data = df_matriz_desglose.to_dict(orient="records") 
 
-     # Retornamos los cinco elementos alineados con la cabecera
-    return (
-        unidad_edu_graph, 
-        kpis_layout, 
-        tabla_consolidada_data, 
-        tabla_matriz_data,  # Inyecta las filas desglosadas
-        columnas_matriz, # Inyecta los nombres de las columnas de años
-        corp_graph     # GRAFICO TOTAL CORPORACION
-    )
+        # Retornamos los cinco elementos alineados con la cabecera
+        return (
+            unidad_edu_graph, 
+            kpis_layout, 
+            tabla_consolidada_data, 
+            tabla_matriz_data,  # Inyecta las filas desglosadas
+            columnas_matriz, # Inyecta los nombres de las columnas de años
+            corp_graph     # GRAFICO TOTAL CORPORACION
+        )
 
 
 
@@ -632,9 +715,10 @@ def exportar_a_excel(n_clicks, lista_retencion, lista_nuevos, unidad_edu):
     State("input-nombre-escenario", "value"),
     State({"type": "slider-retencion", "id": ALL}, "value"),
     State({"type": "slider-nuevos", "id": ALL}, "value"),
+    State('tabla-matriculas-vertical', 'data'),
     prevent_initial_call=True # 👈 Esto es obligatorio si usas allow_duplicate
 )
-def ejecutar_guardado_escenario(n_clicks, unidad_edu, nombre_escenario, lista_ret, lista_nuevos):
+def ejecutar_guardado_escenario(n_clicks, unidad_edu, nombre_escenario, lista_ret, lista_nuevos, data_tabla):
     if not n_clicks:
         raise dash.exceptions.PreventUpdate
         
@@ -642,6 +726,8 @@ def ejecutar_guardado_escenario(n_clicks, unidad_edu, nombre_escenario, lista_re
         opciones_actuales = listar_escenarios_por_unidad(unidad_edu)
         return "⚠️ Por favor, ingresa un nombre para el escenario antes de guardar.", opciones_actuales
 
+    # Convertir la tabla de Valores iniciales prekinder o 1° medio a diccionario antes de guardar
+    valores_tabla = {str(fila["Anio"]): fila["Matricula"] for fila in data_tabla}
     # Ejecutamos el motor analítico para obtener el DataFrame que queremos respaldar
     df, _, _= calcular_proyeccion_completa(
         lista_ret, 
@@ -651,7 +737,7 @@ def ejecutar_guardado_escenario(n_clicks, unidad_edu, nombre_escenario, lista_re
         )
     
     # Llamamos a tu función del módulo especializado
-    exito, mensaje = guardar_escenario_simulacion(unidad_edu, nombre_escenario.strip(), lista_ret, lista_nuevos, df)
+    exito, mensaje = guardar_escenario_simulacion(unidad_edu, nombre_escenario.strip(), lista_ret, lista_nuevos, df, valores_tabla)
     
     # Recargamos las opciones del dropdown para que aparezca el nuevo escenario de inmediato
     nuevas_opciones = listar_escenarios_por_unidad(unidad_edu)
@@ -662,6 +748,7 @@ def ejecutar_guardado_escenario(n_clicks, unidad_edu, nombre_escenario, lista_re
 @callback(
     Output({"type": "slider-retencion", "id": ALL}, "value"),
     Output({"type": "slider-nuevos", "id": ALL}, "value"),
+    Output('tabla-matriculas-vertical', 'data', allow_duplicate=True),  # ← nuevo
     Input("btn-cargar-escenario", "n_clicks"),
     State("dropdown-escenarios-guardados", "value"),
     prevent_initial_call=True
@@ -680,8 +767,13 @@ def ejecutar_carga_en_sliders(n_clicks, ruta_archivo_escenario):
     valores_retencion_guardados = datos_escenario.get("valores_retencion", [])
     valores_nuevos_guardados = datos_escenario.get("valores_nuevos", [])
     
+    # Extraer y convertir los valores de la tabla  ← nuevo
+    valores_tabla = datos_escenario.get("valores_tabla_inicial", {})
+    filas_tabla = [{"Anio": anio, "Matricula": valor} for anio, valor in valores_tabla.items()]
+    
     # Retornamos los arreglos directos. Dash se encargará de posicionarlos en orden en los sliders
-    return valores_retencion_guardados, valores_nuevos_guardados
+
+    return valores_retencion_guardados, valores_nuevos_guardados, filas_tabla
 
 # Callback para ELIMINAR un escenario en los Sliders
 @callback(

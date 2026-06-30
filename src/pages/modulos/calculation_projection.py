@@ -206,7 +206,8 @@ def proyeccion_por_nivel(lista_retencion, lista_nuevos, unidad_educativa, diccio
 def proyeccion_corporativa(diccionario_matriculas=None, 
                            unidad_activa=None, 
                            lista_retencion_activa=None, 
-                           lista_nuevos_activa=None):
+                           lista_nuevos_activa=None,
+                           escenarios_corp=None):
     """
     backend para calcular proyección de toda la corporacion
     Incluye 5 unidades educativas
@@ -234,13 +235,20 @@ def proyeccion_corporativa(diccionario_matriculas=None,
     for unidad in ue_corp: 
     
         # Después — usa sliders reales solo para la unidad activa
-        if unidad == unidad_activa and lista_retencion_activa and lista_nuevos_activa:
+        if escenarios_corp and unidad in escenarios_corp:
+            # Usar escenario guardado para esta unidad
+            datos_escenario = escenarios_corp[unidad]
+            lista_retencion_corp = datos_escenario["valores_retencion"]
+            lista_nuevos_corp = datos_escenario["valores_nuevos"]
+
+        elif unidad == unidad_activa and lista_retencion_activa and lista_nuevos_activa:
             lista_retencion_corp = lista_retencion_activa
             lista_nuevos_corp = lista_nuevos_activa
-            
+
         elif unidad in ['BÁSICA 1','BÁSICA 2','BÁSICA SF']:
             lista_retencion_corp = [95, 95, 95, 95, 95, 95, 95, 95, 95, 95]
             lista_nuevos_corp = [10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
+            
         else:
             lista_retencion_corp = [95, 95, 95, 95]
             lista_nuevos_corp = [10, 10, 10, 10]
@@ -385,7 +393,7 @@ def asegurar_carpeta_escenarios():
     ruta_escenarios.mkdir(parents=True, exist_ok=True)
     return ruta_escenarios
 
-def guardar_escenario_simulacion(unidad_edu, nombre_escenario, lista_ret, lista_nuevos, df_resultado):
+def guardar_escenario_simulacion(unidad_edu, nombre_escenario, lista_ret, lista_nuevos, df_resultado, valores_tabla):
     """Guarda el escenario completo en un archivo JSON estructurado."""
     if not nombre_escenario:
         return False, "Por favor, ingresa un nombre válido para el escenario."
@@ -403,6 +411,7 @@ def guardar_escenario_simulacion(unidad_edu, nombre_escenario, lista_ret, lista_
         "unidad_educativa": unidad_edu,
         "valores_retencion": lista_ret,
         "valores_nuevos": lista_nuevos,
+        "valores_tabla_inicial": valores_tabla,  # ← nuevo campo
         "tabla_proyeccion": tabla_datos
     }
     
@@ -441,4 +450,31 @@ def eliminar_archivo_escenario(ruta_archivo):
         return True, "🗑️ Escenario eliminado con éxito del sistema."
     except Exception as e:
         return False, f"❌ Error al intentar eliminar el archivo: {str(e)}"
- 
+
+def listar_todos_escenarios_agrupados():
+    """Devuelve todos los escenarios guardados agrupados por unidad educativa para un dropdown múltiple."""
+    carpeta = asegurar_carpeta_escenarios()
+    ue_corp = ['BÁSICA 1', 'BÁSICA 2', 'BÁSICA SF', 'MEDIA LOS ANDES', 'MEDIA SAN FELIPE']
+    
+    grupos = []
+    for unidad in ue_corp:
+        archivos = carpeta.glob(f"{unidad.replace(' ', '_')}_*.json")
+        opciones_unidad = []
+        
+        for archivo in archivos:
+            with open(archivo, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                opciones_unidad.append({
+                    "label": data["nombre_escenario"],
+                    "value": str(archivo)
+                })
+        
+        if opciones_unidad:  # Solo agregar el grupo si tiene escenarios
+            grupos.append({
+                "label": unidad,
+                "value": unidad,
+                "disabled": True  # Título del grupo no seleccionable
+            })
+            grupos.extend(opciones_unidad)
+    
+    return grupos
