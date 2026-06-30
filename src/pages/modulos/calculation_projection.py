@@ -29,6 +29,58 @@ matriculas_iniciales_default = {
                             '2032':200,'2033':200,'2034':190,'2035':190,'2036':180},   
      }
 
+tasas_nuevos_alumnos = {
+    'BÁSICA 1': {
+        'PRE-KINDER': 0.024,
+        'KINDER': 0.018,
+        '1BÁSICO': 0.0,
+        '2BÁSICO': 0.015,
+        '3BÁSICO': -0.012,
+        '4BÁSICO': 0.008,
+        '5BÁSICO': -0.005,
+        '6BÁSICO': 0.021,
+        '7BÁSICO': 0.0,
+        '8BÁSICO': -0.018,
+    },
+    'BÁSICA 2': {
+        'PRE-KINDER': 0.031,
+        'KINDER': -0.009,
+        '1BÁSICO': 0.014,
+        '2BÁSICO': 0.0,
+        '3BÁSICO': 0.022,
+        '4BÁSICO': -0.017,
+        '5BÁSICO': 0.011,
+        '6BÁSICO': 0.0,
+        '7BÁSICO': -0.024,
+        '8BÁSICO': 0.007,
+    },
+    'BÁSICA SF': {
+        'PRE-KINDER': -0.015,
+        'KINDER': 0.012,
+        '1BÁSICO': 0.0,
+        '2BÁSICO': -0.008,
+        '3BÁSICO': 0.019,
+        '4BÁSICO': 0.0,
+        '5BÁSICO': -0.021,
+        '6BÁSICO': 0.016,
+        '7BÁSICO': 0.003,
+        '8BÁSICO': -0.011,
+    },
+    'MEDIA LOS ANDES': {
+        '1MEDIO': 0.028,
+        '2MEDIO': -0.014,
+        '3MEDIO': 0.0,
+        '4MEDIO': 0.009,
+    },
+    'MEDIA SAN FELIPE': {
+        '1MEDIO': -0.022,
+        '2MEDIO': 0.017,
+        '3MEDIO': 0.0,
+        '4MEDIO': -0.013,
+    },
+}
+
+
 def obtener_ruta_json_dinamica(uni_edu):
     """
     Toma la carpeta 'data' original del proyecto y construye una ruta
@@ -135,7 +187,9 @@ def proyeccion_por_nivel(lista_retencion, lista_nuevos, unidad_educativa, diccio
     # 1. OPTIMIZACIÓN: Vectorizar tasas de sliders antes de los ciclos for
     tasas_decimales = [r / 100 if r > 1 else r for r in lista_retencion]
 
-    
+    # Obtener tasas para esta unidad educativa
+    tasas_unidad = tasas_nuevos_alumnos.get(unidad_educativa, {})
+    niveles_unidad = list(df_nivel_filtrado['NIVEL'])
 
 
 
@@ -156,11 +210,21 @@ def proyeccion_por_nivel(lista_retencion, lista_nuevos, unidad_educativa, diccio
         j_anterior = df_nivel_filtrado.columns.get_loc(str(periodo - 1)) 
         estudiantes_carga_inicial = valores_inicales_uni_acad[str(periodo)]
 
+        anios_transcurridos = periodo - 2027
+
         for nivel in range(total_niveles):
             tasa_ret_nivel = tasas_decimales[nivel]
-            alumnos_nuevos_nivel = lista_nuevos[nivel]
+            nombre_nivel = niveles_unidad[nivel]
+        
+            tasa_crecimiento = tasas_unidad.get(nombre_nivel, 0.0)
 
-            # df_nivel_filtrado.iloc[nivel, j_anterior] +
+
+            alumnos_nuevos_base = lista_nuevos[nivel]
+
+            # Tasa aplicada con guardia de seguridad contra negativos
+            alumnos_nuevos_nivel = max(0, int(round(
+                    alumnos_nuevos_base * ((1 + tasa_crecimiento) ** anios_transcurridos), 0
+                )))
 
             if nivel == 0:
                 # Pre-Kinder o 1° Medio en colegios de pura Media
@@ -478,3 +542,26 @@ def listar_todos_escenarios_agrupados():
             grupos.extend(opciones_unidad)
     
     return grupos
+
+def guardar_escenario_corporativo(nombre_escenario, escenarios_por_unidad, df_resultado):
+    """Guarda la receta de escenarios corporativos y el DataFrame resultado."""
+    if not nombre_escenario:
+        return False, "Por favor, ingresa un nombre válido para el escenario."
+    
+    carpeta = asegurar_carpeta_escenarios()
+    nombre_archivo = f"CORPORACIÓN_{nombre_escenario}.json".replace(" ", "_")
+    ruta_final = carpeta / nombre_archivo
+    
+    tabla_datos = df_resultado.to_dict(orient="records")
+    
+    escenario_dict = {
+        "nombre_escenario": nombre_escenario,
+        "tipo": "corporativo",
+        "escenarios_por_unidad": escenarios_por_unidad,
+        "tabla_proyeccion": tabla_datos
+    }
+    
+    with open(ruta_final, "w", encoding="utf-8") as f:
+        json.dump(escenario_dict, f, indent=4, ensure_ascii=False)
+    
+    return True, f"Escenario corporativo '{nombre_escenario}' guardado con éxito."

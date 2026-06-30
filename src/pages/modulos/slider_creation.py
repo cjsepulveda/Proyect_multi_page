@@ -1,7 +1,8 @@
 
 from dash import html, dcc
+import dash_bootstrap_components as dbc
 
-def crear_grupo_sliders(titulo_grupo, prefijo_id, tipo_slider='retencion'):
+def crear_grupo_sliders(titulo_grupo, prefijo_id, tipo_slider='retencion', tasas_nivel=None):
     """
     Genera un grupo de sliders colapsados.
     tipo_slider puede ser: 'retencion' (porcentajes) o 'nuevos' (cantidades de alumnos).
@@ -42,17 +43,68 @@ def crear_grupo_sliders(titulo_grupo, prefijo_id, tipo_slider='retencion'):
                 # Si te equivocas al escribir el nombre en el layout, Python te avisará de inmediato
                 raise ValueError(f"Error: El tipo_slider '{tipo_slider}' no es válido. Usa 'retencion' o 'nuevos'.")
         
-        sliders.append(
-            html.Div([
-                html.Label(curso, style={"fontWeight": "bold", "fontSize": "14px"}),
-                dcc.Slider(
-                    min=min_val, max=max_val, value=val_defecto, step=1, 
-                    id=id_diccionario, 
-                    marks=marcas,
-                    className=clase
+        # ← bloquear solo el primer slider de cada grupo
+        es_nivel_cero = (i == 1)
+
+        # ← Etiqueta de tasa solo para slider de nuevos
+        etiqueta_tasa = None
+        if tipo_slider == 'nuevos' and tasas_nivel:
+            tasa = tasas_nivel.get(curso, 0.0)
+            
+            if tasa > 0:
+                color_fondo = "#198754"  # verde
+                simbolo = f"+{tasa*100:.1f}%"
+                tooltip = "Tendencia histórica al alza en alumnos nuevos"
+            elif tasa < 0:
+                color_fondo = "#dc3545"  # rojo
+                simbolo = f"{tasa*100:.1f}%"
+                tooltip = "Tendencia histórica a la baja en alumnos nuevos"
+            else:
+                color_fondo = "#fd7e14"  # naranja
+                simbolo = "0.0%"
+                tooltip = "Sin tendencia histórica en alumnos nuevos"
+
+            # ← id único para vincular tooltip
+            id_etiqueta = f"badge-tasa-{prefijo_id}-{i}"
+
+            etiqueta_tasa = html.Span([
+                html.Span(
+                    simbolo,
+                    id=id_etiqueta,
+                    style={
+                        "backgroundColor": color_fondo,
+                        "color": "white",
+                        "fontSize": "11px",
+                        "fontWeight": "bold",
+                        "padding": "2px 7px",
+                        "borderRadius": "10px",
+                        "marginLeft": "8px",
+                        "verticalAlign": "middle",
+                        "cursor": "pointer"
+                    }
+                ),
+                dbc.Tooltip(
+                    tooltip,
+                    target=id_etiqueta,
+                    placement="top"
                 )
-            ], style={"marginBottom": "20px"})
-        )
+            ])
+
+        sliders.append(
+                html.Div([
+                    html.Div([
+                        html.Label(curso, style={"fontWeight": "bold", "fontSize": "14px"}),
+                        etiqueta_tasa if etiqueta_tasa else html.Span()  # ← etiqueta al lado del nombre
+                    ], style={"display": "flex", "alignItems": "center", "marginBottom": "5px"}),
+                    dcc.Slider(
+                        min=min_val, max=max_val, value=val_defecto, step=1,
+                        id=id_diccionario,
+                        marks=marcas,
+                        className=clase,
+                        disabled=es_nivel_cero
+                    )
+                ], style={"marginBottom": "20px", "opacity": "0.4" if es_nivel_cero else "1"})
+            )
             
             
     return html.Details([

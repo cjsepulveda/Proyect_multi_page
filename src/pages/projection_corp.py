@@ -10,12 +10,14 @@ import pages.modulos.calculation_projection as proyecciones
 from pages.modulos.calculation_projection import (
     calcular_proyeccion_completa, 
     cargar_datos_consolidados, 
-    guardar_escenario_simulacion,      
+    guardar_escenario_simulacion,
+    guardar_escenario_corporativo,  # ← agregar      
     listar_escenarios_por_unidad,
     listar_todos_escenarios_agrupados,  # ← agregar      
     cargar_datos_escenario,
     eliminar_archivo_escenario,
     proyeccion_corporativa,
+    tasas_nuevos_alumnos,  # ← agregar
                  
 )
 from pages.modulos.slider_creation import crear_grupo_sliders 
@@ -63,35 +65,43 @@ menu_lateral = dbc.Card([
                 className='dropdown'
             ),
         ]),
-    html.Br(),
-    html.H5("Configuración", className="text-primary fw-bold mb-3"),
-    html.Hr(),
-    
-    # Pestañas para los 20 slider separados en 10 para retencion y 10 para captacion
-    dbc.Tabs([
-        # Pestaña 1: Controles de Retención
-        dbc.Tab(label="Alumnos Nuevos", tab_id="tab-sliders-retencion", children=[
-            html.Div([
-            # Nuevos Slider retencion
-                    html.Label("Nuevos Estudiantes: ", className="fw-bold text-secondary me-1"),
-                    html.Hr(),
-                    # Crear slider con funcion crear_grupo_sliders para retencion
-                    html.Div(id='contenedor-captacion') # contenedor de slider segun unidad educativa elegida
+        html.Br(),
+    # Contenedor para slider de unidades educativas, se oculta si se elije CORPORACION
+    html.Div(
+    id='contenedor-configuracion',
+    children=[
+        html.Br(),
+        html.H5("Configuración", className="text-primary fw-bold mb-3"),
+        html.Hr(),
+        
+        # Pestañas para los 20 slider separados en 10 para retencion y 10 para captacion
+        dbc.Tabs([
+            # Pestaña 1: Controles de Retención
+            dbc.Tab(label="Alumnos Nuevos", tab_id="tab-sliders-retencion", children=[
+                html.Div([
+                # Nuevos Slider retencion
+                        html.Label("Nuevos Estudiantes: ", className="fw-bold text-secondary me-1"),
+                        html.Hr(),
+                        # Crear slider con funcion crear_grupo_sliders para retencion
+                        html.Div(id='contenedor-captacion') # contenedor de slider segun unidad educativa elegida
 
-                ], className="pt-2")
-             ]),
+                    ], className="pt-2")
+                ]),
 
 
-        dbc.Tab(label="Retención", tab_id="tab-sliders-nuevos", children=[
-            html.Div([
-                    html.Label(" Tasa de retencion (%):", className="fw-bold text-secondary me-1"),
-                    html.Hr(),
-                    # Crear slider con funcion crear_grupo_sliders para retencion
-                    html.Div(id='contenedor-retencion') # contenedor de slider segun unidad educativa elegida
+            dbc.Tab(label="Retención", tab_id="tab-sliders-nuevos", children=[
+                html.Div([
+                        html.Label(" Tasa de retencion (%):", className="fw-bold text-secondary me-1"),
+                        html.Hr(),
+                        # Crear slider con funcion crear_grupo_sliders para retencion
+                        html.Div(id='contenedor-retencion') # contenedor de slider segun unidad educativa elegida
 
-                ], className="pt-2")
-             ]),
-      ], id="tabs-sliders-menu", active_tab="tab-sliders-retencion"),
+                    ], className="pt-2")
+                ]),
+        ], id="tabs-sliders-menu", active_tab="tab-sliders-retencion"),
+    ]
+
+    ),
 
     # Dropdown múltiple para vista corporativa
     html.Div(
@@ -204,6 +214,7 @@ def cargar_valores_verticales(unidad_seleccionada):
     Output('dropdown-escenarios-guardados', 'options'), # 👈 Nuevo para cargar escenarios de slider
     Output('dropdown-escenarios-corp', 'options'),  
     Output('contenedor-dropdown-corp', 'style'),          # ← nuevo, escenarios agrupados
+    Output('contenedor-configuracion', 'style'),  # ← nuevo, contender slider (visible/oculto)
     Input('unidades_educativas', 'value'),  # Origen: la unidad educativa seleccionada
 )
 def actualizar_sliders(unidad_educativa):
@@ -211,10 +222,12 @@ def actualizar_sliders(unidad_educativa):
     if unidad_educativa == 'CORPORACIÓN':  # ← agregar este bloque primero
         opciones_dropdown = listar_escenarios_por_unidad(unidad_educativa)
         escenarios_agrupados = listar_todos_escenarios_agrupados()  # ← cargar escenarios
-        return [], [], opciones_dropdown, escenarios_agrupados, {'display': 'block'}  # ← mostrar dropdown
+        return [], [], opciones_dropdown, escenarios_agrupados, {'display': 'block'}, {'display': 'none'}  # ← mostrar dropdown
     
     # Condicional que define por completo cada grupo independiente
     if unidad_educativa in ['BÁSICA 1', 'BÁSICA 2', 'BÁSICA SF']:
+        tasas = tasas_nuevos_alumnos.get(unidad_educativa, {})  # ← obtener tasas de la unidad
+        
         # Grupo completamente definido de 3 sliders
         sliders_retencion = [
             crear_grupo_sliders("Prebásica", "grupo-a", tipo_slider='retencion'),
@@ -223,17 +236,20 @@ def actualizar_sliders(unidad_educativa):
           ]
         
         sliders_captacion =[
-            crear_grupo_sliders("Prebásica", "grupo-a", tipo_slider='nuevos'),
-            crear_grupo_sliders("Primer Ciclo Básica",  "grupo-b", tipo_slider='nuevos'),
-            crear_grupo_sliders("Segundo Ciclo Básica",  "grupo-c", tipo_slider='nuevos'),
+            crear_grupo_sliders("Prebásica", "grupo-a", tipo_slider='nuevos',tasas_nivel=tasas),
+            crear_grupo_sliders("Primer Ciclo Básica",  "grupo-b", tipo_slider='nuevos',tasas_nivel=tasas),
+            crear_grupo_sliders("Segundo Ciclo Básica",  "grupo-c", tipo_slider='nuevos',tasas_nivel=tasas),
           ]
     else:
+        
+        tasas = tasas_nuevos_alumnos.get(unidad_educativa, {})  # ← obtener tasas de la unidad
+        
         sliders_retencion = [
             crear_grupo_sliders("Enseñanza Media", "grupo-d", tipo_slider='retencion'),
           ]
         
         sliders_captacion =[
-            crear_grupo_sliders("Enseñanza Media", "grupo-d", tipo_slider='nuevos'),
+            crear_grupo_sliders("Enseñanza Media", "grupo-d", tipo_slider='nuevos',tasas_nivel=tasas),
           ]
         
     # Un solo punto de retorno para la variable que contiene el grupo seleccionado
@@ -242,7 +258,7 @@ def actualizar_sliders(unidad_educativa):
     opciones_dropdown = listar_escenarios_por_unidad(unidad_educativa)
     
     # Retornamos los tres elementos en el orden exacto de los Outputs de arriba
-    return sliders_retencion, sliders_captacion, opciones_dropdown, [], {'display': 'none'}
+    return sliders_retencion, sliders_captacion, opciones_dropdown, [], {'display': 'none'}, {'display': 'block'}
 
 # Layaout Genral, Menu Lateral, 2 Tarjetas KPI, Gráfico y Tabla
 layout = dbc.Container([
@@ -258,31 +274,17 @@ layout = dbc.Container([
             # Tarjetas KPI
             html.Div(id="contenedor-kpis", className="mb-4"), # Tarjetas KPI
             
-            # Diseño de dos pestañas "dbc.Tabs" para gráficos
-            dbc.Tabs([
-            # Primera pestaña: Gráfico Completo
-            dbc.Tab(
+            # Diseño para gráfico unidad académica
             dbc.Card([
                 dbc.CardHeader(html.H6("Modelación Escenarios Matrículas Corporativas", className="m-0 text-dark")),
-                dbc.CardBody(dcc.Graph(config={"displayModeBar": False}, id="grafico-dinamico-completo"))
+                dbc.CardBody(
+                    dcc.Loading(
+                        id="loading-grafico",
+                        type="circle",
+                        children=dcc.Graph(config={"displayModeBar": False}, id="grafico-dinamico-completo")
+                    )
+                )
             ], className="shadow-sm mt-3"), # 'mt-3' separa la tarjeta de la barra de pestañas
-            label="Gráfico Unidad Académica",
-            tab_id="tab-completo",
-            ),
-        
-            # Segunda pestaña: Gráfico Corporación
-            dbc.Tab(
-            dbc.Card([
-                dbc.CardHeader(html.H6("Modelación Escenarios Matrículas Corporativas", className="m-0 text-dark")),
-                dbc.CardBody(dcc.Graph(config={"displayModeBar": False}, id="grafico-corp"))
-            ], className="shadow-sm mt-3"),
-            label="Gráfico Corporación",
-            tab_id="tab-corporacion",
-            ),
-            ],
-            id="tabs-scenarios",
-            active_tab="tab-completo", # Define cuál se muestra primero al cargar la página
-            ),
 
 
             # Diseño de dos tabs para las tablas
@@ -361,7 +363,7 @@ layout = dbc.Container([
     Output("tabla-datos-reales", "data"), # 🚀 NUEVO OUTPUT AGREGADO AQUÍ
     Output("tabla-matriz-desglose-cursos", "data"),    # 🚀 NUEVO OUTPUT DATA
     Output("tabla-matriz-desglose-cursos", "columns"), # 🚀 NUEVO OUTPUT COLUMNS DINÁMICAS
-    Output("grafico-corp", "figure"), # 🚀 Grafico CORPORACION
+    #Output("grafico-corp", "figure"), # 🚀 Grafico CORPORACION
     
     Input({"type": "slider-retencion", "id": ALL}, "value"), # Lista de 10 porcentajes para retención
     Input({"type": "slider-nuevos", "id": ALL}, "value"),    # Lista de 10 cantidades de alumnos
@@ -421,9 +423,16 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
         )
         corp_graph.update_xaxes(showgrid=True, gridcolor="#EAEAEA")
         corp_graph.update_yaxes(showgrid=True, gridcolor="#EAEAEA")
+
+        # Preparar datos para la tabla
+        df_tabla_corp = df_corporacion.rename(columns={
+                                                "PERIODO": "Año",
+                                                "MATRICULA": "Valor"
+                                             })
+        tabla_corp_data = df_tabla_corp.to_dict(orient="records")
         
         # Retornamos valores vacíos para los outputs que no aplican
-        return corp_graph, [], [], [], [], corp_graph
+        return corp_graph, [], tabla_corp_data, [], []
 
 
 # CODIGO ORIGINAL
@@ -674,7 +683,7 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
             tabla_consolidada_data, 
             tabla_matriz_data,  # Inyecta las filas desglosadas
             columnas_matriz, # Inyecta los nombres de las columnas de años
-            corp_graph     # GRAFICO TOTAL CORPORACION
+            #corp_graph     # GRAFICO TOTAL CORPORACION
         )
 
 
@@ -716,32 +725,66 @@ def exportar_a_excel(n_clicks, lista_retencion, lista_nuevos, unidad_edu):
     State({"type": "slider-retencion", "id": ALL}, "value"),
     State({"type": "slider-nuevos", "id": ALL}, "value"),
     State('tabla-matriculas-vertical', 'data'),
+    State('dropdown-escenarios-corp', 'value'),  # ← agregar
     prevent_initial_call=True # 👈 Esto es obligatorio si usas allow_duplicate
 )
-def ejecutar_guardado_escenario(n_clicks, unidad_edu, nombre_escenario, lista_ret, lista_nuevos, data_tabla):
+def ejecutar_guardado_escenario(
+                        n_clicks, 
+                        unidad_edu, 
+                        nombre_escenario, 
+                        lista_ret, 
+                        lista_nuevos, 
+                        data_tabla, 
+                        escenarios_seleccionados
+                        ):
     if not n_clicks:
         raise dash.exceptions.PreventUpdate
         
     if not nombre_escenario or str(nombre_escenario).strip() == "":
         opciones_actuales = listar_escenarios_por_unidad(unidad_edu)
-        return "⚠️ Por favor, ingresa un nombre para el escenario antes de guardar.", opciones_actuales
+        return "⚠️ Por favor, ingresa un nombre para el escenario.", opciones_actuales
 
-    # Convertir la tabla de Valores iniciales prekinder o 1° medio a diccionario antes de guardar
-    valores_tabla = {str(fila["Anio"]): fila["Matricula"] for fila in data_tabla}
-    # Ejecutamos el motor analítico para obtener el DataFrame que queremos respaldar
-    df, _, _= calcular_proyeccion_completa(
-        lista_ret, 
-        lista_nuevos, 
-        unidad_edu, 
-        proyecciones.matriculas_iniciales_default
+    # Guardar escenario corporativo
+    if unidad_edu == 'CORPORACIÓN':
+        # Construir diccionario de receta
+        escenarios_por_unidad = {}
+        ue_corp = ['BÁSICA 1', 'BÁSICA 2', 'BÁSICA SF', 'MEDIA LOS ANDES', 'MEDIA SAN FELIPE']
+        
+        for unidad in ue_corp:
+            escenarios_por_unidad[unidad] = "default"  # valor inicial
+        
+        if escenarios_seleccionados:
+            for ruta in escenarios_seleccionados:
+                datos = cargar_datos_escenario(ruta)
+                if datos:
+                    escenarios_por_unidad[datos["unidad_educativa"]] = ruta
+        
+        # Calcular df corporativo para guardar
+        df_corp = proyecciones.proyeccion_corporativa(
+            proyecciones.matriculas_iniciales_default,
+            escenarios_corp={datos["unidad_educativa"]: cargar_datos_escenario(ruta) 
+                           for ruta in (escenarios_seleccionados or []) 
+                           if cargar_datos_escenario(ruta)}
         )
-    
-    # Llamamos a tu función del módulo especializado
-    exito, mensaje = guardar_escenario_simulacion(unidad_edu, nombre_escenario.strip(), lista_ret, lista_nuevos, df, valores_tabla)
-    
-    # Recargamos las opciones del dropdown para que aparezca el nuevo escenario de inmediato
+        
+        exito, mensaje = guardar_escenario_corporativo(
+            nombre_escenario.strip(), 
+            escenarios_por_unidad, 
+            df_corp
+        )
+        
+    # Guardar escenario de unidad educativa
+    else:
+        df, _, _ = calcular_proyeccion_completa(
+            lista_ret, lista_nuevos, unidad_edu,
+            proyecciones.matriculas_iniciales_default
+        )
+        valores_tabla = {str(fila["Anio"]): fila["Matricula"] for fila in data_tabla}
+        exito, mensaje = guardar_escenario_simulacion(
+            unidad_edu, nombre_escenario.strip(), lista_ret, lista_nuevos, df, valores_tabla
+        )
+
     nuevas_opciones = listar_escenarios_por_unidad(unidad_edu)
-    
     return mensaje, nuevas_opciones
 
 # Callback para CARGAR un escenario en los Sliders
@@ -749,31 +792,39 @@ def ejecutar_guardado_escenario(n_clicks, unidad_edu, nombre_escenario, lista_re
     Output({"type": "slider-retencion", "id": ALL}, "value"),
     Output({"type": "slider-nuevos", "id": ALL}, "value"),
     Output('tabla-matriculas-vertical', 'data', allow_duplicate=True),  # ← nuevo
+    Output('dropdown-escenarios-corp', 'value', allow_duplicate=True),  # ← nuevo, corporativo
     Input("btn-cargar-escenario", "n_clicks"),
     State("dropdown-escenarios-guardados", "value"),
+    State({"type": "slider-retencion", "id": ALL}, "value"),  # ← para mantener valores actuales
+    State({"type": "slider-nuevos", "id": ALL}, "value"),     # ← para mantener valores actuales
     prevent_initial_call=True
 )
-def ejecutar_carga_en_sliders(n_clicks, ruta_archivo_escenario):
+def ejecutar_carga_en_sliders(n_clicks, ruta_archivo_escenario, sliders_ret_actuales, sliders_nuevos_actuales):
     if not n_clicks or not ruta_archivo_escenario:
         raise dash.exceptions.PreventUpdate
         
-    # Leemos el archivo JSON seleccionado
     datos_escenario = cargar_datos_escenario(ruta_archivo_escenario)
     
     if datos_escenario is None:
         raise dash.exceptions.PreventUpdate
-        
-    # Extraemos las listas de valores guardadas
-    valores_retencion_guardados = datos_escenario.get("valores_retencion", [])
-    valores_nuevos_guardados = datos_escenario.get("valores_nuevos", [])
     
-    # Extraer y convertir los valores de la tabla  ← nuevo
-    valores_tabla = datos_escenario.get("valores_tabla_inicial", {})
-    filas_tabla = [{"Anio": anio, "Matricula": valor} for anio, valor in valores_tabla.items()]
-    
-    # Retornamos los arreglos directos. Dash se encargará de posicionarlos en orden en los sliders
+    # Detectar tipo de escenario
+    if datos_escenario.get("tipo") == "corporativo":
+        # Cargar escenario corporativo — restaurar dropdown múltiple
+        escenarios_por_unidad = datos_escenario.get("escenarios_por_unidad", {})
+        # Extraer solo las rutas que no son "default"
+        rutas_seleccionadas = [v for v in escenarios_por_unidad.values() if v != "default"]
 
-    return valores_retencion_guardados, valores_nuevos_guardados, filas_tabla
+        return sliders_ret_actuales, sliders_nuevos_actuales, dash.no_update, rutas_seleccionadas
+    
+    else:
+        # Cargar escenario de unidad educativa — comportamiento original
+        valores_retencion_guardados = datos_escenario.get("valores_retencion", [])
+        valores_nuevos_guardados = datos_escenario.get("valores_nuevos", [])
+        valores_tabla = datos_escenario.get("valores_tabla_inicial", {})
+        filas_tabla = [{"Anio": anio, "Matricula": valor} for anio, valor in valores_tabla.items()]
+        
+        return valores_retencion_guardados, valores_nuevos_guardados, filas_tabla, dash.no_update
 
 # Callback para ELIMINAR un escenario en los Sliders
 @callback(

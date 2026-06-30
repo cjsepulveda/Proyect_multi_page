@@ -1,0 +1,73 @@
+{
+    "nombre_escenario": "P02_corporacion",
+    "tipo": "corporativo",
+    "escenarios_por_unidad": {
+        "BÁSICA 1": "D:\\OneDrive\\Documentos\\Proyect_Phyton\\Proyect_multi_page\\src\\pages\\data\\escenarios\\BÁSICA_1_P01_bas01.json",
+        "BÁSICA 2": "D:\\OneDrive\\Documentos\\Proyect_Phyton\\Proyect_multi_page\\src\\pages\\data\\escenarios\\BÁSICA_2_P01_bas_02.json",
+        "BÁSICA SF": "default",
+        "MEDIA LOS ANDES": "D:\\OneDrive\\Documentos\\Proyect_Phyton\\Proyect_multi_page\\src\\pages\\data\\escenarios\\MEDIA_LOS_ANDES_P01_Media_LA.json",
+        "MEDIA SAN FELIPE": "default"
+    },
+    "tabla_proyeccion": [
+        {
+            "PERIODO": 2024,
+            "MATRICULA": 4185,
+            "Tipo": "Real"
+        },
+        {
+            "PERIODO": 2025,
+            "MATRICULA": 4288,
+            "Tipo": "Real"
+        },
+        {
+            "PERIODO": 2026,
+            "MATRICULA": 4476,
+            "Tipo": "Real"
+        },
+        {
+            "PERIODO": 2027,
+            "MATRICULA": 4704,
+            "Tipo": "Proyección"
+        },
+        {
+            "PERIODO": 2028,
+            "MATRICULA": 4780,
+            "Tipo": "Proyección"
+        },
+        {
+            "PERIODO": 2029,
+            "MATRICULA": 4738,
+            "Tipo": "Proyección"
+        },
+        {
+            "PERIODO": 2030,
+            "MATRICULA": 4591,
+            "Tipo": "Proyección"
+        },
+        {
+            "PERIODO": 2031,
+            "MATRICULA": 4493,
+            "Tipo": "Proyección"
+        },
+        {
+            "PERIODO": 2032,
+            "MATRICULA": 4391,
+            "Tipo": "Proyección"
+        },
+        {
+            "PERIODO": 2033,
+            "MATRICULA": 4329,
+            "Tipo": "Proyección"
+        },
+        {
+            "PERIODO": 2034,
+            "MATRICULA": 4240,
+            "Tipo": "Proyección"
+        },
+        {
+            "PERIODO": 2035,
+            "MATRICULA": 4171,
+            "Tipo": "Proyección"
+        }
+    ]
+}

@@ -1,0 +1,102 @@
+{
+    "nombre_escenario": "pbas_1_prekinder_2030",
+    "unidad_educativa": "BÁSICA 1",
+    "valores_retencion": [
+        95,
+        95,
+        95,
+        95,
+        95,
+        95,
+        95,
+        95,
+        95,
+        95
+    ],
+    "valores_nuevos": [
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10
+    ],
+    "valores_tabla_inicial": {
+        "2027": 24,
+        "2028": 22,
+        "2029": 21,
+        "2030": 60,
+        "2031": 20,
+        "2032": 19,
+        "2033": 18,
+        "2034": 18,
+        "2035": 17,
+        "2036": 17
+    },
+    "tabla_proyeccion": [
+        {
+            "Año": "2024",
+            "Valor": 645,
+            "Tipo": "Real"
+        },
+        {
+            "Año": "2025",
+            "Valor": 648,
+            "Tipo": "Real"
+        },
+        {
+            "Año": "2026",
+            "Valor": 635,
+            "Tipo": "Real"
+        },
+        {
+            "Año": "2027",
+            "Valor": 638,
+            "Tipo": "Proyección"
+        },
+        {
+            "Año": "2028",
+            "Valor": 654,
+            "Tipo": "Proyección"
+        },
+        {
+            "Año": "2029",
+            "Valor": 630,
+            "Tipo": "Proyección"
+        },
+        {
+            "Año": "2030",
+            "Valor": 627,
+            "Tipo": "Proyección"
+        },
+        {
+            "Año": "2031",
+            "Valor": 629,
+            "Tipo": "Proyección"
+        },
+        {
+            "Año": "2032",
+            "Valor": 627,
+            "Tipo": "Proyección"
+        },
+        {
+            "Año": "2033",
+            "Valor": 633,
+            "Tipo": "Proyección"
+        },
+        {
+            "Año": "2034",
+            "Valor": 628,
+            "Tipo": "Proyección"
+        },
+        {
+            "Año": "2035",
+            "Valor": 629,
+            "Tipo": "Proyección"
+        }
+    ]
+}
