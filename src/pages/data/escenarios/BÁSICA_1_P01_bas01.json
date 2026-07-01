@@ -3,28 +3,40 @@
     "unidad_educativa": "BÁSICA 1",
     "valores_retencion": [
         95,
-        95,
-        95,
-        95,
-        95,
-        95,
-        95,
-        95,
-        95,
-        95
+        87,
+        80,
+        92,
+        80,
+        85,
+        90,
+        90,
+        85,
+        90
     ],
     "valores_nuevos": [
         0,
-        7,
-        14,
-        6,
-        12,
-        12,
-        11,
+        8,
         16,
+        7,
         12,
-        14
+        13,
+        12,
+        18,
+        13,
+        13
     ],
+    "valores_tabla_inicial": {
+        "2027": 24,
+        "2028": 22,
+        "2029": 21,
+        "2030": 20,
+        "2031": 20,
+        "2032": 19,
+        "2033": 18,
+        "2034": 18,
+        "2035": 17,
+        "2036": 17
+    },
     "tabla_proyeccion": [
         {
             "Año": "2024",
@@ -43,47 +55,47 @@
         },
         {
             "Año": "2027",
-            "Valor": 642,
+            "Valor": 617,
             "Tipo": "Proyección"
         },
         {
             "Año": "2028",
-            "Valor": 657,
+            "Valor": 613,
             "Tipo": "Proyección"
         },
         {
             "Año": "2029",
-            "Valor": 632,
+            "Valor": 576,
             "Tipo": "Proyección"
         },
         {
             "Año": "2030",
-            "Valor": 622,
+            "Valor": 553,
             "Tipo": "Proyección"
         },
         {
             "Año": "2031",
-            "Valor": 618,
+            "Valor": 538,
             "Tipo": "Proyección"
         },
         {
             "Año": "2032",
-            "Valor": 609,
+            "Valor": 520,
             "Tipo": "Proyección"
         },
         {
             "Año": "2033",
-            "Valor": 606,
+            "Valor": 510,
             "Tipo": "Proyección"
         },
         {
             "Año": "2034",
-            "Valor": 595,
+            "Valor": 497,
             "Tipo": "Proyección"
         },
         {
             "Año": "2035",
-            "Valor": 585,
+            "Valor": 488,
             "Tipo": "Proyección"
         }
     ]

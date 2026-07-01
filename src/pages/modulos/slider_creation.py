@@ -35,16 +35,23 @@ def crear_grupo_sliders(titulo_grupo, prefijo_id, tipo_slider='retencion', tasas
                 clase = "slider-retencion"
 
         elif tipo_slider == 'nuevos': # 👈 Ahora es estricto para 'nuevos'
-                min_val, max_val, val_defecto = 0, 500, 10
-                marcas = {j: str(j) for j in range(0, 501, 50)}
-                clase = "slider-nuevos"
+                
+                #control prekinder
+                if curso == "PRE-KINDER" or curso =="1MEDIO":
+                     min_val, max_val, val_defecto = 0, 500, 0
+                     marcas = {j: str(j) for j in range(0, 501, 50)}
+                     clase = "slider-nuevos"
+                else:
+                    min_val, max_val, val_defecto = 0, 500, 10
+                    marcas = {j: str(j) for j in range(0, 501, 50)}
+                    clase = "slider-nuevos"
 
         else:
                 # Si te equivocas al escribir el nombre en el layout, Python te avisará de inmediato
                 raise ValueError(f"Error: El tipo_slider '{tipo_slider}' no es válido. Usa 'retencion' o 'nuevos'.")
         
         # ← bloquear solo el primer slider de cada grupo
-        es_nivel_cero = (i == 1)
+        es_nivel_cero = (i == 1) and (curso =="PRE-KINDER" or curso =="1MEDIO")
 
         # ← Etiqueta de tasa solo para slider de nuevos
         etiqueta_tasa = None
