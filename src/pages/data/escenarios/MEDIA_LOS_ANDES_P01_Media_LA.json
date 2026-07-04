@@ -1,18 +1,29 @@
 {
-    "nombre_escenario": "P01_Media_LA",
+    "nombre_escenario": "P01_MEDIA_LA",
     "unidad_educativa": "MEDIA LOS ANDES",
     "valores_retencion": [
         95,
-        95,
-        95,
-        95
+        85,
+        85,
+        94
     ],
     "valores_nuevos": [
         0,
-        38,
+        42,
         20,
         5
     ],
+    "valores_tabla_inicial": {
+        "2027": 400,
+        "2028": 380,
+        "2029": 350,
+        "2030": 340,
+        "2031": 330,
+        "2032": 300,
+        "2033": 300,
+        "2034": 300,
+        "2035": 290
+    },
     "tabla_proyeccion": [
         {
             "Año": "2024",
@@ -31,47 +42,47 @@
         },
         {
             "Año": "2027",
-            "Valor": 1477,
+            "Valor": 1402,
             "Tipo": "Proyección"
         },
         {
             "Año": "2028",
-            "Valor": 1531,
+            "Valor": 1415,
             "Tipo": "Proyección"
         },
         {
             "Año": "2029",
-            "Valor": 1524,
+            "Valor": 1404,
             "Tipo": "Proyección"
         },
         {
             "Año": "2030",
-            "Valor": 1435,
+            "Valor": 1343,
             "Tipo": "Proyección"
         },
         {
             "Año": "2031",
-            "Valor": 1365,
+            "Valor": 1291,
             "Tipo": "Proyección"
         },
         {
             "Año": "2032",
-            "Valor": 1320,
+            "Valor": 1227,
             "Tipo": "Proyección"
         },
         {
             "Año": "2033",
-            "Valor": 1301,
+            "Valor": 1189,
             "Tipo": "Proyección"
         },
         {
             "Año": "2034",
-            "Valor": 1283,
+            "Valor": 1162,
             "Tipo": "Proyección"
         },
         {
             "Año": "2035",
-            "Valor": 1256,
+            "Valor": 1133,
             "Tipo": "Proyección"
         }
     ]

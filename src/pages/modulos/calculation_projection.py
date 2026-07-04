@@ -14,19 +14,19 @@ json_data_web_path = ruta_actual.parent.parent / "data" / "data_web_user.json"
 
 matriculas_iniciales_default = {
         'BÁSICA 1':         {'2027':24,'2028':22, '2029':21, '2030':20,'2031':20,
-                            '2032':19,'2033':18,'2034':18,'2035':17,'2036':17},
+                            '2032':19,'2033':18,'2034':18,'2035':17},
 
         'BÁSICA 2':         {'2027':40,'2028':39, '2029':38, '2030':37,'2031':36,
-                            '2032':32,'2033':30,'2034':29,'2035':28,'2036':24},
+                            '2032':32,'2033':30,'2034':29,'2035':28},
 
         'BÁSICA SF':        {'2027':36,'2028':35, '2029':34, '2030':33,'2031':30,
-                            '2032':30,'2033':28,'2034':28,'2035':26,'2036':24},
+                            '2032':30,'2033':28,'2034':28,'2035':26},
 
-        'MEDIA LOS ANDES':  {'2027':400,'2028':350, '2029':320, '2030':320,'2031':320,
-                            '2032':300,'2033':300,'2034':300,'2035':290,'2036':280},
+        'MEDIA LOS ANDES':  {'2027':400,'2028':380, '2029':350, '2030':340,'2031':330,
+                            '2032':300,'2033':300,'2034':300,'2035':290},
 
         'MEDIA SAN FELIPE': {'2027':257,'2028':250, '2029':240, '2030':240,'2031':240,
-                            '2032':200,'2033':200,'2034':190,'2035':190,'2036':180},   
+                            '2032':200,'2033':200,'2034':190,'2035':190},   
      }
 
 tasas_nuevos_alumnos = {
@@ -67,10 +67,10 @@ tasas_nuevos_alumnos = {
         '8BÁSICO': -0.015,
     },
     'MEDIA LOS ANDES': {
-        '1MEDIO': 0.028,
-        '2MEDIO': -0.014,
-        '3MEDIO': 0.0,
-        '4MEDIO': 0.009,
+        '1MEDIO': 0.000,
+        '2MEDIO': -0.060,
+        '3MEDIO': -0.080,
+        '4MEDIO': 0.000,
     },
     'MEDIA SAN FELIPE': {
         '1MEDIO': -0.022,
@@ -121,7 +121,7 @@ def calcular_proyeccion_completa(lista_retencion, lista_nuevos, unidad_educativa
     #  Aquí cargamos datos excel
     reales_dict = cargar_datos_consolidados(unidad_educativa) 
     
-    anios = [str(a) for a in range(2024, 2036)]
+    anios = [str(a) for a in range(2020, 2036)]
     registros = []
     
     # Identificar cuál es el último año real disponible (venga de Excel)

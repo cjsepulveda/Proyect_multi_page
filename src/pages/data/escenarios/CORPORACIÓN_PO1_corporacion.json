@@ -1,14 +1,34 @@
 {
-    "nombre_escenario": "P02_corporacion",
+    "nombre_escenario": "PO1_corporacion",
     "tipo": "corporativo",
     "escenarios_por_unidad": {
         "BÁSICA 1": "D:\\OneDrive\\Documentos\\Proyect_Phyton\\Proyect_multi_page\\src\\pages\\data\\escenarios\\BÁSICA_1_P01_bas01.json",
-        "BÁSICA 2": "D:\\OneDrive\\Documentos\\Proyect_Phyton\\Proyect_multi_page\\src\\pages\\data\\escenarios\\BÁSICA_2_P01_bas_02.json",
-        "BÁSICA SF": "default",
-        "MEDIA LOS ANDES": "D:\\OneDrive\\Documentos\\Proyect_Phyton\\Proyect_multi_page\\src\\pages\\data\\escenarios\\MEDIA_LOS_ANDES_P01_Media_LA.json",
-        "MEDIA SAN FELIPE": "default"
+        "BÁSICA 2": "D:\\OneDrive\\Documentos\\Proyect_Phyton\\Proyect_multi_page\\src\\pages\\data\\escenarios\\BÁSICA_2_P01_BAS_02.json",
+        "BÁSICA SF": "D:\\OneDrive\\Documentos\\Proyect_Phyton\\Proyect_multi_page\\src\\pages\\data\\escenarios\\BÁSICA_SF_P01_BAS_SF.json",
+        "MEDIA LOS ANDES": "D:\\OneDrive\\Documentos\\Proyect_Phyton\\Proyect_multi_page\\src\\pages\\data\\escenarios\\MEDIA_LOS_ANDES_P01_MEDIA_LA.json",
+        "MEDIA SAN FELIPE": "D:\\OneDrive\\Documentos\\Proyect_Phyton\\Proyect_multi_page\\src\\pages\\data\\escenarios\\MEDIA_SAN_FELIPE_P01_MEDIA_SF.json"
     },
     "tabla_proyeccion": [
+        {
+            "PERIODO": 2020,
+            "MATRICULA": 5008,
+            "Tipo": "Real"
+        },
+        {
+            "PERIODO": 2021,
+            "MATRICULA": 4950,
+            "Tipo": "Real"
+        },
+        {
+            "PERIODO": 2022,
+            "MATRICULA": 4697,
+            "Tipo": "Real"
+        },
+        {
+            "PERIODO": 2023,
+            "MATRICULA": 4339,
+            "Tipo": "Real"
+        },
         {
             "PERIODO": 2024,
             "MATRICULA": 4185,
@@ -31,42 +51,42 @@
         },
         {
             "PERIODO": 2028,
-            "MATRICULA": 4780,
+            "MATRICULA": 4814,
             "Tipo": "Proyección"
         },
         {
             "PERIODO": 2029,
-            "MATRICULA": 4738,
+            "MATRICULA": 4788,
             "Tipo": "Proyección"
         },
         {
             "PERIODO": 2030,
-            "MATRICULA": 4591,
+            "MATRICULA": 4656,
             "Tipo": "Proyección"
         },
         {
             "PERIODO": 2031,
-            "MATRICULA": 4493,
+            "MATRICULA": 4563,
             "Tipo": "Proyección"
         },
         {
             "PERIODO": 2032,
-            "MATRICULA": 4391,
+            "MATRICULA": 4432,
             "Tipo": "Proyección"
         },
         {
             "PERIODO": 2033,
-            "MATRICULA": 4329,
+            "MATRICULA": 4345,
             "Tipo": "Proyección"
         },
         {
             "PERIODO": 2034,
-            "MATRICULA": 4240,
+            "MATRICULA": 4242,
             "Tipo": "Proyección"
         },
         {
             "PERIODO": 2035,
-            "MATRICULA": 4171,
+            "MATRICULA": 4168,
             "Tipo": "Proyección"
         }
     ]

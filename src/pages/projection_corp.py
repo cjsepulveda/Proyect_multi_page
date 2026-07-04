@@ -43,7 +43,7 @@ ue_options = {
 # Lista de diccionarios para 'options' usando una lista por comprensión
 ue_options_dropdown = [{'label': k, 'value': v} for k, v in ue_options.items()]
 
-# Lista de Columnas optimizadas para el menú lateral angosto
+# Lista de Columnas optimizadas para el menú lateral angosto en la tabla de datos
 columnas_verticales = [
     {"name": "Año", "id": "Anio", "editable": False},
     {"name": "Matrícula", "id": "Matricula", "type": "numeric", "editable": True}
@@ -183,7 +183,8 @@ menu_lateral = dbc.Card([
     
 )
 
-# CALLBACK 1: Convierte el diccionario plano en 10 filas verticales para la tabla
+# Callback que convierte el diccionario plano de matriculas iniciales 
+# en 10 filas verticales para la tabla
 @callback(
     Output('tabla-matriculas-vertical', 'data'),
     Input('unidades_educativas', 'value')
@@ -205,7 +206,6 @@ def cargar_valores_verticales(unidad_seleccionada):
     return filas_tabla
 
 # Callback para crear slider segun la unidad educativa elegida y buscar escenarios en el output
-# ! el output Output('dropdown-escenarios-guardados', 'options') esta duplicado en el callbac cargar datos
 @callback(
     [
         Output('contenedor-retencion', 'children'), # Primer Output (retencion)
@@ -260,7 +260,7 @@ def actualizar_sliders(unidad_educativa):
     # Retornamos los tres elementos en el orden exacto de los Outputs de arriba
     return sliders_retencion, sliders_captacion, opciones_dropdown, [], {'display': 'none'}, {'display': 'block'}
 
-# Layaout Genral, Menu Lateral, 2 Tarjetas KPI, Gráfico y Tabla
+# Layaout General, Menu Lateral, 2 Tarjetas KPI, Gráfico y 2 Tablas con pestañas
 layout = dbc.Container([
         
     # Layaout General, 1 fila, 2 columnas,
@@ -276,7 +276,11 @@ layout = dbc.Container([
             
             # Diseño para gráfico unidad académica
             dbc.Card([
-                dbc.CardHeader(html.H6("Modelación Escenarios Matrículas Corporativas", className="m-0 text-dark")),
+                dbc.CardHeader(html.Div([
+                                        html.H6("Modelación Escenarios Matrículas: ", className="m-0 text-dark", style={"display": "inline"}),
+                                        html.Span(id="variable-matricula", className="text-dark fw-bold", style={"display": "inline", "marginLeft": "5px"})
+                                        ], className="d-flex align-items-center")
+                ),
                 dbc.CardBody(
                     dcc.Loading(
                         id="loading-grafico",
@@ -363,8 +367,8 @@ layout = dbc.Container([
     Output("tabla-datos-reales", "data"), # 🚀 NUEVO OUTPUT AGREGADO AQUÍ
     Output("tabla-matriz-desglose-cursos", "data"),    # 🚀 NUEVO OUTPUT DATA
     Output("tabla-matriz-desglose-cursos", "columns"), # 🚀 NUEVO OUTPUT COLUMNS DINÁMICAS
-    #Output("grafico-corp", "figure"), # 🚀 Grafico CORPORACION
-    
+    Output("variable-matricula", "children"), # nombre unidad educativa para el titulo de gráfico
+        
     Input({"type": "slider-retencion", "id": ALL}, "value"), # Lista de 10 porcentajes para retención
     Input({"type": "slider-nuevos", "id": ALL}, "value"),    # Lista de 10 cantidades de alumnos
     Input('unidades_educativas', 'value'), # unidad educativa elegida para filtrar excel
@@ -374,9 +378,11 @@ layout = dbc.Container([
 )
 def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, data_tabla_matriculas, escenarios_seleccionados):
     
-        # ← Agregar este bloque al inicio
+    # ← Agregar este bloque al inicio
     if unidad_edu == 'CORPORACIÓN':
-            # Construir diccionario de escenarios seleccionados
+        titulo_grafico_unidad_educativa = unidad_edu
+
+        # Construir diccionario de escenarios seleccionados
         escenarios_corp = {}
         if escenarios_seleccionados:
             for ruta in escenarios_seleccionados:
@@ -391,7 +397,15 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
         escenarios_corp=escenarios_corp
         )
         
-        #df_corporacion = proyecciones.proyeccion_corporativa(proyecciones.matriculas_iniciales_default)
+        # 1. 🚀 CALCULAR RANGO DINÁMICO SEGÚN LOS DATOS ACTUALES DE ESTA ESCUELA
+        # Buscamos el valor máximo y mínimo dentro del DataFrame generado
+        valor_maximo_corp = int(df_corporacion["MATRICULA"].max())
+        valor_minimo_corp = int(df_corporacion["MATRICULA"].min())
+
+        # Dejamos un 25% de holgura hacia arriba y hacia abajo para que la línea respire
+        techo_eje_y_corp = int(valor_maximo_corp * 1.15)
+        piso_eje_y_corp = max(0, int(valor_minimo_corp * 0.85))
+
         
         # Gráfico corporativo con valores default
         corp_graph = graph_objects.Figure()
@@ -422,7 +436,10 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
             font_family='Roboto mono',
         )
         corp_graph.update_xaxes(showgrid=True, gridcolor="#EAEAEA")
-        corp_graph.update_yaxes(showgrid=True, gridcolor="#EAEAEA")
+        corp_graph.update_yaxes(showgrid=True, 
+                                gridcolor="#EAEAEA",
+                                range=[piso_eje_y_corp, techo_eje_y_corp],
+                                )
 
         # Preparar datos para la tabla
         df_tabla_corp = df_corporacion.rename(columns={
@@ -432,7 +449,7 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
         tabla_corp_data = df_tabla_corp.to_dict(orient="records")
         
         # Retornamos valores vacíos para los outputs que no aplican
-        return corp_graph, [], tabla_corp_data, [], []
+        return corp_graph, [], tabla_corp_data, [], [], titulo_grafico_unidad_educativa
 
 
 # CODIGO ORIGINAL
@@ -441,6 +458,7 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
         # (usando tu variable 'matriculas_iniciales_deafault')
         diccionario_completo_actualizado = copy.deepcopy(proyecciones.matriculas_iniciales_default)
 
+        titulo_grafico_unidad_educativa = unidad_edu
 
         # 1. Validación inicial por si la tabla viene vacía en el primer renderizado
         if not data_tabla_matriculas:
@@ -462,7 +480,7 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
         if not lista_retencion or not lista_nuevos:
             raise dash.exceptions.PreventUpdate
         
-        """Importante data frame para generar gráficos de unidad académicay el corporativo"""
+        """Importante data frame para generar gráficos de unidad académica y el corporativo"""
         # Data Frame para unidad Educativa
         df_corporacion = proyeccion_corporativa(
                 diccionario_matriculas=diccionario_completo_actualizado,
@@ -497,7 +515,7 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
             
             
         
-    # 1. DEFINIR TU VARIABLE O CONDICIÓN
+    # DEFINIR TU VARIABLE O CONDICIÓN
     # Ejemplo: si el valor es mayor a 50000 es exitoso, si no, es una alerta.
 
         valor_condicion = valor_2035
@@ -570,19 +588,10 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
         # Buscamos el valor máximo y mínimo dentro del DataFrame generado
         valor_maximo = int(df["Valor"].max())
         valor_minimo = int(df["Valor"].min())
-
-        valor_maximo_corp = int(df_corporacion["MATRICULA"].max())
-        valor_minimo_corp = int(df_corporacion["MATRICULA"].min())
         
-
-        
-        # Dejamos un 15% de holgura hacia arriba y hacia abajo para que la línea respire
-        techo_eje_y = int(valor_maximo * 1.15)
-        piso_eje_y = max(0, int(valor_minimo * 0.85)) # El 'max' evita que baje de 0 alumnos si hay valores muy chicos
-
-        techo_eje_y_corp = int(valor_maximo_corp * 1.15)
-        piso_eje_y_corp = max(0, int(valor_minimo_corp * 0.85))
-
+        # Dejamos un 25% de holgura hacia arriba y hacia abajo para que la línea respire
+        techo_eje_y = int(valor_maximo * 1.25)
+        piso_eje_y = max(0, int(valor_minimo * 0.75)) # El 'max' evita que baje de 0 alumnos si hay valores muy chicos
 
         # Grafico para unidad educativa seleccionada
         unidad_edu_graph = graph_objects.Figure()
@@ -624,44 +633,44 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
                         )
         
         # Grafico para la CORPORACION completa
-        corp_graph = graph_objects.Figure()
+        #corp_graph = graph_objects.Figure()
 
-        df_reales_corp = df_corporacion[df_corporacion["Tipo"] == "Real"]
-        df_proy_corp = df_corporacion[df_corporacion["Tipo"] == "Proyección"]
+        #df_reales_corp = df_corporacion[df_corporacion["Tipo"] == "Real"]
+        #df_proy_corp = df_corporacion[df_corporacion["Tipo"] == "Proyección"]
 
-        corp_graph.add_trace(graph_objects.Scatter(
-            x=df_reales_corp["PERIODO"], y=df_reales_corp["MATRICULA"], name="Datos Reales",
-            mode="lines+markers", 
-            marker=dict(color= "#af0000", size=8),
-            line=dict(color="#4B4B4B", width=2)
-        ))
+        #corp_graph.add_trace(graph_objects.Scatter(
+         #   x=df_reales_corp["PERIODO"], y=df_reales_corp["MATRICULA"], name="Datos Reales",
+          #  mode="lines+markers", 
+           # marker=dict(color= "#af0000", size=8),
+            #line=dict(color="#4B4B4B", width=2)
+        #))
 
-        punto_conexion_corp = df_reales_corp.tail(1)
-        df_proy_conectado_corp = pd.concat([punto_conexion_corp, df_proy_corp])
+        #punto_conexion_corp = df_reales_corp.tail(1)
+        #df_proy_conectado_corp = pd.concat([punto_conexion_corp, df_proy_corp])
 
-        corp_graph.add_trace(graph_objects.Scatter(
-            x=df_proy_conectado_corp["PERIODO"], y=df_proy_conectado_corp["MATRICULA"], name="Proyección",
-            mode="lines+markers",
-            marker=dict(color= "#1d1d1d", size=8), 
-            line=dict(color="#ffae00", width=2)
-        ))
+        #corp_graph.add_trace(graph_objects.Scatter(
+         #   x=df_proy_conectado_corp["PERIODO"], y=df_proy_conectado_corp["MATRICULA"], name="Proyección",
+          #  mode="lines+markers",
+           # marker=dict(color= "#1d1d1d", size=8), 
+            #line=dict(color="#ffae00", width=2)
+        #))
 
-        corp_graph.update_layout(
-            hovermode="x unified", plot_bgcolor="white", height=260,
-            margin=dict(l=40, r=30, t=10, b=10),
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-            hoverlabel_font=dict(family='Roboto mono', weight='bold', size=14, color='black'),
-            font_family='Roboto mono',
-        )
+        #corp_graph.update_layout(
+         #   hovermode="x unified", plot_bgcolor="white", height=260,
+          #  margin=dict(l=40, r=30, t=10, b=10),
+           # legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            #hoverlabel_font=dict(family='Roboto mono', weight='bold', size=14, color='black'),
+            #font_family='Roboto mono',
+        #)
 
-        corp_graph.update_xaxes(showgrid=True, gridcolor="#EAEAEA")
+        #corp_graph.update_xaxes(showgrid=True, gridcolor="#EAEAEA")
         
         # CORRECCIÓN DEL EJE Y: Reemplazamos los números fijos por tus variables dinámicas
-        corp_graph.update_yaxes(
-                        showgrid=True, 
-                        gridcolor="#EAEAEA",
-                        range=[piso_eje_y_corp, techo_eje_y_corp]
-                        )
+        #corp_graph.update_yaxes(
+         #               showgrid=True, 
+          #              gridcolor="#EAEAEA",
+                        #range=[piso_eje_y_corp, techo_eje_y_corp]
+           #             )
 
         # 1. Datos para tabla resumen por año
         tabla_consolidada_data = df.to_dict(orient="records") 
@@ -683,12 +692,10 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
             tabla_consolidada_data, 
             tabla_matriz_data,  # Inyecta las filas desglosadas
             columnas_matriz, # Inyecta los nombres de las columnas de años
-            #corp_graph     # GRAFICO TOTAL CORPORACION
-        )
+            titulo_grafico_unidad_educativa,
+            )
 
-
-
-# CORREGIDO: Callback para descargar el archivo Excel vinculando los componentes reales
+# Callback para DESCARGAR el archivo Excel vinculando los componentes reales
 @callback(
     Output("descarga-excel", "data"),
     Input("btn-exportar-excel", "n_clicks"),
@@ -714,7 +721,7 @@ def exportar_a_excel(n_clicks, lista_retencion, lista_nuevos, unidad_edu):
     
     return dcc.send_data_frame(df_excel.to_excel, filename="Reporte_Proyeccion_Matriculas.xlsx", sheet_name="Matrículas", index=False)
 
-# Callback para guardar escenario de una unidad educativa específica
+# Callback para GUARDAR escenario de una unidad educativa específica
 @callback(
     Output("mensaje-alerta-escenario", "children"),
     # 🚀 CORRECCIÓN: Agregamos allow_duplicate=True para permitir que este callback actualice las opciones
