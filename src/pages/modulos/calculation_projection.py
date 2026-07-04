@@ -96,10 +96,6 @@ def cargar_datos_consolidados(uni_edu):
     Une el Excel maestro de Power Query con las ediciones hechas en la web.
     El Excel manda, pero la web puede actualizar o agregar nuevos años.
     """
-
-    # Usamos la ruta dinámica construida a partir de la ubicación original
-    # ruta_json_especifica = obtener_ruta_json_dinamica(uni_edu)
-
     # 1. Leer datos base desde tu archivo Excel
     if data_corp_projection_path.exists():
         

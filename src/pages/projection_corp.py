@@ -6,10 +6,10 @@ import pandas as pd
 import copy
 
 import pages.modulos.calculation_projection as proyecciones
-# Importar modulo para calculo de matricula proyectada
+# Importar funciones para calculo de matricula proyectada
 from pages.modulos.calculation_projection import (
     calcular_proyeccion_completa, 
-    cargar_datos_consolidados, 
+    #cargar_datos_consolidados, 
     guardar_escenario_simulacion,
     guardar_escenario_corporativo,  # ← agregar      
     listar_escenarios_por_unidad,
