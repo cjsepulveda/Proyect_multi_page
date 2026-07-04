@@ -50,10 +50,10 @@ def crear_grupo_sliders(titulo_grupo, prefijo_id, tipo_slider='retencion', tasas
                 # Si te equivocas al escribir el nombre en el layout, Python te avisará de inmediato
                 raise ValueError(f"Error: El tipo_slider '{tipo_slider}' no es válido. Usa 'retencion' o 'nuevos'.")
         
-        # ← bloquear solo el primer slider de cada grupo
+        # bloquear solo el primer slider de cada grupo
         es_nivel_cero = (i == 1) and (curso =="PRE-KINDER" or curso =="1MEDIO")
 
-        # ← Etiqueta de tasa solo para slider de nuevos
+        # Etiqueta de tasa solo para slider de nuevos
         etiqueta_tasa = None
         if tipo_slider == 'nuevos' and tasas_nivel:
             tasa = tasas_nivel.get(curso, 0.0)
@@ -61,15 +61,15 @@ def crear_grupo_sliders(titulo_grupo, prefijo_id, tipo_slider='retencion', tasas
             if tasa > 0:
                 color_fondo = "#198754"  # verde
                 simbolo = f"+{tasa*100:.1f}%"
-                tooltip = "Tendencia histórica al alza en alumnos nuevos"
+                tooltip = "Tendencia al alza en alumnos nuevos"
             elif tasa < 0:
                 color_fondo = "#dc3545"  # rojo
                 simbolo = f"{tasa*100:.1f}%"
-                tooltip = "Tendencia histórica a la baja en alumnos nuevos"
+                tooltip = "Tendencia a la baja en alumnos nuevos"
             else:
                 color_fondo = "#fd7e14"  # naranja
                 simbolo = "0.0%"
-                tooltip = "Sin tendencia histórica en alumnos nuevos"
+                tooltip = "Tendencia estable en alumnos nuevos"
 
             # ← id único para vincular tooltip
             id_etiqueta = f"badge-tasa-{prefijo_id}-{i}"

@@ -11,13 +11,13 @@ from pages.modulos.calculation_projection import (
     calcular_proyeccion_completa, 
     #cargar_datos_consolidados, 
     guardar_escenario_simulacion,
-    guardar_escenario_corporativo,  # ← agregar      
+    guardar_escenario_corporativo,
     listar_escenarios_por_unidad,
-    listar_todos_escenarios_agrupados,  # ← agregar      
+    listar_todos_escenarios_agrupados,
     cargar_datos_escenario,
     eliminar_archivo_escenario,
     proyeccion_corporativa,
-    tasas_nuevos_alumnos,  # ← agregar
+    tasas_nuevos_alumnos,  
                  
 )
 from pages.modulos.slider_creation import crear_grupo_sliders 
@@ -278,7 +278,7 @@ layout = dbc.Container([
             dbc.Card([
                 dbc.CardHeader(html.Div([
                                         html.H6("Modelación Escenarios Matrículas: ", className="m-0 text-dark", style={"display": "inline"}),
-                                        html.Span(id="variable-matricula", className="text-dark fw-bold", style={"display": "inline", "marginLeft": "5px"})
+                                        html.Span(id="variable-matricula", className="text-white fw-bold", style={"display": "inline", "marginLeft": "5px"})
                                         ], className="d-flex align-items-center")
                 ),
                 dbc.CardBody(
@@ -397,7 +397,129 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
         escenarios_corp=escenarios_corp
         )
         
-        # 1. 🚀 CALCULAR RANGO DINÁMICO SEGÚN LOS DATOS ACTUALES DE ESTA ESCUELA
+        
+        """Cálculo tarjetas KPI CORPORACIÓN"""
+               
+        # 1. Determinar nivel matrícula critica de unidad educativa, promedio años 2024, 2025 y 2026
+        df_real_solo = df_corporacion[df_corporacion["Tipo"] == "Real"]      
+        promedio = df_real_solo.loc[df_real_solo['PERIODO'].isin([2024, 2025, 2026]),'MATRICULA'].mean().round().astype(int)
+        
+        # 1.1 Matrícula año 2026
+        valor_2026 = df_corporacion[df_corporacion["PERIODO"] == 2026]["MATRICULA"].values[0]
+
+        # 2. Matricula Máxima
+        fila_max = df_corporacion.loc[df_corporacion["MATRICULA"].idxmax()]
+        max_valor = fila_max["MATRICULA"]
+        max_anio = fila_max["PERIODO"]
+
+        # 3. Estado de Alerta (¿Cae abajo de promedio en algún año proyectado?)
+        df_proy_solo = df_corporacion[df_corporacion["Tipo"] == "Proyección"]
+        quiebra_limite = (df_proy_solo["MATRICULA"] < valor_2026 * 0.95).any()
+        
+        # 4. Cálculo matricula año 2035 para mensaje de alerta específico
+        valor_2035 = df_corporacion[df_corporacion["PERIODO"] == 2035]["MATRICULA"].values[0]
+        
+        # 5. Cálculo porcentaje matricula 20235 sobre matricula 2026
+
+        porcentaje_matricula = valor_2035/valor_2026 - 1   
+
+        if quiebra_limite:
+            
+            if valor_2035 < valor_2026 * 0.9:
+                    kpi_alerta_texto = f"Baja Crítica {porcentaje_matricula:.1%}"
+                    kpi_alerta_color = "danger"
+            else:    
+                    kpi_alerta_texto = f"Baja {porcentaje_matricula:.1%}"
+                    kpi_alerta_color = "warning"
+            
+        else:
+            
+                 
+            kpi_alerta_texto = f"Estable {'a la baja' if valor_2035 < valor_2026 * 1 else 
+                                          
+                                          'al alza' if valor_2035 < valor_2026 * 1.1 else 'alza sostenida'
+                                          } {porcentaje_matricula:.1%}"
+            kpi_alerta_color = "success"
+            
+            
+        
+        # DEFINIR TU VARIABLE O CONDICIÓN
+        # Ejemplo: si el valor es mayor a 50000 es exitoso, si no, es una alerta.
+
+        valor_condicion = valor_2035
+
+        if valor_condicion > valor_2026 * 0.95:
+            kpi_bg_1 = "bg-success"  # Fondo verde muy suave
+        else:
+            
+            if valor_condicion < valor_2026 * 0.9:
+
+                kpi_bg_1 = "bg-danger"   # Fondo rojo muy suave
+            
+            else:
+                kpi_bg_1 = "bg-warning"   # Fondo rojo muy suave
+
+
+
+        # CONSTRUCCIÓN VISUAL DE LAS TARJETAS KPI (Bootstrap)
+        kpis_layout = dbc.Row([
+            # 1. Primera Columna 
+            dbc.Col(dbc.Card([
+                dbc.CardBody([
+                    dbc.Row([ # Fila con dos columnas una texto y otra numérica
+                        # Columna de texto
+                        dbc.Col([
+                                html.H6("Última Matrícula", className="text-muted card-subtitle small"),
+                                html.Span(f"Año Académico: 2026", className="text-secondary small"),
+                                
+                        ],
+                        width=8,
+                        className="d-flex flex-column justify-content-center"
+                        ), # Cierre columna Texto
+
+                        # Columna Numérica
+                        dbc.Col([
+                                html.H6(f"{valor_2026:,}", className="text-white fw-bold my-1 fs-2"),
+                        ],
+                        width=4,
+                        className="d-flex flex-column justify-content-center bg-primary text-white py-3 px-1 text-center rounded"
+                        ), # Cierre columna numérica
+                    ],
+                    className="h-100 g-0" # Alinea verticalmente y quita márgenes (gutters)
+                    ) # Cierre de la fila
+                ]) # Cierre cuerpo tarjeta
+            ],className="border-start border-primary border-2 shadow-sm h-100"), width=5), # Cierre borde tarjeta numero 1
+            
+            # 2. Segunda Columna 
+            dbc.Col(dbc.Card([
+                dbc.CardBody([
+                    dbc.Row([ # Filas con dos columnas, una de texto y otra numérica
+                        # Columna de texto
+                        dbc.Col([
+                                html.H6("Estado matrícula al 2035", className="text-muted card-subtitle small"),
+                                html.H6(kpi_alerta_texto, className=f"text-{kpi_alerta_color} fw-bold my-0 me-2"),
+                            ],
+                        width=8,
+                        className="d-flex flex-column justify-content-center"
+                        ), # Cierre columna Texto
+                        # Columna numérica
+                        dbc.Col([
+                                html.Span(f"{valor_2035:,} ", className="text-white fw-bold fs-2"),
+                        ],
+                        width=4,
+                        className= f"{kpi_bg_1} d-flex flex-column justify-content-center text-white py-3 px-1 text-center rounded"
+                        ), # Cierre columna numérica
+                    ],
+                    className="h-100 g-0" # Alinea verticalmente y quita márgenes (gutters)
+                    ) # Cierre de la fila
+                ]) # Cierre cuerpo segunda tarjeta          
+            ], className=f"border-start border-{kpi_alerta_color} border-2 shadow-sm h-100"), width=6), # Cierre borde segunda tarjeta
+                    
+
+        ], className="g-3", style={"marginTop": "5px"}) # Cierre fila con dos tarjetas
+
+
+        # CALCULAR RANGO DINÁMICO SEGÚN LOS DATOS ACTUALES DE ESTA ESCUELA
         # Buscamos el valor máximo y mínimo dentro del DataFrame generado
         valor_maximo_corp = int(df_corporacion["MATRICULA"].max())
         valor_minimo_corp = int(df_corporacion["MATRICULA"].min())
@@ -449,7 +571,9 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
         tabla_corp_data = df_tabla_corp.to_dict(orient="records")
         
         # Retornamos valores vacíos para los outputs que no aplican
-        return corp_graph, [], tabla_corp_data, [], [], titulo_grafico_unidad_educativa
+        return corp_graph, kpis_layout, tabla_corp_data, [], [], titulo_grafico_unidad_educativa
+         #      grafico  , kpi . tabla resumen , data desagregada , titulo gráfico
+
 
 
 # CODIGO ORIGINAL
@@ -473,15 +597,14 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
                 valores_modificados[anio] = valor_matricula
 
         # Reemplazamos solo los datos de la unidad modificada dentro del diccionario completo
-        
         diccionario_completo_actualizado[unidad_edu] = valores_modificados
 
-        # 1. Control de seguridad para que Dash no intente calcular con listas vacías
+        # Control de seguridad para que Dash no intente calcular con listas vacías
         if not lista_retencion or not lista_nuevos:
             raise dash.exceptions.PreventUpdate
         
-        """Importante data frame para generar gráficos de unidad académica y el corporativo"""
-        # Data Frame para unidad Educativa
+        """Importante data frame para generar gráfico corporativo"""
+        # Data Frame Corporativo
         df_corporacion = proyeccion_corporativa(
                 diccionario_matriculas=diccionario_completo_actualizado,
                 unidad_activa=unidad_edu,
@@ -489,28 +612,50 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
                 lista_nuevos_activa=lista_nuevos,
                 escenarios_corp=None
                 )
-        # Data Frame Corporativo
-        df, ultimo_anio_real_str, df_matriz_desglose= calcular_proyeccion_completa(lista_retencion, lista_nuevos, unidad_edu, diccionario_completo_actualizado)
+        # Data frame para la unidad educativa seleccionada
+        df, ultimo_anio_real_str, df_matriz_desglose = calcular_proyeccion_completa(lista_retencion, lista_nuevos, unidad_edu, diccionario_completo_actualizado)
         
-        # CÁLCULO DE MÉTRICAS PARA TARJETAS KPI ---
-        # 1. Matricula Máxima
+       # CÁLCULO DE MÉTRICAS PARA TARJETAS KPI ---
+       
+       # 1. Determinar nivel matrícula critica de unidad educativa, promedio años 2024, 2025 y 2026
+        df_real_solo = df[df["Tipo"] == "Real"]      
+        promedio = df_real_solo.loc[df_real_solo['Año'].isin(['2024', '2025', '2026']),'Valor'].mean().round().astype(int)
+        
+        # 1.1 Matrícula año 2026
+        valor_2026 = df[df["Año"] == "2026"]["Valor"].values[0]
+
+        # 2. Matricula Máxima
         fila_max = df.loc[df["Valor"].idxmax()]
         max_valor = fila_max["Valor"]
         max_anio = fila_max["Año"]
-        
-        # 2. Estado de Alerta (¿Cae abajo de 500 en algún año proyectado?)
-        df_proy_solo = df[df["Tipo"] == "Proyección"]
-        quiebra_limite = (df_proy_solo["Valor"] < UMBRAL_CRITICO).any()
 
-        # Cálculo matricula año 2035 para mensaje de alerta específico
+        # 3. Estado de Alerta (¿Cae abajo de promedio en algún año proyectado?)
+        df_proy_solo = df[df["Tipo"] == "Proyección"]
+        quiebra_limite = (df_proy_solo["Valor"] < valor_2026 * 0.9).any()
+        
+        # 4. Cálculo matricula año 2035 para mensaje de alerta específico
         valor_2035 = df[df["Año"] == "2035"]["Valor"].values[0]
         
+        # 5. Cálculo porcentaje matricula 20235 sobre matricula 2026
+
+        porcentaje_matricula = valor_2035/valor_2026 - 1   
+
         if quiebra_limite:
-            kpi_alerta_texto = f"Riesgo Crítico {'' if valor_2035 < UMBRAL_CRITICO * 0.8 else ''}"
-            kpi_alerta_color = "danger"
+            
+            if valor_2035 < valor_2026 * 0.8:
+                    kpi_alerta_texto = f"Baja Crítica {porcentaje_matricula:.1%}"
+                    kpi_alerta_color = "danger"
+            else:    
+                    kpi_alerta_texto = f"Baja {porcentaje_matricula:.1%}"
+                    kpi_alerta_color = "warning"
             
         else:
-            kpi_alerta_texto = f"Estable {'' if valor_2035 < UMBRAL_CRITICO * 1.2 else ''}"
+            
+                 
+            kpi_alerta_texto = f"Estable {'a la baja' if valor_2035 < valor_2026 * 1 else 
+                                          
+                                          'al alza' if valor_2035 < valor_2026 * 1.1 else 'alza sostenida'
+                                          } {porcentaje_matricula:.1%}"
             kpi_alerta_color = "success"
             
             
@@ -520,10 +665,16 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
 
         valor_condicion = valor_2035
 
-        if valor_condicion > UMBRAL_CRITICO:
+        if valor_condicion > valor_2026 * 0.9:
             kpi_bg_1 = "bg-success"  # Fondo verde muy suave
         else:
-            kpi_bg_1 = "bg-danger"   # Fondo rojo muy suave
+            
+            if valor_condicion < valor_2026 * 0.8:
+
+                kpi_bg_1 = "bg-danger"   # Fondo rojo muy suave
+            
+            else:
+                kpi_bg_1 = "bg-warning"   # Fondo rojo muy suave
 
 
 
@@ -535,8 +686,9 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
                     dbc.Row([ # Fila con dos columnas una texto y otra numérica
                         # Columna de texto
                         dbc.Col([
-                                html.H6("Máxima Matrícula", className="text-muted card-subtitle small"),
-                                html.Span(f"Año Académico: {max_anio}", className="text-secondary small"),
+                                html.H6("Última Matrícula", className="text-muted card-subtitle small"),
+                                html.Span(f"Año Académico: 2026", className="text-secondary small"),
+                                
                         ],
                         width=8,
                         className="d-flex flex-column justify-content-center"
@@ -544,7 +696,7 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
 
                         # Columna Numérica
                         dbc.Col([
-                                html.H6(f"{max_valor:,}", className="text-white fw-bold my-1 fs-2"),
+                                html.H6(f"{valor_2026:,}", className="text-white fw-bold my-1 fs-2"),
                         ],
                         width=4,
                         className="d-flex flex-column justify-content-center bg-primary text-white py-3 px-1 text-center rounded"
@@ -578,7 +730,7 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
                     className="h-100 g-0" # Alinea verticalmente y quita márgenes (gutters)
                     ) # Cierre de la fila
                 ]) # Cierre cuerpo segunda tarjeta          
-            ], className=f"border-start border-{kpi_alerta_color} border-2 shadow-sm h-100"), width=5), # Cierre borde segunda tarjeta
+            ], className=f"border-start border-{kpi_alerta_color} border-2 shadow-sm h-100"), width=6), # Cierre borde segunda tarjeta
                     
 
         ], className="g-3", style={"marginTop": "5px"}) # Cierre fila con dos tarjetas
@@ -687,12 +839,12 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
 
         # Retornamos los cinco elementos alineados con la cabecera
         return (
-            unidad_edu_graph, 
-            kpis_layout, 
-            tabla_consolidada_data, 
-            tabla_matriz_data,  # Inyecta las filas desglosadas
-            columnas_matriz, # Inyecta los nombres de las columnas de años
-            titulo_grafico_unidad_educativa,
+            unidad_edu_graph, # Gráfico unidad educativa
+            kpis_layout, # Tarjetas con valores
+            tabla_consolidada_data, # Tabla con el resumen por año de la matrícula
+            tabla_matriz_data,  # Las filas con los datos desagregados por nivel y año
+            columnas_matriz, # Los nombres de las columnas de cada año
+            titulo_grafico_unidad_educativa, # título del gráfico
             )
 
 # Callback para DESCARGAR el archivo Excel vinculando los componentes reales
