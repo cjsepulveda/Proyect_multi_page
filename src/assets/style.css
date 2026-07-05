@@ -338,8 +338,8 @@ body {
     
   }
 
-  .slider-retencion {
-    --Dash-Fill-Interactive-Strong: rgb(0, 123, 255);
+.slider-retencion {
+    --Dash-Fill-Interactive-Strong: #007bff;
 }
 
 .slider-nuevos {
@@ -353,11 +353,11 @@ body {
 
 /* Variables de color corporativo */
 :root {
-    --corp-rojo:        #C0392B;
-    --corp-rojo-oscuro: #922B21;
-    --corp-cafe:        #FDFBD4;
+    --corp-rojo:        #b90f00;
+    --corp-rojo-oscuro: #910c00;
+    --corp-cafe:        #0055af;
     --corp-negro:       #1C1C1C;
-    --corp-marino:      #2C3E50;
+    --corp-marino:      #0055af;
     --corp-gris:        #D5D8DC;
     --corp-fondo:       #F5F5F5;
 }
@@ -370,7 +370,7 @@ body {
 /* Menú lateral */
 .shadow-sm.border-0 {
     border-left: 3px solid var(--corp-rojo) !important;
-    background-color: #ffffff !important;
+    background-color:#ffffff !important;
 }
 
 /* Títulos del menú lateral */
@@ -378,39 +378,8 @@ body {
     color: var(--corp-negro) !important;
 }
 
-/* Botón primario — Guardar Escenario */
-.btn-primary {
-    background-color: var(--corp-rojo) !important;
-    border-color: var(--corp-rojo-oscuro) !important;
-    color: #ffffff !important;
-}
 
-.btn-primary:hover {
-    background-color: var(--corp-rojo-oscuro) !important;
-    border-color: var(--corp-rojo-oscuro) !important;
-}
 
-/* Botón warning — Cargar */
-.btn-warning {
-    background-color: var(--corp-cafe) !important;
-    border-color: #C4A882 !important;
-    color: var(--corp-negro) !important;
-}
-
-.btn-warning:hover {
-    background-color: #D4B898 !important;
-    border-color: #C4A882 !important;
-}
-
-/* Slider de retención — color corporativo */
-.slider-retencion {
-    --Dash-Fill-Interactive-Strong: var(--corp-rojo) !important;
-}
-
-/* Slider de nuevos alumnos */
-.slider-nuevos {
-    --Dash-Fill-Interactive-Strong: var(--corp-marino) !important;
-}
 
 /* Tabs activos */
 .nav-tabs .nav-link.active {
@@ -433,9 +402,12 @@ body {
 .card-header h6 {
     color: #ffffff !important;
 }
-
+ 
 /* Summary de los grupos de sliders colapsados */
 details summary {
     background-color: var(--corp-cafe) !important;
-    color: var(--corp-negro) !important;
+    color:  #ffffff ;
 }
+
+
+

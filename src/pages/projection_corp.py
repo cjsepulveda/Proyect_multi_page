@@ -56,31 +56,38 @@ menu_lateral = dbc.Card([
     # Lista despegable de UNIDAD EDUCATIVA
     html.Div(
         children=[
-            html.H5('Unidad Educativa', className="text-primary fw-bold mb-3"),
+            html.H6('Unidad Educativa ', className="text-primary fw-bold mb-3"),
             dcc.Dropdown(
                 id='unidades_educativas', 
                 options=ue_options_dropdown,
                 value='BÁSICA 1',
                 clearable=False,
-                className='dropdown'
+                style={
+                        'width': '100%',          # Ancho del dropdown
+                        'backgroundColor': '#f0f0f0', # Color de fondo
+                        'color': '#333333',      # Color del texto
+                        'fontSize': '14px'       # Tamaño de la fuente
+                      },
+                
             ),
         ]),
-        html.Br(),
+       
     # Contenedor para slider de unidades educativas, se oculta si se elije CORPORACION
     html.Div(
     id='contenedor-configuracion',
     children=[
         html.Br(),
-        html.H5("Configuración", className="text-primary fw-bold mb-3"),
+        html.H6("Configuración", className="text-primary fw-bold mb-3"),
         html.Hr(),
         
         # Pestañas para los 20 slider separados en 10 para retencion y 10 para captacion
         dbc.Tabs([
-            # Pestaña 1: Controles de Retención
-            dbc.Tab(label="Alumnos Nuevos", tab_id="tab-sliders-retencion", children=[
+            # Pestaña 1: Alumnos nuevos
+            dbc.Tab(label="Alumnos Nuevos", tab_id="tab-sliders-retencion", label_style={'fontSize': '14px'},
+                    children=[
                 html.Div([
-                # Nuevos Slider retencion
-                        html.Label("Nuevos Estudiantes: ", className="fw-bold text-secondary me-1"),
+                # Slider alumnos nuevos
+                        html.Label("Nuevos Estudiantes: ", className="fw-bold text-secondary me-1", style={"fontSize": "14px"}),
                         html.Hr(),
                         # Crear slider con funcion crear_grupo_sliders para retencion
                         html.Div(id='contenedor-captacion') # contenedor de slider segun unidad educativa elegida
@@ -88,10 +95,12 @@ menu_lateral = dbc.Card([
                     ], className="pt-2")
                 ]),
 
-
-            dbc.Tab(label="Retención", tab_id="tab-sliders-nuevos", children=[
+            # Pestaña 2: Retencion
+            dbc.Tab(label="Retención", tab_id="tab-sliders-nuevos", label_style={'fontSize': '14px'},
+                    children=[
                 html.Div([
-                        html.Label(" Tasa de retencion (%):", className="fw-bold text-secondary me-1"),
+                # Slider retencion
+                        html.Label(" Tasa de retencion (%):", className="fw-bold text-secondary me-1", style={"fontSize": "14px"}),
                         html.Hr(),
                         # Crear slider con funcion crear_grupo_sliders para retencion
                         html.Div(id='contenedor-retencion') # contenedor de slider segun unidad educativa elegida
@@ -107,13 +116,20 @@ menu_lateral = dbc.Card([
     html.Div(
         id='contenedor-dropdown-corp',
         children=[
-            html.H5("Escenarios por Unidad", className="text-primary fw-bold mb-2"),
+            html.Br(),
+            html.H6("Escenarios por Unidad", className="text-primary fw-bold mb-2"),
             html.Hr(),
             dcc.Dropdown(
                 id='dropdown-escenarios-corp',
                 placeholder="Seleccionar escenarios...",
                 multi=True,  # ← selección múltiple
-                className="mb-3"
+                className="mb-3",
+                style={
+                        'width': '100%',          # Ancho del dropdown
+                        'backgroundColor': '#f0f0f0', # Color de fondo
+                        'color': '#333333',      # Color del texto
+                        'fontSize': '14px'       # Tamaño de la fuente
+                      }, 
             )
         ],
         style={'display': 'none'}  # ← oculto por defecto
@@ -121,14 +137,28 @@ menu_lateral = dbc.Card([
 
    # Botones para gestion de escenarios"
     html.Br(),
-    html.H5("Gestión de Escenarios Simulados", className="text-primary fw-bold mb-2"),
+    html.H6("Gestión de Escenarios Simulados", className="text-primary fw-bold mb-2"),
     html.Hr(),
     
     # Campo para escribir el nombre al guardar
-    dcc.Input(id="input-nombre-escenario", type="text", placeholder="Ej: Proyeccion 01 BAS1", className="form-control mb-2"),
+    dcc.Input(id="input-nombre-escenario", 
+              type="text", 
+              placeholder="Ej: Proyeccion 01 BAS1", 
+              className="form-control mb-2",
+              style={"fontSize": "14px"},
+              ),
+              
     
     # Dropdown para seleccionar qué escenario cargar
-    dcc.Dropdown(id="dropdown-escenarios-guardados", placeholder="Seleccionar escenario para cargar...", className="mb-3"),
+    dcc.Dropdown(id="dropdown-escenarios-guardados", 
+                 placeholder="Seleccionar escenario para cargar...",
+                 style={
+                        'width': '100%',          # Ancho del dropdown
+                        'backgroundColor': '#f0f0f0', # Color de fondo
+                        'color': '#333333',      # Color del texto
+                        'fontSize': '14px'       # Tamaño de la fuente
+                      }, 
+                 className="mb-3"),
     
     # Botones de acción en una fila balanceada
     html.Div([
@@ -147,16 +177,16 @@ menu_lateral = dbc.Card([
             "Exportar Proyección"
         ],
         id="btn-exportar-excel", 
-        color="success", 
+        color="success",
+        style={"fontSize": "14px"}, 
         className="mt-2"),
     dcc.Download(id="descarga-excel"),
     
     html.Br(),
     html.Br(),
-    html.Br(),
 
     # Tabla para ver y modificar valores iniciales
-    html.Label("Valores Iniciales Pre-kinder o 1° Medio:", style={'fontWeight': 'bold'}),
+    html.Label("Valores Iniciales Pre-kinder o 1° Medio:", style={'fontWeight': 'bold', "fontSize": "14px"}),
     # Tabla Vertical Interactiva
         dash_table.DataTable(
             id='tabla-matriculas-vertical',
@@ -290,7 +320,7 @@ layout = dbc.Container([
                 )
             ], className="shadow-sm mt-3"), # 'mt-3' separa la tarjeta de la barra de pestañas
 
-
+            html.Br(),
             # Diseño de dos tabs para las tablas
             dbc.Tabs([
                 

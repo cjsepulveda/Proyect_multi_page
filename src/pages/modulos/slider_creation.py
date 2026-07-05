@@ -115,6 +115,6 @@ def crear_grupo_sliders(titulo_grupo, prefijo_id, tipo_slider='retencion', tasas
             
             
     return html.Details([
-        html.Summary(titulo_grupo, style={"cursor": "pointer", "fontWeight": "bold", "fontSize": "16px", "padding": "10px", "backgroundColor": "#f0f2f5", "borderRadius": "5px", "marginBottom": "10px"}),
+        html.Summary(titulo_grupo, style={"cursor": "pointer", "fontWeight": "bold", "fontSize": "14px", "padding": "10px", "backgroundColor": "#f0f2f5", "borderRadius": "5px", "marginBottom": "10px"}),
         html.Div(sliders, style={"padding": "10px 15px"})
     ], open=False, style={"marginBottom": "15px"})
