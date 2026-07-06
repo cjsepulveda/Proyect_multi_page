@@ -129,7 +129,15 @@ menu_lateral = dbc.Card([
         id='contenedor-dropdown-corp',
         children=[
             html.Br(),
-            html.H6("Escenarios por Unidad", className="text-primary fw-bold mb-2"),
+            
+            html.H6(
+                [
+                 html.I(className="fa-solid fa-chart-line me-2"), 
+                'Escenarios por Unidad'
+                ],
+                className="text-primary fw-bold mb-2"
+              ),
+            
             html.Hr(),
             dcc.Dropdown(
                 id='dropdown-escenarios-corp',
