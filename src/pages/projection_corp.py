@@ -56,8 +56,14 @@ menu_lateral = dbc.Card([
     # Lista despegable de UNIDAD EDUCATIVA
     html.Div(
         children=[
-            html.H6('Unidad Educativa ', className="text-primary fw-bold mb-3"),
-            dcc.Dropdown(
+            html.H6(
+                [
+                 html.I(className="fa-solid fa-school me-2"), 
+                'Unidad Educativa '
+                ],
+                className="text-primary fw-bold mb-3"
+              ),
+              dcc.Dropdown(
                 id='unidades_educativas', 
                 options=ue_options_dropdown,
                 value='BÁSICA 1',
@@ -77,7 +83,13 @@ menu_lateral = dbc.Card([
     id='contenedor-configuracion',
     children=[
         html.Br(),
-        html.H6("Configuración", className="text-primary fw-bold mb-3"),
+        html.H6(
+            [
+            html.I(className="bi bi-gear-fill me-2"), # Icono de engranaje con margen derecho
+            "Configuración"
+            ],
+            className="primary fw-bold mb-3" # Tus clases originales
+        ),
         html.Hr(),
         
         # Pestañas para los 20 slider separados en 10 para retencion y 10 para captacion
@@ -162,9 +174,34 @@ menu_lateral = dbc.Card([
     
     # Botones de acción en una fila balanceada
     html.Div([
-        dbc.Button("Guardar Escenario", id="btn-guardar-escenario", color="primary", size="sm", className="me-2"),
-        dbc.Button("Cargar", id="btn-cargar-escenario", color="warning", size="sm", className="me-2"),
-        dbc.Button("Eliminar", id="btn-eliminar-escenario", color="danger", size="sm")
+        dbc.Button(
+            [
+            html.I(className="bi bi-floppy me-2"), 
+            "Guardar"
+            ], 
+            id="btn-guardar-escenario", 
+            color="primary", size="sm", 
+            className="me-2"
+            ),
+        dbc.Button(
+            [
+            html.I(className="bi bi-file-earmark-arrow-up me-2"), 
+            "Cargar"
+            ], 
+            id="btn-cargar-escenario", 
+            color="warning", 
+            size="sm", 
+            className="me-2"
+            ),
+        dbc.Button(
+            [
+            html.I(className="bi bi-file-earmark-x me-2"), 
+            "Eliminar"
+            ],  
+            id="btn-eliminar-escenario", 
+            color="danger", 
+            size="sm"
+            )
     ], className="d-flex justify-content-start mb-3"),
     
     # Mensaje de confirmación oculto o alerta
