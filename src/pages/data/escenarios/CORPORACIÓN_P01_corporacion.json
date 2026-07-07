@@ -1,12 +1,12 @@
 {
-    "nombre_escenario": "PO1_corporacion",
+    "nombre_escenario": "P01_corporacion",
     "tipo": "corporativo",
     "escenarios_por_unidad": {
         "BÁSICA 1": "D:\\OneDrive\\Documentos\\Proyect_Phyton\\Proyect_multi_page\\src\\pages\\data\\escenarios\\BÁSICA_1_P01_bas01.json",
         "BÁSICA 2": "D:\\OneDrive\\Documentos\\Proyect_Phyton\\Proyect_multi_page\\src\\pages\\data\\escenarios\\BÁSICA_2_P01_BAS_02.json",
         "BÁSICA SF": "D:\\OneDrive\\Documentos\\Proyect_Phyton\\Proyect_multi_page\\src\\pages\\data\\escenarios\\BÁSICA_SF_P01_BAS_SF.json",
-        "MEDIA LOS ANDES": "D:\\OneDrive\\Documentos\\Proyect_Phyton\\Proyect_multi_page\\src\\pages\\data\\escenarios\\MEDIA_LOS_ANDES_P01_MEDIA_LA.json",
-        "MEDIA SAN FELIPE": "D:\\OneDrive\\Documentos\\Proyect_Phyton\\Proyect_multi_page\\src\\pages\\data\\escenarios\\MEDIA_SAN_FELIPE_P01_MEDIA_SF.json"
+        "MEDIA LOS ANDES": "D:\\OneDrive\\Documentos\\Proyect_Phyton\\Proyect_multi_page\\src\\pages\\data\\escenarios\\MEDIA_LOS_ANDES_P01_Media_LA.json",
+        "MEDIA SAN FELIPE": "D:\\OneDrive\\Documentos\\Proyect_Phyton\\Proyect_multi_page\\src\\pages\\data\\escenarios\\MEDIA_SAN_FELIPE_P01_Media_SF.json"
     },
     "tabla_proyeccion": [
         {

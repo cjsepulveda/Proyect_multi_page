@@ -1,5 +1,5 @@
 import dash
-from dash import html, dcc, callback, Input, Output, ALL, State, dash_table, register_page
+from dash import html, dcc, callback, Input, Output, ALL, State, dash_table, register_page, no_update, exceptions
 import dash_bootstrap_components as dbc
 import plotly.graph_objects as graph_objects
 import pandas as pd
@@ -142,16 +142,38 @@ menu_lateral = dbc.Card([
             size="sm"
             ),
 
-            # NUEVO: Componente invisible que maneja la alerta "Aceptar/Cancelar"
-            dcc.ConfirmDialog(
-                id='alerta-confirmacion-eliminar',
-                message='El escenario será eliminado. ¿Deseas continuar?',
-            ),
+            
 
     ], className="d-flex justify-content-start mb-3"),
     
-    # Mensaje de confirmación o alerta
-    html.Div(id="mensaje-alerta-escenario", className="small text-muted mb-2"),
+    # Div con mensaje de alerta y modal para ventana emergente
+    html.Div([
+        # Mensaje de confirmación o alerta en pantalla (debajo de los botones)
+        html.Div(id="mensaje-alerta-escenario", className="small text-muted mb-2"),
+
+        # El bloque del Modal (permanece invisible hasta que se activa)
+        dbc.Modal(
+            [
+                dbc.ModalHeader(dbc.ModalTitle("Confirmar Acción"), close_button=False),
+                dbc.ModalBody(
+                        html.Div([
+                            html.I(className="bi bi-exclamation-triangle-fill text-danger me-3 fs-3"),
+                            html.Span("El escenario será eliminado definitivamente del sistema. ¿Deseas continuar?", className="fw-bold")
+                         ], className="d-flex align-items-center p-3")
+                     ),
+                dbc.ModalFooter([
+                        dbc.Button("Cancelar", id="btn-modal-cancelar", color="secondary", size="sm", className="me-2"),
+                        dbc.Button("Aceptar", id="btn-modal-aceptar", color="danger", size="sm"),
+                        ]),
+            ],
+            id="modal-confirmacion-eliminar",
+            is_open=False,       
+            centered=True,       
+            backdrop="static",   
+        ) # Cierre Modal
+
+        ], id="contenedor-alertas-y-modal"), # Cierre mensaje alerta y modal
+    
 
     # Boton exportar excel
     dbc.Button(
@@ -197,7 +219,7 @@ menu_lateral = dbc.Card([
         ],
         style={'display': 'none'}  # ← oculto por defecto
     ),
-
+    
     # Gestion Escenarios: contenedor para slider de unidades educativas 
     # y tabla matricula inicial, se oculta si se elije CORPORACION
     html.Div( # incio contenedor
@@ -1093,33 +1115,58 @@ def ejecutar_carga_en_sliders(n_clicks, ruta_archivo_escenario, sliders_ret_actu
         
         return valores_retencion_guardados, valores_nuevos_guardados, filas_tabla, dash.no_update
 
-
-# Callback para la ventana emergente de alerta al presionar el botón de eliminar
+# Callback para abrir el Modal, lo Cierra con "Cancelar" y limpia/muestra errores
 @callback(
-    Output('alerta-confirmacion-eliminar', 'displayed'), # salida de ventana emergente de confirmación
-    Input('btn-eliminar-escenario', 'n_clicks'), # se activa al presionar eliminar
-    State('dropdown-escenarios-guardados', 'value'), # Validación por si no hay escenario que borrar
-    prevent_initial_call=True # previene que se muestre la ventana emergente al inicar la aplicacion
+    Output("modal-confirmacion-eliminar", "is_open"),
+    Output("mensaje-alerta-escenario", "children", allow_duplicate=True),
+    Input("btn-eliminar-escenario", "n_clicks"),
+    Input("btn-modal-cancelar", "n_clicks"),
+    State("dropdown-escenarios-guardados", "value"),
+    prevent_initial_call=True
 )
-def mostrar_alerta_confirmacion(n_clicks, ruta_archivo_escenario):
-    # Si no hay un escenario seleccionado, no abrimos la alerta
-    if not n_clicks or not ruta_archivo_escenario:
-        raise dash.exceptions.PreventUpdate
-    
-    return True
+def controlar_visibilidad_modal(click_eliminar, click_cancelar, ruta_archivo_escenario):
+    # Identificamos cuál de los dos botones disparó este callback
+    ctx = dash.callback_context
+    if not ctx.triggered:
+        raise exceptions.PreventUpdate
+        
+    id_disparador = ctx.triggered[0]["prop_id"].split(".")[0]
+
+    # CASO A: El usuario presionó el botón "Eliminar" principal
+    if id_disparador == "btn-eliminar-escenario":
+        # Validación: Si no hay escenario, no abrimos el modal y mostramos error
+        if not ruta_archivo_escenario:
+            mensaje_error = html.Span([
+                html.I(className="bi bi-exclamation-triangle-fill me-2 text-danger"),
+                "Por favor, selecciona un escenario antes de intentar eliminar."
+            ])
+            return False, mensaje_error
+            
+        # Si hay escenario seleccionado: Abrimos el modal (True) y LIMPIAMOS el texto viejo (None)
+        return True, None
+
+    # CASO B: El usuario presionó "Cancelar" dentro del Modal
+    if id_disparador == "btn-modal-cancelar":
+        # Cerramos el modal (False) y no alteramos los mensajes de la pantalla
+        return False, no_update
+
+    raise exceptions.PreventUpdate
 
 # Callback para ELIMINAR un escenario en los Sliders, con ventana emergente de seguridad
 @callback(
     Output("mensaje-alerta-escenario", "children", allow_duplicate=True),
     Output("dropdown-escenarios-guardados", "options", allow_duplicate=True),
     Output("dropdown-escenarios-guardados", "value"), # Resetea el selector visual a vacío
-    Input("alerta-confirmacion-eliminar", "submit_n_clicks"), # recibe el valor de la ventana de alerta, "aceptar" o " cancelar"
+    
+    Output("modal-confirmacion-eliminar", "is_open", allow_duplicate=True), # Cerramos el modal tras borrar
+    Input("btn-modal-aceptar", "n_clicks"),
+    
     State("unidades_educativas", "value"),
     State("dropdown-escenarios-guardados", "value"),
     prevent_initial_call=True
 )
-def ejecutar_eliminacion_escenario(submit_n_clicks, unidad_edu, ruta_archivo_escenario):
-    if not submit_n_clicks or not ruta_archivo_escenario:
+def ejecutar_eliminacion_escenario(click_aceptar, unidad_edu, ruta_archivo_escenario):
+    if not click_aceptar or not ruta_archivo_escenario:
         raise dash.exceptions.PreventUpdate
         
     # 1. Borramos el archivo del disco
@@ -1129,4 +1176,4 @@ def ejecutar_eliminacion_escenario(submit_n_clicks, unidad_edu, ruta_archivo_esc
     nuevas_opciones = listar_escenarios_por_unidad(unidad_edu)
     
     # 3. Retornamos el mensaje, las nuevas opciones y limpiamos la selección
-    return mensaje, nuevas_opciones, None
+    return mensaje, nuevas_opciones, None, False
