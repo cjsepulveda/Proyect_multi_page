@@ -77,90 +77,21 @@ menu_lateral = dbc.Card([
                 
             ),
         ]),
-       
-    # Contenedor para slider de unidades educativas, se oculta si se elije CORPORACION
-    html.Div(
-    id='contenedor-configuracion',
-    children=[
-        html.Br(),
-        html.H6(
+    
+    html.Br(),  
+    
+     # Título para Gestion de Escenarios, Input y Botones 
+    html.H6(
             [
-            html.I(className="bi bi-gear-fill me-2"), # Icono de engranaje con margen derecho
-            "Configuración"
+            html.I(className="fa-solid fa-folder-tree me-2"), # Icono de engranaje con margen derecho
+            "Gestión de Escenarios"
             ],
-            className="primary fw-bold mb-3" # Tus clases originales
+            className="text-primary fw-bold mb-2" # Tus clases originales
         ),
-        html.Hr(),
-        
-        # Pestañas para los 20 slider separados en 10 para retencion y 10 para captacion
-        dbc.Tabs([
-            # Pestaña 1: Alumnos nuevos
-            dbc.Tab(label="Alumnos Nuevos", tab_id="tab-sliders-retencion", label_style={'fontSize': '14px'},
-                    children=[
-                html.Div([
-                # Slider alumnos nuevos
-                        html.Label("Nuevos Estudiantes: ", className="fw-bold text-secondary me-1", style={"fontSize": "14px"}),
-                        html.Hr(),
-                        # Crear slider con funcion crear_grupo_sliders para retencion
-                        html.Div(id='contenedor-captacion') # contenedor de slider segun unidad educativa elegida
-
-                    ], className="pt-2")
-                ]),
-
-            # Pestaña 2: Retencion
-            dbc.Tab(label="Retención", tab_id="tab-sliders-nuevos", label_style={'fontSize': '14px'},
-                    children=[
-                html.Div([
-                # Slider retencion
-                        html.Label(" Tasa de retencion (%):", className="fw-bold text-secondary me-1", style={"fontSize": "14px"}),
-                        html.Hr(),
-                        # Crear slider con funcion crear_grupo_sliders para retencion
-                        html.Div(id='contenedor-retencion') # contenedor de slider segun unidad educativa elegida
-
-                    ], className="pt-2")
-                ]),
-        ], id="tabs-sliders-menu", active_tab="tab-sliders-retencion"),
-    ]
-
-    ),
-
-    # Dropdown múltiple para vista corporativa
-    html.Div(
-        id='contenedor-dropdown-corp',
-        children=[
-            html.Br(),
-            
-            html.H6(
-                [
-                 html.I(className="fa-solid fa-chart-line me-2"), 
-                'Escenarios por Unidad'
-                ],
-                className="text-primary fw-bold mb-2"
-              ),
-            
-            html.Hr(),
-            dcc.Dropdown(
-                id='dropdown-escenarios-corp',
-                placeholder="Seleccionar escenarios...",
-                multi=True,  # ← selección múltiple
-                className="mb-3",
-                style={
-                        'width': '100%',          # Ancho del dropdown
-                        'backgroundColor': '#f0f0f0', # Color de fondo
-                        'color': '#333333',      # Color del texto
-                        'fontSize': '14px'       # Tamaño de la fuente
-                      }, 
-            )
-        ],
-        style={'display': 'none'}  # ← oculto por defecto
-    ),
-
-   # Botones para gestion de escenarios"
-    html.Br(),
-    html.H6("Gestión de Escenarios Simulados", className="text-primary fw-bold mb-2"),
+    
     html.Hr(),
     
-    # Campo para escribir el nombre al guardar
+    # Campo para escribir el nombre del escenario a guardar
     dcc.Input(id="input-nombre-escenario", 
               type="text", 
               placeholder="Ej: Proyeccion 01 BAS1", 
@@ -180,7 +111,7 @@ menu_lateral = dbc.Card([
                       }, 
                  className="mb-3"),
     
-    # Botones de acción en una fila balanceada
+    # Botones para escenarios, guardar, cargar, eliminar
     html.Div([
         dbc.Button(
             [
@@ -209,10 +140,17 @@ menu_lateral = dbc.Card([
             id="btn-eliminar-escenario", 
             color="danger", 
             size="sm"
-            )
+            ),
+
+            # NUEVO: Componente invisible que maneja la alerta "Aceptar/Cancelar"
+            dcc.ConfirmDialog(
+                id='alerta-confirmacion-eliminar',
+                message='El escenario será eliminado. ¿Deseas continuar?',
+            ),
+
     ], className="d-flex justify-content-start mb-3"),
     
-    # Mensaje de confirmación oculto o alerta
+    # Mensaje de confirmación o alerta
     html.Div(id="mensaje-alerta-escenario", className="small text-muted mb-2"),
 
     # Boton exportar excel
@@ -229,34 +167,129 @@ menu_lateral = dbc.Card([
     
     html.Br(),
     html.Br(),
+    
+    # Dropdown CORPORATIVO para elejir múltiples escenarios
+    html.Div(
+        id='contenedor-dropdown-corp',
+        children=[
+                        
+            html.H6(
+                [
+                 html.I(className="fa-solid fa-chart-line me-2"), 
+                'Escenarios por Unidad'
+                ],
+                className="text-primary fw-bold mb-2"
+              ),
+            
+            html.Hr(),
+            dcc.Dropdown(
+                id='dropdown-escenarios-corp',
+                placeholder="Seleccionar escenarios...",
+                multi=True,  # ← selección múltiple
+                className="mb-3",
+                style={
+                        'width': '100%',          # Ancho del dropdown
+                        'backgroundColor': '#f0f0f0', # Color de fondo
+                        'color': '#333333',      # Color del texto
+                        'fontSize': '14px'       # Tamaño de la fuente
+                      }, 
+            )
+        ],
+        style={'display': 'none'}  # ← oculto por defecto
+    ),
 
-    # Tabla para ver y modificar valores iniciales
-    html.Label("Valores Iniciales Pre-kinder o 1° Medio:", style={'fontWeight': 'bold', "fontSize": "14px"}),
-    # Tabla Vertical Interactiva
-        dash_table.DataTable(
-            id='tabla-matriculas-vertical',
-            columns=columnas_verticales,
-            editable=True,
-            style_cell={
-                'textAlign': 'center', 
-                'padding': '6px',
-                'fontSize': '13px',
-                'fontFamily': 'sans-serif'
-            },
-            style_header={
-                'backgroundColor': '#f4f4f4', 
-                'fontWeight': 'bold',
-                'border': '1px solid #d6d6d6'
-            },
-            style_data={
-                'border': '1px solid #e0e0e0'
-            }
-        ),
+    # Gestion Escenarios: contenedor para slider de unidades educativas 
+    # y tabla matricula inicial, se oculta si se elije CORPORACION
+    html.Div( # incio contenedor
+            id='contenedor-configuracion', # id contenedor"
+            children=[ # inicio children contenedor
+        # Contenedor despegable, Configuración escenarios
+        html.Details([
+            html.Summary(
+                    [
+                    # Icono de engranaje (ajustes) con un pequeño margen a la derecha
+                    html.I(className="bi bi-gear-fill me-2"), 
+                    "Configuración Escenarios"
+                    ],  
+                    
+                    style={"cursor": "pointer", 
+                                                        "fontWeight": "bold", 
+                                                        "fontSize": "16px", 
+                                                        "padding": "10px",
+                                                        "color": "#ffffff", 
+                                                        "backgroundColor": "#6E6E6E", 
+                                                        "borderRadius": "5px", 
+                                                        "marginBottom": "10px"}
+                                                        ),
+        
+                
+                    html.Hr(),
+                    
+                    # Pestañas para los 20 slider separados en 10 para retencion y 10 para captacion
+                    dbc.Tabs([
+                        # Pestaña 1: Alumnos nuevos
+                        dbc.Tab(label="Alumnos Nuevos", tab_id="tab-sliders-retencion", label_style={'fontSize': '14px'},
+                                children=[
+                            html.Div([
+                            # Slider alumnos nuevos
+                                    html.Label("Nuevos Estudiantes: ", className="fw-bold text-secondary me-1", style={"fontSize": "14px"}),
+                                    html.Hr(),
+                                    # Crear slider con funcion crear_grupo_sliders para retencion
+                                    html.Div(id='contenedor-captacion') # contenedor de slider segun unidad educativa elegida
+
+                                ], className="pt-2")
+                            ]),
+
+                        # Pestaña 2: Retencion
+                        dbc.Tab(label="Retención", tab_id="tab-sliders-nuevos", label_style={'fontSize': '14px'},
+                                children=[
+                            html.Div([
+                            # Slider retencion
+                                    html.Label(" Tasa de retencion (%):", className="fw-bold text-secondary me-1", style={"fontSize": "14px"}),
+                                    html.Hr(),
+                                    # Crear slider con funcion crear_grupo_sliders para retencion
+                                    html.Div(id='contenedor-retencion') # contenedor de slider segun unidad educativa elegida
+
+                                ], className="pt-2")
+                            ]),
+                    ], id="tabs-sliders-menu", active_tab="tab-sliders-retencion"), # fin 2 pestañas de sliders
+                
+                
+        # Tabla para ver y modificar valores iniciales
+        html.Label("Valores Iniciales Pre-kinder o 1° Medio:", style={'fontWeight': 'bold', "fontSize": "14px"}),
+        # Tabla Vertical Interactiva
+            dash_table.DataTable(
+                id='tabla-matriculas-vertical',
+                columns=columnas_verticales,
+                editable=True,
+                style_cell={
+                    'textAlign': 'center', 
+                    'padding': '6px',
+                    'fontSize': '13px',
+                    'fontFamily': 'sans-serif'
+                },
+                style_header={
+                    'backgroundColor': '#f4f4f4', 
+                    'fontWeight': 'bold',
+                    'border': '1px solid #d6d6d6'
+                },
+                style_data={
+                    'border': '1px solid #e0e0e0'
+                }
+            ),
+        
+            ], open=False, style={"marginBottom": "15px"}), # Final menu despegable, escenarios unidades educativa
+
+     
+                     ] # final children contenedor Configuracion Escenarios, sliders y tabla matricula inicial
+
+                 ), # Final contenedor configuracion escenarios, slider y tabla matricula inicial
+            
+    html.Br(), # salto de linea
+        
+    ], body=True, className="shadow-sm border-0", # fin menu lateral
     
-    
-], body=True, className="shadow-sm border-0", 
-    
-)
+ ) # fin dbc, Menu Lateral
 
 # Callback que convierte el diccionario plano de matriculas iniciales 
 # en 10 filas verticales para la tabla
@@ -286,7 +319,7 @@ def cargar_valores_verticales(unidad_seleccionada):
         Output('contenedor-retencion', 'children'), # Primer Output (retencion)
         Output('contenedor-captacion', 'children')  # Segundo Output (captacion)
     ],
-    Output('dropdown-escenarios-guardados', 'options'), # 👈 Nuevo para cargar escenarios de slider
+    Output('dropdown-escenarios-guardados', 'options'), # Nuevo para cargar escenarios de slider
     Output('dropdown-escenarios-corp', 'options'),  
     Output('contenedor-dropdown-corp', 'style'),          # ← nuevo, escenarios agrupados
     Output('contenedor-configuracion', 'style'),  # ← nuevo, contender slider (visible/oculto)
@@ -1060,18 +1093,33 @@ def ejecutar_carga_en_sliders(n_clicks, ruta_archivo_escenario, sliders_ret_actu
         
         return valores_retencion_guardados, valores_nuevos_guardados, filas_tabla, dash.no_update
 
-# Callback para ELIMINAR un escenario en los Sliders
+
+# Callback para la ventana emergente de alerta al presionar el botón de eliminar
+@callback(
+    Output('alerta-confirmacion-eliminar', 'displayed'), # salida de ventana emergente de confirmación
+    Input('btn-eliminar-escenario', 'n_clicks'), # se activa al presionar eliminar
+    State('dropdown-escenarios-guardados', 'value'), # Validación por si no hay escenario que borrar
+    prevent_initial_call=True # previene que se muestre la ventana emergente al inicar la aplicacion
+)
+def mostrar_alerta_confirmacion(n_clicks, ruta_archivo_escenario):
+    # Si no hay un escenario seleccionado, no abrimos la alerta
+    if not n_clicks or not ruta_archivo_escenario:
+        raise dash.exceptions.PreventUpdate
+    
+    return True
+
+# Callback para ELIMINAR un escenario en los Sliders, con ventana emergente de seguridad
 @callback(
     Output("mensaje-alerta-escenario", "children", allow_duplicate=True),
     Output("dropdown-escenarios-guardados", "options", allow_duplicate=True),
     Output("dropdown-escenarios-guardados", "value"), # Resetea el selector visual a vacío
-    Input("btn-eliminar-escenario", "n_clicks"),
+    Input("alerta-confirmacion-eliminar", "submit_n_clicks"), # recibe el valor de la ventana de alerta, "aceptar" o " cancelar"
     State("unidades_educativas", "value"),
     State("dropdown-escenarios-guardados", "value"),
     prevent_initial_call=True
 )
-def ejecutar_eliminacion_escenario(n_clicks, unidad_edu, ruta_archivo_escenario):
-    if not n_clicks or not ruta_archivo_escenario:
+def ejecutar_eliminacion_escenario(submit_n_clicks, unidad_edu, ruta_archivo_escenario):
+    if not submit_n_clicks or not ruta_archivo_escenario:
         raise dash.exceptions.PreventUpdate
         
     # 1. Borramos el archivo del disco
