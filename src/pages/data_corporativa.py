@@ -47,9 +47,7 @@ def nivel_unidad_educativa(unidad_edu):
 
     return  niveles_options_dropdown
 
-etiqueta_inicial = 'PRE-KINDER'
 
-resultado = [d[etiqueta_inicial] for d in nivel_unidad_educativa("PRE-KINDER") if etiqueta_inicial in d]
 
 menu_lateral = dbc.Card([
 
@@ -113,13 +111,16 @@ menu_lateral = dbc.Card([
 
 @callback (
     Output('niveles_educativos', 'options'),
+    Output('niveles_educativos', 'value'),
     Input('unidades_educativas', 'value')
 )
 def opciones_niveles(unidad_edu):
 
     lista_opciones = nivel_unidad_educativa(unidad_edu)
+    
+    valor_inicial = next(iter(lista_opciones[0].values()))
 
-    return  lista_opciones
+    return  lista_opciones, valor_inicial
 
 layout = dbc.Container([
 
