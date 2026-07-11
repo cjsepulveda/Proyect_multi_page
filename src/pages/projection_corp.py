@@ -18,8 +18,8 @@ from pages.modulos.calculation_projection import (
     eliminar_archivo_escenario,
     proyeccion_corporativa,
     tasas_nuevos_alumnos,  
-                 
-)
+   )
+
 from pages.modulos.slider_creation import crear_grupo_sliders 
 
 register_page(

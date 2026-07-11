@@ -15,7 +15,7 @@ import dash_bootstrap_components as dbc
 # To use Font Awesome Icons
 FA621 = "https://use.fontawesome.com/releases/v6.2.1/css/all.css"
 APP_TITLE = "Rendimientos LMLA 2024"
-image_path = 'assets/Original-Apaisado.png'
+image_path = 'assets/logo_nuevo.png'
 
 app = dash.Dash(
     __name__,
@@ -37,8 +37,9 @@ navbar = dbc.NavbarSimple(
         #dbc.NavItem(dbc.NavLink("PSU PAES PDT", class_name='option_menu_side',href="/psupdtpaes")),
         #dbc.NavItem(dbc.NavLink("Ensayos PAES", class_name='option_menu_side', href="/ensayos_paes")),
         #dbc.NavItem(dbc.NavLink("Ensayos SIMCE", class_name='option_menu_side', href="/simce_ensayos")),
-        dbc.NavItem(dbc.NavLink("Escenarios Matricula Corporativa", class_name='option_menu_side', href="/proyeccion")),
-        dbc.NavItem(dbc.NavLink("Matrícula", class_name='option_menu_side', href="/matricula")),
+        dbc.NavItem(dbc.NavLink("Datos", href="/datos_corporacion")),
+        dbc.NavItem(dbc.NavLink("Escenarios", href="/proyeccion")),
+        dbc.NavItem(dbc.NavLink("Matrícula", href="/matricula")),
         #dbc.DropdownMenu(
          #   size="md",
           #  children=[
@@ -56,6 +57,7 @@ navbar = dbc.NavbarSimple(
     brand_href="/",
     color="#b51808",
     dark=True,
+    fluid=True,
    )
     
 app.layout = html.Div(
