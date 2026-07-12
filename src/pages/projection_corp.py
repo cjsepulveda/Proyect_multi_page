@@ -399,7 +399,7 @@ layout = dbc.Container([
         # Columna para menu lateral
         dbc.Col(menu_lateral, width=4), 
         
-        # Columna para KPI, 2 pestañas con gráficos y 2 pestañas con tablas
+        # Columna para KPI, 1 Gráfico y 2 pestañas con tablas
         dbc.Col([                       
             # Tarjetas KPI
             html.Div(id="contenedor-kpis", className="mb-4"), # Tarjetas KPI
@@ -914,45 +914,7 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
                         range=[piso_eje_y, techo_eje_y]
                         )
         
-        # Grafico para la CORPORACION completa
-        #corp_graph = graph_objects.Figure()
-
-        #df_reales_corp = df_corporacion[df_corporacion["Tipo"] == "Real"]
-        #df_proy_corp = df_corporacion[df_corporacion["Tipo"] == "Proyección"]
-
-        #corp_graph.add_trace(graph_objects.Scatter(
-         #   x=df_reales_corp["PERIODO"], y=df_reales_corp["MATRICULA"], name="Datos Reales",
-          #  mode="lines+markers", 
-           # marker=dict(color= "#af0000", size=8),
-            #line=dict(color="#4B4B4B", width=2)
-        #))
-
-        #punto_conexion_corp = df_reales_corp.tail(1)
-        #df_proy_conectado_corp = pd.concat([punto_conexion_corp, df_proy_corp])
-
-        #corp_graph.add_trace(graph_objects.Scatter(
-         #   x=df_proy_conectado_corp["PERIODO"], y=df_proy_conectado_corp["MATRICULA"], name="Proyección",
-          #  mode="lines+markers",
-           # marker=dict(color= "#1d1d1d", size=8), 
-            #line=dict(color="#ffae00", width=2)
-        #))
-
-        #corp_graph.update_layout(
-         #   hovermode="x unified", plot_bgcolor="white", height=260,
-          #  margin=dict(l=40, r=30, t=10, b=10),
-           # legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-            #hoverlabel_font=dict(family='Roboto mono', weight='bold', size=14, color='black'),
-            #font_family='Roboto mono',
-        #)
-
-        #corp_graph.update_xaxes(showgrid=True, gridcolor="#EAEAEA")
         
-        # CORRECCIÓN DEL EJE Y: Reemplazamos los números fijos por tus variables dinámicas
-        #corp_graph.update_yaxes(
-         #               showgrid=True, 
-          #              gridcolor="#EAEAEA",
-                        #range=[piso_eje_y_corp, techo_eje_y_corp]
-           #             )
 
         # 1. Datos para tabla resumen por año
         tabla_consolidada_data = df.to_dict(orient="records") 
