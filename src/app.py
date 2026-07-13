@@ -37,7 +37,7 @@ navbar = dbc.NavbarSimple(
         #dbc.NavItem(dbc.NavLink("Ensayos PAES", class_name='option_menu_side', href="/ensayos_paes")),
         #dbc.NavItem(dbc.NavLink("Ensayos SIMCE", class_name='option_menu_side', href="/simce_ensayos")),
         #dbc.NavItem(dbc.NavLink("Escenarios Matricula Corporativa", class_name='option_menu_side', href="/proyeccion")),
-        dbc.NavItem(dbc.NavLink("Matrícula", class_name='option_menu_side', href="/matricula")),
+        dbc.NavItem(dbc.NavLink("Matrícula", href="/matricula")),
         #dbc.DropdownMenu(
          #   size="md",
           #  children=[
@@ -51,10 +51,16 @@ navbar = dbc.NavbarSimple(
             #),
         ],
    
-    brand="Liceo Particular Mixto Los Andes",
+    brand=[
+        html.Img(src="/assets/logo_letra_blanco.png", height="30px", style={"marginRight": "10px"}),
+        "Corporación Monte Aconcagua"
+        ],
+
+
     brand_href="/",
     color="#b51808",
     dark=True,
+    fluid=True
    )
     
 app.layout = html.Div(

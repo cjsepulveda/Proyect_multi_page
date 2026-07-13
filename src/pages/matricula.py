@@ -469,11 +469,12 @@ def update_charts(unidad_edu):
             )
     
     trace01.add_layout_image(                                 
-                            source= "assets/Original-Apaisado.png",
+                            source= "assets/logo_corp.png",
                             xref="paper", yref="paper",
-                            x=1.0, y=1.15,
+                            x=0.9, 
+                            y=1.15,
                             sizex=0.2, sizey=0.2,
-                            xanchor="right", yanchor="bottom",                                
+                            xanchor="left", yanchor="bottom",                                
                             )
 
     trace01.update_traces(hovertemplate=
