@@ -483,7 +483,7 @@ layout = dbc.Container([
 
 
 
-            ], id="tabs-gestion", active_tab="tab-ingreso", className="shadow-sm bg-white rounded"),
+            ], id="tabs-gestion", active_tab="tab-ingreso", className="shadow-sm bg-white rounded"), # fin dos pestañas para tablas
  # fin tabla configuracion
 
          ], width=8) # Fin columna diagrama general

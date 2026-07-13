@@ -161,22 +161,46 @@ layout = dbc.Container([
      # Columna para gráficos
         dbc.Col([
 
-                dbc.Card([
-                dbc.CardHeader(html.Div([
-                                        html.H6("Matrículas 2021 - 2026: ", className="m-0 text-dark", style={"display": "inline"}),
-                                        html.Span(id="titulo-grafico-ue", className="text-white fw-bold", style={"display": "inline", "marginLeft": "5px"})
-                                        ], className="d-flex align-items-center")
-                ),
-                dbc.CardBody(
-                    dcc.Loading(
-                        id="corp-loading-grafico",
-                        type="circle",
-                        children=dcc.Graph(config={"displayModeBar": False}, id="grafico-matricula-corp")
-                    )
-                )
-            ], className="shadow-sm mt-3")
+            dbc.Tabs([
+
+              dbc.Tab(label="Gráfico 1", tab_id="tab-graf-1", children=[
+
+                            dbc.Card([
+                                dbc.CardHeader(html.Div([
+                                                        html.H6("Matrículas 2021 - 2026: ", className="m-0 text-dark", style={"display": "inline"}),
+                                                        html.Span(id="titulo-grafico-ue", className="text-white fw-bold", style={"display": "inline", "marginLeft": "5px"})
+                                                        ], className="d-flex align-items-center")
+                                ),
+                                dbc.CardBody(
+                                    dcc.Loading(
+                                        id="corp-loading-grafico",
+                                        type="circle",
+                                        children=dcc.Graph(config={"displayModeBar": False}, id="grafico-matricula-corp")
+                                    )
+                                )
+                            ], className="shadow-sm mt-3")
 
 
+
+
+                ],
+                        
+                        
+                        
+                        ),
+              dbc.Tab(label="Gráfico 2", children=[],
+                        
+                        
+                        
+                        
+                        ),
+
+            ],active_tab="tab-graf-1"),
+
+
+
+
+            
         ],
             
             width=8), # fin columna gráfico
@@ -195,15 +219,12 @@ layout = dbc.Container([
 )
 def graficos_corporativos(unidad_educativa, nivel_educativo):
 
-
-    
-
     valor_unidad_educativa = unidad_educativa
     texto_unidad_educativa = next((k for k, v in unidades_edu.items() if v == valor_unidad_educativa), None)
     texto_nivel_educativo = nivel_educativo
     texto_final_grafico = texto_unidad_educativa + "-" + " " + texto_nivel_educativo
 
-    print (texto_unidad_educativa)
+    
 
     df_corp_inicial = obtener_datos_base()
     df_corp_filtrado = df_corp_inicial.query("(UNIDAD_ACADEMICA == @unidad_educativa) and (NIVEL_MATRICULA == @nivel_educativo)").copy()
