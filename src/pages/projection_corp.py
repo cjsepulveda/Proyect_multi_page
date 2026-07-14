@@ -409,7 +409,8 @@ layout = dbc.Container([
                 dbc.CardHeader(html.Div([
                                         html.H6("Modelación Escenarios Matrículas: ", className="m-0 text-dark", style={"display": "inline"}),
                                         html.Span(id="variable-matricula", className="text-white fw-bold", style={"display": "inline", "marginLeft": "5px"})
-                                        ], className="d-flex align-items-center")
+                                        ], className="d-flex align-items-center"),
+                                        style={"backgroundColor": "#020072"}
                 ),
                 dbc.CardBody(
                     dcc.Loading(
@@ -458,7 +459,7 @@ layout = dbc.Container([
                 ]),
 
                 # Pestaña 2: Desagregado por Niveles Educativos
-                dbc.Tab(label="Tabla desagregada po Niveles", tab_id="tab-matriz-desglose", children=[
+                dbc.Tab(label="Tabla desagregada por Niveles", tab_id="tab-matriz-desglose", children=[
                     html.Div([
                         html.P("Desagregado por nivel de enseñanza. Visualiza la transferencia secuencial de alumnos año tras año.", className="text-muted small"),
                         dash_table.DataTable(

@@ -163,13 +163,13 @@ layout = dbc.Container([
 
             dbc.Tabs([
 
-              dbc.Tab(label="Gráfico 1", tab_id="tab-graf-1", children=[
-
+              dbc.Tab(label="Matrícula",  tab_id="tab-graf-1", children=[
                             dbc.Card([
                                 dbc.CardHeader(html.Div([
                                                         html.H6("Matrículas 2021 - 2026: ", className="m-0 text-dark", style={"display": "inline"}),
-                                                        html.Span(id="titulo-grafico-ue", className="text-white fw-bold", style={"display": "inline", "marginLeft": "5px"})
-                                                        ], className="d-flex align-items-center")
+                                                        html.Span(id="titulo-grafico-matricula", className="text-white fw-bold", style={"display": "inline", "marginLeft": "5px"})
+                                                        ], className="d-flex align-items-center"),
+                                                        style={"backgroundColor":"#007bff"}  # Otro color de fondo
                                 ),
                                 dbc.CardBody(
                                     dcc.Loading(
@@ -178,41 +178,66 @@ layout = dbc.Container([
                                         children=dcc.Graph(config={"displayModeBar": False}, id="grafico-matricula-corp")
                                     )
                                 )
+                              ], className="shadow-sm mt-3")
+                             ], # fin children Tab
+                                 
+                         ),
+              dbc.Tab(label="Retención",  tab_id="tab-graf-2", children=[
+                            dbc.Card([
+                                dbc.CardHeader(html.Div([
+                                                        html.H6("Retención 2021 - 2026: ", className="m-0 text-dark", style={"display": "inline"}),
+                                                        html.Span(id="titulo-grafico-retencion", className="text-white fw-bold", style={"display": "inline", "marginLeft": "5px"})
+                                                        ], className="d-flex align-items-center"),
+                                                        style={"backgroundColor": "#00B321"}  # Color de fondo personalizado
+                                ),
+                                dbc.CardBody(
+                                    dcc.Loading(
+                                        id="corp-loading-grafico",
+                                        type="circle",
+                                        children=dcc.Graph(config={"displayModeBar": False}, id="grafico-retencion-corp")
+                                    )
+                                )
                             ], className="shadow-sm mt-3")
-
-
-
-
-                ],
-                        
-                        
-                        
-                        ),
-              dbc.Tab(label="Gráfico 2", children=[],
-                        
-                        
-                        
-                        
-                        ),
-
-            ],active_tab="tab-graf-1"),
-
-
-
-
+                            ],
+                         ),
+              dbc.Tab(label="Captación",  tab_id="tab-graf-3", children=[
+                            dbc.Card([
+                                dbc.CardHeader(html.Div([
+                                                        html.H6("Captación 2021 - 2026: ", className="m-0 text-dark", style={"display": "inline"}),
+                                                        html.Span(id="titulo-grafico-captacion", className="text-white fw-bold", style={"display": "inline", "marginLeft": "5px"})
+                                                        ], className="d-flex align-items-center"),
+                                                        style={"backgroundColor": "#FFA600"}  # Color de fondo tarjeta personalizado
+                                ),
+                                dbc.CardBody(
+                                    dcc.Loading(
+                                        id="corp-loading-grafico",
+                                        type="circle",
+                                        children=dcc.Graph(config={"displayModeBar": False}, id="grafico-captacion-corp")
+                                    )
+                                )
+                            ], className="shadow-sm mt-3")
+                            ],
+                         ),
             
-        ],
             
+            
+            ],active_tab="tab-graf-1"), # Cierre de pestañas
+         
+         ], # cierre listas en la columna
             width=8), # fin columna gráfico
 
-     ])
+     ]) # Cierre, fila de layaout
 
-  ], fluid=True) # Fin Layaout para leer en aap.py
+  ], fluid=True) # Fin Layaout, cierre dbc.Container
 
 # callback para gráficos corporacion
 @callback (
     Output('grafico-matricula-corp', 'figure'),
-    Output('titulo-grafico-ue', 'children'),
+    Output('titulo-grafico-matricula', 'children'),
+    Output('grafico-retencion-corp', 'figure'),
+    Output('titulo-grafico-retencion', 'children'),
+    Output('grafico-captacion-corp', 'figure'),
+    Output('titulo-grafico-captacion', 'children'),
     Input('unidades_educativas_corp', 'value'),
     Input('niveles_educativos', 'value'),
 
@@ -220,9 +245,13 @@ layout = dbc.Container([
 def graficos_corporativos(unidad_educativa, nivel_educativo):
 
     valor_unidad_educativa = unidad_educativa
+    
     texto_unidad_educativa = next((k for k, v in unidades_edu.items() if v == valor_unidad_educativa), None)
     texto_nivel_educativo = nivel_educativo
-    texto_final_grafico = texto_unidad_educativa + "-" + " " + texto_nivel_educativo
+    
+    txt_final_graph_matricula = texto_unidad_educativa + "-" + " " + texto_nivel_educativo
+    txt_final_graph_retencion = texto_unidad_educativa + "-" + " " + texto_nivel_educativo
+    txt_final_graph_captacion = texto_unidad_educativa + "-" + " " + texto_nivel_educativo
 
     
 
@@ -233,7 +262,7 @@ def graficos_corporativos(unidad_educativa, nivel_educativo):
         df_corp_filtrado['REPROBADO'] + 
         df_corp_filtrado['NUEVO']
     )
-
+    
     # Creamos un diccionario inverso para obtener la etiqueta legible 
     # a partir del valor seleccionado en el dropdown
     inverse_dict = {v: k for k, v in unidades_edu.items()}
@@ -241,10 +270,64 @@ def graficos_corporativos(unidad_educativa, nivel_educativo):
     # Extraer la etiqueta legible para el gráfico a partir del valor seleccionado en el dropdown
     label_graph = inverse_dict.get(unidad_educativa) 
 
+    config_graficos_corp = [
+        (df_corp_filtrado,"PERIODO","TOTAL_ESTUDIANTES","#ffffff","#5582ff",""),
+        (df_corp_filtrado,"PERIODO","RETENCION","#ffffff","#22BB00",".0%"),
+        (df_corp_filtrado,"PERIODO","NUEVO","#ffffff","#FFAE00",""),
+        ]
     
+    lista_graficos_corp = []
+    
+    for options in config_graficos_corp:
+        
+        data, data_col_x, data_col_y, color_marker, color_line, num_format = options
+        grafico_corporativo = generar_graficos_corp (   data, 
+                                                        data_col_x, 
+                                                        data_col_y, 
+                                                        color_marker, 
+                                                        color_line, 
+                                                        num_format)
+        lista_graficos_corp.append(grafico_corporativo)
+
+    return (lista_graficos_corp[0], 
+            txt_final_graph_matricula, 
+            lista_graficos_corp[1], 
+            txt_final_graph_retencion,
+            lista_graficos_corp[2],
+            txt_final_graph_captacion
+            )
+
+def generar_graficos_corp(df_filtrado, data_x, data_y , marker_color, line_color, formato_num):
+
+    if data_y =="TOTAL_ESTUDIANTES":
+        color_border_marker = "#5582ff"
+        color_fill = "rgba(85, 130, 255, 0.3)"
+        hover_text ="Matrícula"
+    
+    elif data_y == "RETENCION":
+        color_border_marker = "#22BB00"
+        color_fill = "rgba(34, 187, 0, 0.3)"
+        hover_text ="Retención"
+
+    else:
+        color_border_marker = "#FFAE00"
+        color_fill = "rgba(255, 174, 0, 0.3)"
+        hover_text = "Captación"
+
+    # CALCULAR RANGO DINÁMICO SEGÚN LOS DATOS ACTUALES DE ESTA ESCUELA
+        # Buscamos el valor máximo y mínimo dentro del DataFrame generado
+    x_min = df_filtrado[data_x].min() - 0.5
+    x_max = df_filtrado[data_x].max() + 0.5
+
+    valor_maximo_corp = df_filtrado[data_y].max()
+    valor_minimo_corp = df_filtrado[data_y].min()
+
+        # Dejamos un 25% de holgura hacia arriba y hacia abajo para que la línea respire
+    techo_eje_y_corp = (valor_maximo_corp * 1.5)
+    piso_eje_y_corp = (valor_minimo_corp * 0.0)
 
 
-    graph_matricula = px.line(df_corp_filtrado, x='PERIODO', y='TOTAL_ESTUDIANTES',
+    graph = px.line(df_filtrado, x= data_x, y= data_y,
                                
                       #title=f'Matrícula 2021 - 2026 - {label_graph}',
                       #width=1280, 
@@ -252,33 +335,39 @@ def graficos_corporativos(unidad_educativa, nivel_educativo):
                       template="simple_white",
                       )
             
-    graph_matricula.update_traces(
+    graph.update_traces(
                           mode="markers+lines",
                           textposition='top center',
-                          
                           hovertemplate=
-                           '<b>Matriculados: </b>%{y}</b>',
-                          marker=dict(color='#af0000', size=12),
-                          line=dict(width=4, color='#4B4B4B'),
+                           f'<b> {hover_text}: </b>%{{y}}</b>',
+                          marker=dict(color = marker_color, size = 12, 
+                                        line=dict(width = 2,
+                                                  color = color_border_marker)),
+                          line=dict(width = 4, color = line_color),
+                          fill = 'tozeroy',
+                          fillcolor = color_fill,
                     )
     
-    graph_matricula.update_yaxes(tickfont_weight='normal', 
+    graph.update_yaxes(tickfont_weight='normal', 
                          showgrid=True, 
                          tickfont_size=14,
                          showline=False, 
                          ticks="",
                          title_text="",
-                         tickfont=dict(color='gray'))
+                         tickformat= formato_num,
+                         tickfont=dict(color='gray'),
+                         range=[piso_eje_y_corp, techo_eje_y_corp])
     
-    graph_matricula.update_xaxes(tickfont_weight='normal', 
+    graph.update_xaxes(tickfont_weight='normal', 
                          tickfont_size=14, 
                          showgrid=True,
                          ticks="", 
                          showline=False,
                          title_text="",
-                        tickfont=dict(color='gray'))
+                         tickfont=dict(color='gray'),
+                         range=[x_min, x_max])
     
-    graph_matricula.update_layout(
+    graph.update_layout(
                          hoverlabel_font=dict(family='Roboto mono', weight='bold', size=14, color='black'),
                          font_family='Roboto mono',
                          title_font_weight='bold',
@@ -289,6 +378,4 @@ def graficos_corporativos(unidad_educativa, nivel_educativo):
                          hovermode="x unified",
                          
                          )
-
-
-    return graph_matricula, texto_final_grafico
+    return graph

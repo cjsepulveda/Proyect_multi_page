@@ -392,12 +392,12 @@ body {
     color: var(--corp-negro) !important;
 }
 
-/* Header de tarjetas */
+/* Header de tarjetas 
 .card-header {
     background-color: var(--corp-marino) !important;
     color: #ffffff !important;
     font-weight: bold !important;
-}
+} */
 
 .card-header h6 {
     color: #ffffff !important;
