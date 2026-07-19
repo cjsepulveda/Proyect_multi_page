@@ -53,7 +53,11 @@ navbar = dbc.NavbarSimple(
             #),
         ],
    
-    brand="Corporación Monte Aconcagua",
+    brand=[
+        html.Img(src="/assets/logo_letra_blanco.png", height="30px", style={"marginRight": "10px"}),
+        "Corporación Monte Aconcagua"
+        ],
+
     brand_href="/",
     color="#b51808",
     dark=True,

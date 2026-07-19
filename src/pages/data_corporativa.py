@@ -2,9 +2,10 @@ import dash
 import pathlib
 from dash import html, dcc, callback, Input, Output, ALL, State, dash_table, register_page, no_update, exceptions
 import dash_bootstrap_components as dbc
-import plotly.graph_objects as graph_objects
+import plotly.graph_objects as go
 import plotly.express as px
 import pandas as pd
+import numpy as np
 import copy
 
 register_page(
@@ -16,25 +17,32 @@ register_page(
 
 PATH = pathlib.Path(__file__).parent
 DATA_PATH = PATH.joinpath("data").resolve()
-_df01_corp = None # cache en RAM
+_df01_corp = _df02_cuota_mercado = None # cache en RAM
+
 
 def load_data_corp():
     """Carga los datos de Excel solo una vez por proceso."""
-    global _df01_corp
+    global _df01_corp, _df02_cuota_mercado
     # Si ya se cargaron los datos, no hacemos nada.
     if _df01_corp is not None:
         return
 
     workbook = DATA_PATH.joinpath('data_corp_demo.xlsx')
     _df01_corp = pd.read_excel(workbook, sheet_name='data_corp')
+    _df02_cuota_mercado = pd.read_excel(workbook, sheet_name='data_mercado_media')
+
 
 def obtener_datos_base():
     load_data_corp()
     return _df01_corp
 
+def obtener_datos_mercado():
+    load_data_corp()
+    return _df02_cuota_mercado
+
 # Diccionario de Unidades Educativas
 unidades_edu = {
-                'CORPORACIÓN': 'CORPORACIÓN',
+                'CORPORACIÓN': 'CORPORACION',
                 'BÁSICA 1':'BÁSICA 1',
                 'BÁSICA 2':'BÁSICA 2',
                 'BÁSICA SAN FELIPE':'BÁSICA SF',
@@ -44,7 +52,11 @@ unidades_edu = {
 # Lista de diccionarios para 'options' usando una lista por comprensión
 unidades_edu_options_dropdown = [{'label': k, 'value': v} for k, v in unidades_edu.items()]
 
-
+unidades_cuota_mercado = {
+                           'MEDIA LOS ANDES':'MEDIA LOS ANDES',
+                           'MEDIA SAN FELIPE':'MEDIA SAN FELIPE'
+}
+unidades_cuota_mercado_dropdown = [{'label': k, 'value': v} for k, v in unidades_cuota_mercado.items()]
 
 def nivel_unidad_educativa(unidad_edu):
 
@@ -52,6 +64,7 @@ def nivel_unidad_educativa(unidad_edu):
     if unidad_edu in ['BÁSICA 1', 'BÁSICA 2', 'BÁSICA SF']:
 
         niveles = {
+                     'GENERAL': 'GENERAL',
                      'PREKINDER': 'PREKINDER',
                      'KINDER':  'KINDER',
                      '1BÁSICO': '1BÁSICO',
@@ -68,6 +81,7 @@ def nivel_unidad_educativa(unidad_edu):
         niveles_options_dropdown = [{'label': k, 'value': v} for k, v in niveles.items()]
     else:
         niveles = {
+                     'GENERAL': 'GENERAL',
                      '1MEDIO': '1MEDIO',
                      '2MEDIO': '2MEDIO',
                      '3MEDIO': '3MEDIO',
@@ -80,65 +94,140 @@ def nivel_unidad_educativa(unidad_edu):
 
 
 
-menu_lateral = dbc.Card([
+menu_lateral = html.Div([
 
-    # Lista despegable para UNIDAD EDUCATIVA
-    html.Div(
-        children=[
-            html.H6(
-                [
-                 html.I(className="fa-solid fa-school me-2"), 
-                'Unidad Educativa '
-                ],
-                className="text-primary fw-bold mb-3"
-              ),
-              dcc.Dropdown(
-                id='unidades_educativas_corp', 
-                options=unidades_edu_options_dropdown,
-                value='BÁSICA 1',
-                clearable=False,
-                style={
-                        'width': '100%',          # Ancho del dropdown
-                        'backgroundColor': '#f0f0f0', # Color de fondo
-                        'color': '#333333',      # Color del texto
-                        'fontSize': '14px'       # Tamaño de la fuente
-                      },
-                
-            ),
-        ]),
+    dbc.Row([
+        
+        html.H6("Datos Corporación: ", className="mt-3 text-dark fw-bold", style={"display": "inline"}),
 
-    html.Br(),
-    # Lista despegable para los niveles de la UNIDAD EDUCATIVA    
-    html.Div(
-            children=[
-                html.H6(
-                    [
-                    html.I(className="fa-solid fa-users me-2"), 
-                    'Niveles '
-                    ],
-                    className="text-primary fw-bold mb-3"
-                ),
-                dcc.Dropdown(
-                    id='niveles_educativos',
-                    
-                    clearable=False,
-                    style={
-                            'width': '100%',          # Ancho del dropdown
-                            'backgroundColor': '#f0f0f0', # Color de fondo
-                            'color': '#333333',      # Color del texto
-                            'fontSize': '14px'       # Tamaño de la fuente
-                        },
-                    
-                ),
-            ]),
+        dbc.Col(
+    # Tarjeta para datos MATRICULA
+            dbc.Card([
+        dbc.CardHeader(html.Div([
+                                    html.H6(
+                                        [
+                                         html.I(className="fa-solid fa-database me-2"), 
+                                         'Data Matrícula'
+                                         ],                                        
+                                        className="m-0 text-dark", style={"display": "inline"}),
+                                        html.Span(id="data", className="text-white fw-bold", style={"display": "inline", "marginLeft": "5px"})
+                                    ], className="d-flex align-items-center"),
+                                    style={"backgroundColor": "#757575"}  # Color de fondo personalizado
+                                ),
+
+        dbc.CardBody([
+            # Lista despegable para UNIDAD EDUCATIVA
+            html.Div(
+                children=[
+                    html.H6(
+                        [
+                        html.I(className="fa-solid fa-school me-2"), 
+                        'Unidad Educativa '
+                        ],
+                        className="text-primary fw-bold mb-3"
+                    ),
+                    dcc.Dropdown(
+                        id='unidades_educativas_corp', 
+                        options=unidades_edu_options_dropdown,
+                        value='CORPORACION',
+                        clearable=False,
+                        style={
+                                'width': '100%',          # Ancho del dropdown
+                                'backgroundColor': '#f0f0f0', # Color de fondo
+                                'color': '#333333',      # Color del texto
+                                'fontSize': '14px'       # Tamaño de la fuente
+                            },
+                        
+                    ),
+                ]),
+
+            html.Br(),
+            # Lista despegable para los NIVELES de la UNIDAD EDUCATIVA    
+            html.Div(
+                    children=[
+                        html.H6(
+                            [
+                            html.I(className="fa-solid fa-users me-2"), 
+                            'Niveles '
+                            ],
+                            className="text-primary fw-bold mb-3"
+                        ),
+                        dcc.Dropdown(
+                            id='niveles_educativos',
+                            
+                            clearable=False,
+                            style={
+                                    'width': '100%',          # Ancho del dropdown
+                                    'backgroundColor': '#f0f0f0', # Color de fondo
+                                    'color': '#333333',      # Color del texto
+                                    'fontSize': '14px'       # Tamaño de la fuente
+                                },
+                            
+                        ),
+                    ]),
+    ])
+    ], className="shadow-sm border-1", # fin tarjeta para data MATRICULA
+        
+    ), # fin dbc, data MATRICULA
+          style={"marginTop": "16px"}),
+        
+     ]),
 
    
+])
+
+menu_lateral_mercado = html.Div([
+
+    dbc.Row(
+        dbc.Col(
+        # Tarjeta para CUOTA MERCADO
+            dbc.Card([
+                dbc.CardHeader(html.Div([
+                                    html.H6(
+                                        [
+                                         html.I(className="fa-solid fa-chart-pie me-2"), 
+                                         'Cuota de Mercado'
+                                         ],                                        
+                                        className="m-0 text-dark", style={"display": "inline"}),
+                                        html.Span(id="cuota", className="text-white fw-bold", style={"display": "inline", "marginLeft": "5px"})
+                                     ], className="d-flex align-items-center"),
+                                    style={"backgroundColor": "#757575"}  # Color de fondo personalizado
+                                ),
+                dbc.CardBody(
+        # Lista despegable para CUOTAS DE MERCADO
+                        html.Div(
+                                children=[
+                                    html.H6(
+                                        [
+                                        html.I(className="fa-solid fa-people-group me-2"), 
+                                        'Niveles Unidades Educativas'
+                                        ],
+                                        className="text-primary fw-bold mb-3"
+                                    ),
+                                    dcc.Dropdown(
+                                        id='unidades_cuota_mercado', 
+                                        options=unidades_cuota_mercado_dropdown,
+                                        value='MEDIA LOS ANDES',
+                                        clearable=False,
+                                        style={
+                                                'width': '100%',          # Ancho del dropdown
+                                                'backgroundColor': '#f0f0f0', # Color de fondo
+                                                'color': '#333333',      # Color del texto
+                                                'fontSize': '14px'       # Tamaño de la fuente
+                                            },
+                                        
+                                    ),
+                                ]),
+                                            )
+                            ], className="shadow-sm border-1", # fin tarjeta CUOTA MERCADO
+                            
+                            ), # fin dbc CUOTA MERCADO
+         ),className="mt-3" # fin columna para CUOTA MERCADO
+    )
+])
 
 
-     ], body=True, className="shadow-sm border-0", # fin menu lateral
-    
- ) # fin dbc, Menu Lateral
-
+# Callback para cambiar opciones de niveles según unidad educativa elegida
 @callback (
     Output('niveles_educativos', 'options'),
     Output('niveles_educativos', 'value'),
@@ -152,7 +241,7 @@ def opciones_niveles(unidad_edu):
 
 layout = dbc.Container([
 
-     # Layaout General, 1 fila, 2 columnas,
+     # Layaout General, 2 fila, cada fila con 2 columnas,
      dbc.Row([
     
      # Columna para menu lateral
@@ -160,13 +249,13 @@ layout = dbc.Container([
 
      # Columna para gráficos
         dbc.Col([
-
+            # Tres Pestañas cada una con un gráfico, cada gráfico en una tarjeta
             dbc.Tabs([
 
               dbc.Tab(label="Matrícula",  tab_id="tab-graf-1", children=[
                             dbc.Card([
                                 dbc.CardHeader(html.Div([
-                                                        html.H6("Matrículas 2021 - 2026: ", className="m-0 text-dark", style={"display": "inline"}),
+                                                        html.H6("Matrículas 2021-2026: ", className="m-0 text-dark", style={"display": "inline"}),
                                                         html.Span(id="titulo-grafico-matricula", className="text-white fw-bold", style={"display": "inline", "marginLeft": "5px"})
                                                         ], className="d-flex align-items-center"),
                                                         style={"backgroundColor":"#007bff"}  # Otro color de fondo
@@ -178,14 +267,14 @@ layout = dbc.Container([
                                         children=dcc.Graph(config={"displayModeBar": False}, id="grafico-matricula-corp")
                                     )
                                 )
-                              ], className="shadow-sm mt-3")
+                              ], className="shadow-sm mt-3") # fin card
                              ], # fin children Tab
                                  
                          ),
               dbc.Tab(label="Retención",  tab_id="tab-graf-2", children=[
                             dbc.Card([
                                 dbc.CardHeader(html.Div([
-                                                        html.H6("Retención 2021 - 2026: ", className="m-0 text-dark", style={"display": "inline"}),
+                                                        html.H6("Retención 2021-2026: ", className="m-0 text-dark", style={"display": "inline"}),
                                                         html.Span(id="titulo-grafico-retencion", className="text-white fw-bold", style={"display": "inline", "marginLeft": "5px"})
                                                         ], className="d-flex align-items-center"),
                                                         style={"backgroundColor": "#00B321"}  # Color de fondo personalizado
@@ -203,7 +292,7 @@ layout = dbc.Container([
               dbc.Tab(label="Captación",  tab_id="tab-graf-3", children=[
                             dbc.Card([
                                 dbc.CardHeader(html.Div([
-                                                        html.H6("Captación 2021 - 2026: ", className="m-0 text-dark", style={"display": "inline"}),
+                                                        html.H6("Captación 2021-2026: ", className="m-0 text-dark", style={"display": "inline"}),
                                                         html.Span(id="titulo-grafico-captacion", className="text-white fw-bold", style={"display": "inline", "marginLeft": "5px"})
                                                         ], className="d-flex align-items-center"),
                                                         style={"backgroundColor": "#FFA600"}  # Color de fondo tarjeta personalizado
@@ -222,15 +311,39 @@ layout = dbc.Container([
             
             
             ],active_tab="tab-graf-1"), # Cierre de pestañas
-         
-         ], # cierre listas en la columna
+          ], # cierre listas en la columna
             width=8), # fin columna gráfico
 
-     ]) # Cierre, fila de layaout
+     ]), # Cierre, fila de layaout
+     
+     # Segunda fila para menu mercado y gráfico mercado
+     dbc.Row([
+         dbc.Col( menu_lateral_mercado, width=4), 
+         
+         dbc.Col([
+            # Tarjeta para gráfico MERCADO
+            dbc.Card([
+                dbc.CardHeader(html.Div([
+                                        html.H6(" Cuota de Mercado 2021-2026: ", className="m-0 text-dark", style={"display": "inline"}),
+                                        html.Span(id="titulo-grafico-cuota-mercado", className="text-white fw-bold", style={"display": "inline", "marginLeft": "5px"})
+                                        ], className="d-flex align-items-center"),
+                                        style={"backgroundColor":"#BB0C00"}  # Otro color de fondo
+                                ),
+                dbc.CardBody(
+                    dcc.Loading(
+                        id="corp-loading-grafico",
+                        type="circle",
+                        children=dcc.Graph(config={"displayModeBar": False}, id="grafico-corp-mercado"),
+                    )
+                )
+                ], className="shadow-sm mt-3"), # fin card
 
+         ], 
+            width=8), 
+     ])
   ], fluid=True) # Fin Layaout, cierre dbc.Container
 
-# callback para gráficos corporacion
+# Callback para opciones gráficos CORPORACION
 @callback (
     Output('grafico-matricula-corp', 'figure'),
     Output('titulo-grafico-matricula', 'children'),
@@ -238,10 +351,10 @@ layout = dbc.Container([
     Output('titulo-grafico-retencion', 'children'),
     Output('grafico-captacion-corp', 'figure'),
     Output('titulo-grafico-captacion', 'children'),
+    Output('niveles_educativos', 'disabled'),
     Input('unidades_educativas_corp', 'value'),
     Input('niveles_educativos', 'value'),
-
-)
+    )
 def graficos_corporativos(unidad_educativa, nivel_educativo):
 
     valor_unidad_educativa = unidad_educativa
@@ -253,15 +366,61 @@ def graficos_corporativos(unidad_educativa, nivel_educativo):
     txt_final_graph_retencion = texto_unidad_educativa + "-" + " " + texto_nivel_educativo
     txt_final_graph_captacion = texto_unidad_educativa + "-" + " " + texto_nivel_educativo
 
-    
+    if unidad_educativa == "CORPORACION":
+        
+        df_corp_inicial = obtener_datos_base()
+        df_corp_drop = df_corp_inicial.drop(columns='UNIDAD_ACADEMICA')
+        df_corp_drop["RETENCION"] = df_corp_drop["RETENCION"].replace(0, np.nan)
+        df_corp_sum_mean = df_corp_drop.groupby('PERIODO').agg({
+            'PROMOVIDO' : 'sum',
+            'REPROBADO' : 'sum',
+            'NUEVO'     : 'sum',
+            'RETENCION' : 'mean'
+                                }).reset_index()
 
-    df_corp_inicial = obtener_datos_base()
-    df_corp_filtrado = df_corp_inicial.query("(UNIDAD_ACADEMICA == @unidad_educativa) and (NIVEL_MATRICULA == @nivel_educativo)").copy()
-    df_corp_filtrado['TOTAL_ESTUDIANTES'] = (
-        df_corp_filtrado['PROMOVIDO'] + 
-        df_corp_filtrado['REPROBADO'] + 
-        df_corp_filtrado['NUEVO']
-    )
+        df_corp_sum_mean['TOTAL_ESTUDIANTES'] = (
+            df_corp_sum_mean['PROMOVIDO'] + 
+            df_corp_sum_mean['REPROBADO'] + 
+            df_corp_sum_mean['NUEVO']
+            )        
+        df_corp_filtrado = df_corp_sum_mean
+
+        disabled_level_grade = True
+
+    else:
+
+        if nivel_educativo == "GENERAL":
+
+            df_corp_inicial = obtener_datos_base()
+            df_corp_filter_ue = df_corp_inicial.query("UNIDAD_ACADEMICA == @unidad_educativa").copy()
+            df_corp_ue_drop = df_corp_filter_ue.drop(columns='NIVEL_MATRICULA')
+            df_corp_ue_drop["RETENCION"] = df_corp_ue_drop["RETENCION"].replace(0, np.nan)
+            df_corp_sum_mean = df_corp_ue_drop.groupby('PERIODO').agg({
+            'PROMOVIDO' : 'sum',
+            'REPROBADO' : 'sum',
+            'NUEVO'     : 'sum',
+            'RETENCION' : 'mean'
+                                }).reset_index()
+            df_corp_sum_mean['TOTAL_ESTUDIANTES'] = (
+            df_corp_sum_mean['PROMOVIDO'] + 
+            df_corp_sum_mean['REPROBADO'] + 
+            df_corp_sum_mean['NUEVO']
+            )
+            df_corp_filtrado = df_corp_sum_mean
+     
+            disabled_level_grade = False
+        
+        else: 
+
+            df_corp_inicial = obtener_datos_base()
+            df_corp_filtrado = df_corp_inicial.query("(UNIDAD_ACADEMICA == @unidad_educativa) and (NIVEL_MATRICULA == @nivel_educativo)").copy()
+            df_corp_filtrado['TOTAL_ESTUDIANTES'] = (
+                df_corp_filtrado['PROMOVIDO'] + 
+                df_corp_filtrado['REPROBADO'] + 
+                df_corp_filtrado['NUEVO']
+                )
+            
+            disabled_level_grade = False
     
     # Creamos un diccionario inverso para obtener la etiqueta legible 
     # a partir del valor seleccionado en el dropdown
@@ -294,9 +453,25 @@ def graficos_corporativos(unidad_educativa, nivel_educativo):
             lista_graficos_corp[1], 
             txt_final_graph_retencion,
             lista_graficos_corp[2],
-            txt_final_graph_captacion
+            txt_final_graph_captacion,
+            disabled_level_grade 
             )
 
+# Callback para opciones graficos MERCADO
+@callback(
+        Output('grafico-corp-mercado', 'figure'),
+        Input('unidades_cuota_mercado','value'),
+        )
+def mercado_graficos(unidad_mercado):
+
+    df_corp_mercado = obtener_datos_mercado()
+
+    df_corp_filter_mercado = df_corp_mercado.query("UNIDAD_ACADEMICA == @unidad_mercado").copy()
+    grafico_mercado = generar_grafico_mercado(df_corp_filter_mercado)
+    
+    return grafico_mercado
+
+# Funcion para crear graficos Matrícula, retencion y Captación
 def generar_graficos_corp(df_filtrado, data_x, data_y , marker_color, line_color, formato_num):
 
     if data_y =="TOTAL_ESTUDIANTES":
@@ -331,7 +506,7 @@ def generar_graficos_corp(df_filtrado, data_x, data_y , marker_color, line_color
                                
                       #title=f'Matrícula 2021 - 2026 - {label_graph}',
                       #width=1280, 
-                      height=260,
+                      height=380,
                       template="simple_white",
                       )
             
@@ -379,3 +554,58 @@ def generar_graficos_corp(df_filtrado, data_x, data_y , marker_color, line_color
                          
                          )
     return graph
+
+# Funcion para crear grafico MERCADO
+def generar_grafico_mercado(data_mercado_unidad):
+
+    df_mercado = data_mercado_unidad
+    
+    graph_mercado = go.Figure()
+
+    data_agrupado = ["MAT_CORPORACION", "HC_PROVINCIA", "TP_PROVINCIA"]
+    color_data_agrupado = ["#30AEFD","#FFB753","#3FBD3F" ]
+
+    for mercado, color in zip(data_agrupado,color_data_agrupado):
+        graph_mercado.add_trace(
+        go.Bar(
+            x=df_mercado['PERIODO'], 
+            y=df_mercado[mercado], 
+            marker_color = color,
+            name=mercado,
+            texttemplate="%{y:.0f}",
+            hovertemplate=f"<b>{mercado}</b><br>Porcentaje: %{{y:.1f}}%<extra></extra>"
+             )
+         )
+        
+        
+        graph_mercado.update_layout(
+                                    template="simple_white",
+                                    barmode='stack',
+                                    barnorm='percent',  # Escala automáticamente las barras al 100%
+                                    yaxis_ticksuffix='%',  # Añade el símbolo % al eje Y
+                                    legend_title_text='Años',
+                                    margin=dict(l=40, r=30, t=10, b=10),
+                                    hovermode="x unified" 
+                                    )
+        
+        graph_mercado.update_xaxes(tickfont_weight='normal', 
+                         tickfont_size=14, 
+                         showgrid=True,
+                         ticks="", 
+                         showline=False,
+                         title_text="",
+                         tickfont=dict(color='gray'),
+                         )
+        
+        graph_mercado.update_yaxes(tickfont_weight='normal', 
+                         showgrid=True, 
+                         tickfont_size=14,
+                         showline=False, 
+                         ticks="",
+                         title_text="",
+                         #tickformat= ".0%",
+                         tickfont=dict(color='gray'),
+                         )
+
+
+    return graph_mercado
