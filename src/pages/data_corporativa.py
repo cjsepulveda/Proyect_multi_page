@@ -17,12 +17,12 @@ register_page(
 
 PATH = pathlib.Path(__file__).parent
 DATA_PATH = PATH.joinpath("data").resolve()
-_df01_corp = _df02_cuota_mercado = None # cache en RAM
+_df01_corp = _df02_cuota_mercado = _df03_cuota_mercado_basica = _df04_cuota_mercado_corp = None # cache en RAM
 
 
 def load_data_corp():
     """Carga los datos de Excel solo una vez por proceso."""
-    global _df01_corp, _df02_cuota_mercado
+    global _df01_corp, _df02_cuota_mercado, _df03_cuota_mercado_basica, _df04_cuota_mercado_corp
     # Si ya se cargaron los datos, no hacemos nada.
     if _df01_corp is not None:
         return
@@ -30,6 +30,8 @@ def load_data_corp():
     workbook = DATA_PATH.joinpath('data_corp_demo.xlsx')
     _df01_corp = pd.read_excel(workbook, sheet_name='data_corp')
     _df02_cuota_mercado = pd.read_excel(workbook, sheet_name='data_mercado_media')
+    _df03_cuota_mercado_basica = pd.read_excel(workbook, sheet_name='data_mercado_basica')
+    _df04_cuota_mercado_corp = pd.read_excel(workbook, sheet_name='data_mercado_corp')
 
 
 def obtener_datos_base():
@@ -39,6 +41,14 @@ def obtener_datos_base():
 def obtener_datos_mercado():
     load_data_corp()
     return _df02_cuota_mercado
+
+def obtener_datos_mercado_basica():
+    load_data_corp()
+    return _df03_cuota_mercado_basica
+
+def obtener_datos_mercado_corp():
+    load_data_corp()
+    return _df04_cuota_mercado_corp
 
 # Diccionario de Unidades Educativas
 unidades_edu = {
@@ -53,9 +63,18 @@ unidades_edu = {
 unidades_edu_options_dropdown = [{'label': k, 'value': v} for k, v in unidades_edu.items()]
 
 unidades_cuota_mercado = {
+                           'CORPORACIÓN' : 'CORPORACION',
+                           'PARV BÁSICA 1' :  'PARV BÁSICA 1',
+                           'PARV BÁSICA 2' :  'PARV BÁSICA 2',
+                           'PARV BÁSICA SAN FELIPE' :  'PARV BÁSICA SAN FELIPE',
+                           'BÁSICA 1': 'BÁSICA 1',
+                           'BÁSICA 2': 'BÁSICA 2',
+                           'BÁSICA SAN FELIPE': 'BÁSICA SAN FELIPE',
                            'MEDIA LOS ANDES':'MEDIA LOS ANDES',
-                           'MEDIA SAN FELIPE':'MEDIA SAN FELIPE'
-}
+                           'MEDIA SAN FELIPE':'MEDIA SAN FELIPE',
+                           
+                           
+                         }
 unidades_cuota_mercado_dropdown = [{'label': k, 'value': v} for k, v in unidades_cuota_mercado.items()]
 
 def nivel_unidad_educativa(unidad_edu):
@@ -207,7 +226,7 @@ menu_lateral_mercado = html.Div([
                                     dcc.Dropdown(
                                         id='unidades_cuota_mercado', 
                                         options=unidades_cuota_mercado_dropdown,
-                                        value='MEDIA LOS ANDES',
+                                        value='CORPORACION',
                                         clearable=False,
                                         style={
                                                 'width': '100%',          # Ancho del dropdown
@@ -324,7 +343,7 @@ layout = dbc.Container([
             # Tarjeta para gráfico MERCADO
             dbc.Card([
                 dbc.CardHeader(html.Div([
-                                        html.H6(" Cuota de Mercado 2021-2026: ", className="m-0 text-dark", style={"display": "inline"}),
+                                        html.H6(" Cuota de Mercado 2020-2025: ", className="m-0 text-dark", style={"display": "inline"}),
                                         html.Span(id="titulo-grafico-cuota-mercado", className="text-white fw-bold", style={"display": "inline", "marginLeft": "5px"})
                                         ], className="d-flex align-items-center"),
                                         style={"backgroundColor":"#BB0C00"}  # Otro color de fondo
@@ -464,10 +483,20 @@ def graficos_corporativos(unidad_educativa, nivel_educativo):
         )
 def mercado_graficos(unidad_mercado):
 
-    df_corp_mercado = obtener_datos_mercado()
-
-    df_corp_filter_mercado = df_corp_mercado.query("UNIDAD_ACADEMICA == @unidad_mercado").copy()
-    grafico_mercado = generar_grafico_mercado(df_corp_filter_mercado)
+    if unidad_mercado == "CORPORACION":
+        
+        df_corp_mercado = obtener_datos_mercado_corp()
+        df_corp_filter_mercado = df_corp_mercado.copy()
+    
+    elif unidad_mercado in ["MEDIA LOS ANDES", "MEDIA SAN FELIPE"]:
+        df_corp_mercado = obtener_datos_mercado()
+        df_corp_filter_mercado = df_corp_mercado.query("UNIDAD_ACADEMICA == @unidad_mercado").copy()
+    
+    else:
+        df_corp_mercado = obtener_datos_mercado_basica()
+        df_corp_filter_mercado = df_corp_mercado.query("UNIDAD_ACADEMICA == @unidad_mercado").copy()
+    
+    grafico_mercado = generar_grafico_mercado(df_corp_filter_mercado, unidad_mercado)
     
     return grafico_mercado
 
@@ -556,49 +585,83 @@ def generar_graficos_corp(df_filtrado, data_x, data_y , marker_color, line_color
     return graph
 
 # Funcion para crear grafico MERCADO
-def generar_grafico_mercado(data_mercado_unidad):
+def generar_grafico_mercado(data_mercado_unidad, unidad_mercado_grafico):
 
     df_mercado = data_mercado_unidad
     
+    if unidad_mercado_grafico == "CORPORACION":
+        data_agrupado = ["MAT_CORPORACION", "SAN FELIPE", "LOS ANDES"]
+        color_data_agrupado = ["#3067FD","#FFA21F","#3FBD3F" ]
+        df_mercado["TOTAL"] = df_mercado[data_agrupado].sum(axis=1)
+
+    elif unidad_mercado_grafico in ["MEDIA LOS ANDES", "MEDIA SAN FELIPE"]:
+        
+        data_agrupado = ["MAT_CORPORACION", "TP_PROVINCIA", "HC_PROVINCIA"]
+        color_data_agrupado = ["#3067FD","#FFA21F","#3FBD3F" ]
+        df_mercado["TOTAL"] = df_mercado[data_agrupado].sum(axis=1)
+
+    else:
+
+        data_agrupado = ["MAT_CORPORACION", "BASICAS_PROV"]
+        color_data_agrupado = ["#3067FD","#FFA21F"]
+        df_mercado["TOTAL"] = df_mercado[data_agrupado].sum(axis=1)
+
+    
+    
+ 
     graph_mercado = go.Figure()
 
-    data_agrupado = ["MAT_CORPORACION", "HC_PROVINCIA", "TP_PROVINCIA"]
-    color_data_agrupado = ["#30AEFD","#FFB753","#3FBD3F" ]
+    for mercado, color in zip(data_agrupado, color_data_agrupado):
 
-    for mercado, color in zip(data_agrupado,color_data_agrupado):
+        porcentaje_mercado = ((df_mercado[mercado]/df_mercado["TOTAL"])*100).round(1)
+
         graph_mercado.add_trace(
         go.Bar(
             x=df_mercado['PERIODO'], 
             y=df_mercado[mercado], 
             marker_color = color,
             name=mercado,
-            texttemplate="%{y:.0f}",
-            hovertemplate=f"<b>{mercado}</b><br>Porcentaje: %{{y:.1f}}%<extra></extra>"
+            text = porcentaje_mercado.astype(str) + "%",
+            textposition= "inside",
+            insidetextanchor= "middle",
+            textfont=dict(
+            size=16,                     
+            color="white",
+            weight = "bold"                                
+            ),
+            customdata=df_mercado[mercado],
+            hovertemplate=f"<b>{mercado}</b>"
+                           ": %{customdata:,}"
+                           "<extra></extra>"
              )
          )
         
-        
-        graph_mercado.update_layout(
+    if unidad_mercado_grafico in ['PARV BÁSICA 1','PARV BÁSICA 2','PARV BÁSICA SAN FELIPE']:
+        graph_mercado.update_traces(name="PARV_PROVINCIA", selector=dict(name="BASICAS_PROV"))
+    
+    graph_mercado.update_layout(
+                                    hoverlabel_font=dict(family='Roboto mono', weight='bold', size=14, color='black'),
+                                    font_family='Roboto mono',
                                     template="simple_white",
                                     barmode='stack',
                                     barnorm='percent',  # Escala automáticamente las barras al 100%
                                     yaxis_ticksuffix='%',  # Añade el símbolo % al eje Y
-                                    legend_title_text='Años',
+                                    # legend_title_text='Categorías',
                                     margin=dict(l=40, r=30, t=10, b=10),
                                     hovermode="x unified" 
                                     )
         
-        graph_mercado.update_xaxes(tickfont_weight='normal', 
+    graph_mercado.update_xaxes(tickfont_weight='normal', 
                          tickfont_size=14, 
-                         showgrid=True,
+                         showgrid=False,
                          ticks="", 
                          showline=False,
                          title_text="",
                          tickfont=dict(color='gray'),
                          )
         
-        graph_mercado.update_yaxes(tickfont_weight='normal', 
-                         showgrid=True, 
+    graph_mercado.update_yaxes(tickfont_weight='normal', 
+                         showgrid=False, 
                          tickfont_size=14,
                          showline=False, 
                          ticks="",
