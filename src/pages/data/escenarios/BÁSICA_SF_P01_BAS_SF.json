@@ -1,108 +1,120 @@
 {
-    "nombre_escenario": "P01_MEDIA_SF",
-    "unidad_educativa": "MEDIA SAN FELIPE",
+    "nombre_escenario": "P01_BAS_SF",
+    "unidad_educativa": "BÁSICA SF",
     "valores_retencion": [
         95,
-        88,
-        95,
-        92
+        89,
+        92,
+        86,
+        87,
+        90,
+        90,
+        91,
+        89,
+        88
     ],
     "valores_nuevos": [
         0,
-        40,
-        37,
-        9
+        10,
+        20,
+        11,
+        10,
+        15,
+        20,
+        15,
+        18,
+        28
     ],
     "valores_tabla_inicial": {
-        "2027": 228,
-        "2028": 232,
-        "2029": 219,
-        "2030": 202,
-        "2031": 194,
-        "2032": 185,
-        "2033": 179,
-        "2034": 172,
-        "2035": 162
+        "2027": 36,
+        "2028": 35,
+        "2029": 34,
+        "2030": 33,
+        "2031": 30,
+        "2032": 30,
+        "2033": 28,
+        "2034": 28,
+        "2035": 26
     },
     "tabla_proyeccion": [
         {
             "Año": "2020",
-            "Valor": 875,
+            "Valor": 1305,
             "Tipo": "Real"
         },
         {
             "Año": "2021",
-            "Valor": 866,
+            "Valor": 1260,
             "Tipo": "Real"
         },
         {
             "Año": "2022",
-            "Valor": 849,
+            "Valor": 1140,
             "Tipo": "Real"
         },
         {
             "Año": "2023",
-            "Valor": 807,
+            "Valor": 1117,
             "Tipo": "Real"
         },
         {
             "Año": "2024",
-            "Valor": 802,
+            "Valor": 1024,
             "Tipo": "Real"
         },
         {
             "Año": "2025",
-            "Valor": 859,
+            "Valor": 1006,
             "Tipo": "Real"
         },
         {
             "Año": "2026",
-            "Valor": 914,
+            "Valor": 975,
             "Tipo": "Real"
         },
         {
             "Año": "2027",
-            "Valor": 997,
-            "Tipo": "Proyección"
-        },
-        {
-            "Año": "2028",
-            "Valor": 1039,
-            "Tipo": "Proyección"
-        },
-        {
-            "Año": "2029",
-            "Valor": 1068,
-            "Tipo": "Proyección"
-        },
-        {
-            "Año": "2030",
-            "Valor": 1055,
-            "Tipo": "Proyección"
-        },
-        {
-            "Año": "2031",
-            "Valor": 1042,
-            "Tipo": "Proyección"
-        },
-        {
-            "Año": "2032",
-            "Valor": 996,
-            "Tipo": "Proyección"
-        },
-        {
-            "Año": "2033",
-            "Valor": 963,
-            "Tipo": "Proyección"
-        },
-        {
-            "Año": "2034",
             "Valor": 922,
             "Tipo": "Proyección"
         },
         {
+            "Año": "2028",
+            "Valor": 885,
+            "Tipo": "Proyección"
+        },
+        {
+            "Año": "2029",
+            "Valor": 830,
+            "Tipo": "Proyección"
+        },
+        {
+            "Año": "2030",
+            "Valor": 768,
+            "Tipo": "Proyección"
+        },
+        {
+            "Año": "2031",
+            "Valor": 727,
+            "Tipo": "Proyección"
+        },
+        {
+            "Año": "2032",
+            "Valor": 698,
+            "Tipo": "Proyección"
+        },
+        {
+            "Año": "2033",
+            "Valor": 667,
+            "Tipo": "Proyección"
+        },
+        {
+            "Año": "2034",
+            "Valor": 644,
+            "Tipo": "Proyección"
+        },
+        {
             "Año": "2035",
-            "Valor": 884,
+            "Valor": 624,
             "Tipo": "Proyección"
         }
     ]
