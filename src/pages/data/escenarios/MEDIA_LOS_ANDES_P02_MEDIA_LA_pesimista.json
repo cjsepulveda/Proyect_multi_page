@@ -1,28 +1,28 @@
 {
-    "nombre_escenario": "P02_MEDIA_LA",
+    "nombre_escenario": "P02_MEDIA_LA_pesimista",
     "unidad_educativa": "MEDIA LOS ANDES",
     "valores_retencion": [
         95,
-        85,
-        85,
+        84,
+        90,
         94
     ],
     "valores_nuevos": [
         0,
-        42,
+        38,
         20,
-        5
+        7
     ],
     "valores_tabla_inicial": {
         "2027": 393,
-        "2028": 370,
-        "2029": 388,
-        "2030": 367,
-        "2031": 360,
-        "2032": 328,
-        "2033": 314,
-        "2034": 303,
-        "2035": 286
+        "2028": 339,
+        "2029": 399,
+        "2030": 377,
+        "2031": 346,
+        "2032": 325,
+        "2033": 306,
+        "2034": 271,
+        "2035": 223
     },
     "tabla_proyeccion": [
         {
@@ -62,47 +62,47 @@
         },
         {
             "Año": "2027",
-            "Valor": 1402,
+            "Valor": 1413,
             "Tipo": "Proyección"
         },
         {
             "Año": "2028",
-            "Valor": 1409,
+            "Valor": 1433,
             "Tipo": "Proyección"
         },
         {
             "Año": "2029",
-            "Valor": 1389,
+            "Valor": 1409,
             "Tipo": "Proyección"
         },
         {
             "Año": "2030",
-            "Valor": 1318,
+            "Valor": 1338,
             "Tipo": "Proyección"
         },
         {
             "Año": "2031",
-            "Valor": 1256,
+            "Valor": 1274,
             "Tipo": "Proyección"
         },
         {
             "Año": "2032",
-            "Valor": 1182,
+            "Valor": 1198,
             "Tipo": "Proyección"
         },
         {
             "Año": "2033",
-            "Valor": 1136,
+            "Valor": 1150,
             "Tipo": "Proyección"
         },
         {
             "Año": "2034",
-            "Valor": 1099,
+            "Valor": 1114,
             "Tipo": "Proyección"
         },
         {
             "Año": "2035",
-            "Valor": 1063,
+            "Valor": 1076,
             "Tipo": "Proyección"
         }
     ]
