@@ -448,10 +448,19 @@ def proyeccion_corporativa(diccionario_matriculas=None,
 
 # funciones especializadas en gestionar escenarios
 def asegurar_carpeta_escenarios():
-    """Crea la subcarpeta de escenarios si no existe."""
-    ruta_escenarios = data_corp_projection_path.parent / "escenarios"
-    ruta_escenarios.mkdir(parents=True, exist_ok=True)
-    return ruta_escenarios
+
+    """Usa disco persistente en Render, carpeta local en desarrollo."""
+    ruta_render = Path("/opt/render/project/src/pages/data/escenarios")
+
+    if ruta_render.exists():
+        return ruta_render  # ← estamos en Render
+    else:
+
+        """Crea la subcarpeta de escenarios si no existe."""
+        ruta_local = data_corp_projection_path.parent / "escenarios"
+        ruta_local.mkdir(parents=True, exist_ok=True)
+
+    return ruta_local
 
 def guardar_escenario_simulacion(unidad_edu, nombre_escenario, lista_ret, lista_nuevos, df_resultado, valores_tabla):
     """Guarda el escenario completo en un archivo JSON estructurado."""
