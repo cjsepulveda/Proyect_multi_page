@@ -1,12 +1,12 @@
 {
-    "nombre_escenario": "P01_CORPORACION",
+    "nombre_escenario": "CORP_optimista",
     "tipo": "corporativo",
     "escenarios_por_unidad": {
-        "BÁSICA 1": "D:\\OneDrive\\Documentos\\Proyect_Phyton\\Proyect_multi_page\\src\\pages\\data\\escenarios\\BÁSICA_1_P01_bas01.json",
-        "BÁSICA 2": "D:\\OneDrive\\Documentos\\Proyect_Phyton\\Proyect_multi_page\\src\\pages\\data\\escenarios\\BÁSICA_2_P01_BAS_02.json",
-        "BÁSICA SF": "D:\\OneDrive\\Documentos\\Proyect_Phyton\\Proyect_multi_page\\src\\pages\\data\\escenarios\\BÁSICA_SF_P01_BAS_SF.json",
-        "MEDIA LOS ANDES": "D:\\OneDrive\\Documentos\\Proyect_Phyton\\Proyect_multi_page\\src\\pages\\data\\escenarios\\MEDIA_LOS_ANDES_P01_MEDIA_LA_conservador.json",
-        "MEDIA SAN FELIPE": "D:\\OneDrive\\Documentos\\Proyect_Phyton\\Proyect_multi_page\\src\\pages\\data\\escenarios\\MEDIA_SAN_FELIPE_P01_Media_SF.json"
+        "BÁSICA 1": "BÁSICA_1_P01_BAS01_opt.json",
+        "BÁSICA 2": "BÁSICA_2_P01_BAS02_opt.json",
+        "BÁSICA SF": "BÁSICA_SF_P02_BAS_SF_opt.json",
+        "MEDIA LOS ANDES": "MEDIA_LOS_ANDES_P03_MEDIA_LA_optimista.json",
+        "MEDIA SAN FELIPE": "MEDIA_SAN_FELIPE_P03_MEDIA_SF_opt.json"
     },
     "tabla_proyeccion": [
         {
@@ -46,47 +46,47 @@
         },
         {
             "PERIODO": 2027,
-            "MATRICULA": 4640,
+            "MATRICULA": 4702,
             "Tipo": "Proyección"
         },
         {
             "PERIODO": 2028,
-            "MATRICULA": 4686,
+            "MATRICULA": 4810,
             "Tipo": "Proyección"
         },
         {
             "PERIODO": 2029,
-            "MATRICULA": 4634,
+            "MATRICULA": 4782,
             "Tipo": "Proyección"
         },
         {
             "PERIODO": 2030,
-            "MATRICULA": 4512,
+            "MATRICULA": 4650,
             "Tipo": "Proyección"
         },
         {
             "PERIODO": 2031,
-            "MATRICULA": 4429,
+            "MATRICULA": 4557,
             "Tipo": "Proyección"
         },
         {
             "PERIODO": 2032,
-            "MATRICULA": 4305,
+            "MATRICULA": 4426,
             "Tipo": "Proyección"
         },
         {
             "PERIODO": 2033,
-            "MATRICULA": 4222,
+            "MATRICULA": 4339,
             "Tipo": "Proyección"
         },
         {
             "PERIODO": 2034,
-            "MATRICULA": 4121,
+            "MATRICULA": 4236,
             "Tipo": "Proyección"
         },
         {
             "PERIODO": 2035,
-            "MATRICULA": 4047,
+            "MATRICULA": 4163,
             "Tipo": "Proyección"
         }
     ]

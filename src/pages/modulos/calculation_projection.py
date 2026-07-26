@@ -56,13 +56,13 @@ tasas_nuevos_alumnos = {
     },
     'BÁSICA SF': {
         'PRE-KINDER': 0.000,
-        'KINDER': -0.040,
-        '1BÁSICO': -0.060,
+        'KINDER':  0.000,
+        '1BÁSICO': 0.000,
         '2BÁSICO': 0.000,
         '3BÁSICO': 0.015,
         '4BÁSICO': -0.025,
         '5BÁSICO': -0.035,
-        '6BÁSICO': -0.060,
+        '6BÁSICO': 0.000,
         '7BÁSICO': 0.015,
         '8BÁSICO': -0.015,
     },
@@ -541,6 +541,7 @@ def listar_todos_escenarios_agrupados():
 
 def guardar_escenario_corporativo(nombre_escenario, escenarios_por_unidad, df_resultado):
     """Guarda la receta de escenarios corporativos y el DataFrame resultado."""
+
     if not nombre_escenario:
         return False, "Por favor, ingresa un nombre válido para el escenario."
     
@@ -550,10 +551,18 @@ def guardar_escenario_corporativo(nombre_escenario, escenarios_por_unidad, df_re
     
     tabla_datos = df_resultado.to_dict(orient="records")
     
+   # Guardar solo nombre de archivo en vez de ruta absoluta
+    escenarios_por_unidad_relativo = {}
+    for unidad, ruta in escenarios_por_unidad.items():
+        if ruta == "default":
+            escenarios_por_unidad_relativo[unidad] = "default"
+        else:
+            escenarios_por_unidad_relativo[unidad] = Path(ruta).name
+    
     escenario_dict = {
         "nombre_escenario": nombre_escenario,
         "tipo": "corporativo",
-        "escenarios_por_unidad": escenarios_por_unidad,
+        "escenarios_por_unidad": escenarios_por_unidad_relativo,
         "tabla_proyeccion": tabla_datos
     }
     

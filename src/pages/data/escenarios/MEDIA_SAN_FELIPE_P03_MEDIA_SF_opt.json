@@ -1,5 +1,5 @@
 {
-    "nombre_escenario": "P01_MEDIA_SF",
+    "nombre_escenario": "P03_MEDIA_SF_opt",
     "unidad_educativa": "MEDIA SAN FELIPE",
     "valores_retencion": [
         95,
@@ -14,15 +14,15 @@
         9
     ],
     "valores_tabla_inicial": {
-        "2027": 228,
-        "2028": 232,
-        "2029": 219,
-        "2030": 202,
-        "2031": 194,
-        "2032": 185,
-        "2033": 179,
-        "2034": 172,
-        "2035": 162
+        "2027": 262,
+        "2028": 276,
+        "2029": 283,
+        "2030": 268,
+        "2031": 262,
+        "2032": 265,
+        "2033": 261,
+        "2034": 256,
+        "2035": 256
     },
     "tabla_proyeccion": [
         {
@@ -62,47 +62,47 @@
         },
         {
             "Año": "2027",
-            "Valor": 997,
+            "Valor": 1002,
             "Tipo": "Proyección"
         },
         {
             "Año": "2028",
-            "Valor": 1039,
+            "Valor": 1070,
             "Tipo": "Proyección"
         },
         {
             "Año": "2029",
-            "Valor": 1068,
+            "Valor": 1138,
             "Tipo": "Proyección"
         },
         {
             "Año": "2030",
-            "Valor": 1055,
+            "Valor": 1146,
             "Tipo": "Proyección"
         },
         {
             "Año": "2031",
-            "Valor": 1042,
+            "Valor": 1145,
             "Tipo": "Proyección"
         },
         {
             "Año": "2032",
-            "Valor": 996,
+            "Valor": 1138,
             "Tipo": "Proyección"
         },
         {
             "Año": "2033",
-            "Valor": 963,
+            "Valor": 1122,
             "Tipo": "Proyección"
         },
         {
             "Año": "2034",
-            "Valor": 922,
+            "Valor": 1113,
             "Tipo": "Proyección"
         },
         {
             "Año": "2035",
-            "Valor": 884,
+            "Valor": 1109,
             "Tipo": "Proyección"
         }
     ]

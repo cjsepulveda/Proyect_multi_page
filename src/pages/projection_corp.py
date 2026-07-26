@@ -4,12 +4,12 @@ import dash_bootstrap_components as dbc
 import plotly.graph_objects as graph_objects
 import pandas as pd
 import copy
+from pathlib import Path
 
 import pages.modulos.calculation_projection as proyecciones
 # Importar funciones para calculo de matricula proyectada
 from pages.modulos.calculation_projection import (
     calcular_proyeccion_completa, 
-    #cargar_datos_consolidados, 
     guardar_escenario_simulacion,
     guardar_escenario_corporativo,
     listar_escenarios_por_unidad,
@@ -17,6 +17,7 @@ from pages.modulos.calculation_projection import (
     cargar_datos_escenario,
     eliminar_archivo_escenario,
     proyeccion_corporativa,
+    asegurar_carpeta_escenarios,
     tasas_nuevos_alumnos,  
    )
 
@@ -545,7 +546,7 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
 
         # 3. Estado de Alerta (¿Cae abajo de promedio en algún año proyectado?)
         df_proy_solo = df_corporacion[df_corporacion["Tipo"] == "Proyección"]
-        quiebra_limite = (df_proy_solo["MATRICULA"] < valor_2026 * 0.95).any()
+        quiebra_limite = (df_proy_solo["MATRICULA"] < valor_2026 * 0.9).any()
         
         # 4. Cálculo matricula año 2035 para mensaje de alerta específico
         valor_2035 = df_corporacion[df_corporacion["PERIODO"] == 2035]["MATRICULA"].values[0]
@@ -556,7 +557,7 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
 
         if quiebra_limite:
             
-            if valor_2035 < valor_2026 * 0.9:
+            if valor_2035 < valor_2026 * 0.8:
                     kpi_alerta_texto = f"Baja Crítica {porcentaje_matricula:.1%}"
                     kpi_alerta_color = "danger"
             else:    
@@ -579,11 +580,11 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
 
         valor_condicion = valor_2035
 
-        if valor_condicion > valor_2026 * 0.95:
+        if valor_condicion > valor_2026 * 0.9:
             kpi_bg_1 = "bg-success"  # Fondo verde muy suave
         else:
             
-            if valor_condicion < valor_2026 * 0.9:
+            if valor_condicion < valor_2026 * 0.8:
 
                 kpi_bg_1 = "bg-danger"   # Fondo rojo muy suave
             
@@ -1027,11 +1028,18 @@ def ejecutar_guardado_escenario(
         
     # Guardar escenario de unidad educativa
     else:
+
+         # Reconstruir diccionario con valores de la tabla
+        diccionario_actualizado = copy.deepcopy(proyecciones.matriculas_iniciales_default)
+        valores_tabla = {str(fila["Anio"]): fila["Matricula"] for fila in data_tabla}
+        diccionario_actualizado[unidad_edu] = valores_tabla
+
+
         df, _, _ = calcular_proyeccion_completa(
             lista_ret, lista_nuevos, unidad_edu,
-            proyecciones.matriculas_iniciales_default
+            diccionario_actualizado
         )
-        valores_tabla = {str(fila["Anio"]): fila["Matricula"] for fila in data_tabla}
+        #valores_tabla = {str(fila["Anio"]): fila["Matricula"] for fila in data_tabla}
         exito, mensaje = guardar_escenario_simulacion(
             unidad_edu, nombre_escenario.strip(), lista_ret, lista_nuevos, df, valores_tabla
         )
@@ -1052,6 +1060,7 @@ def ejecutar_guardado_escenario(
     prevent_initial_call=True
 )
 def ejecutar_carga_en_sliders(n_clicks, ruta_archivo_escenario, sliders_ret_actuales, sliders_nuevos_actuales):
+
     if not n_clicks or not ruta_archivo_escenario:
         raise dash.exceptions.PreventUpdate
         
@@ -1064,8 +1073,14 @@ def ejecutar_carga_en_sliders(n_clicks, ruta_archivo_escenario, sliders_ret_actu
     if datos_escenario.get("tipo") == "corporativo":
         # Cargar escenario corporativo — restaurar dropdown múltiple
         escenarios_por_unidad = datos_escenario.get("escenarios_por_unidad", {})
-        # Extraer solo las rutas que no son "default"
-        rutas_seleccionadas = [v for v in escenarios_por_unidad.values() if v != "default"]
+        carpeta = str(asegurar_carpeta_escenarios())
+
+        # Reconstruir rutas completas desde el nombre del archivo
+        rutas_seleccionadas = [
+        str(Path(carpeta) / nombre_archivo)
+        for nombre_archivo in escenarios_por_unidad.values()
+        if nombre_archivo != "default"
+       ]
 
         return sliders_ret_actuales, sliders_nuevos_actuales, dash.no_update, rutas_seleccionadas
     
