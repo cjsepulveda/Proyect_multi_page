@@ -470,15 +470,39 @@ layout = dbc.Container([
                             style_table={"marginBottom": "1rem", "overflowX": "auto"}, # overflowX permite scroll horizontal si hay muchos años
                             # Destacamos visualmente la fila de TOTAL UNIDAD para diferenciarla de los cursos individuales
                             style_data_conditional=[
-                                {
-                                    'if': {
-                                        'filter_query': '{NIVEL} eq "TOTAL UNIDAD"' # 👈 Cambiado de row_index a filter_query
-                                    },
-                                    'backgroundColor': '#e8f4fd', # Azul muy suave corporativo
-                                    'color': '#0056b3',
-                                    'fontWeight': 'bold',
-                                }
-                            ]
+                                            {
+                                                'if': {'filter_query': '{NIVEL} eq "TOTAL UNIDAD"'},
+                                                'backgroundColor': '#e8f4fd',
+                                                'color': '#0056b3',
+                                                'fontWeight': 'bold',
+                                            },
+                                            {
+                                                'if': {'filter_query': '{DIFERENCIA} < 0', 'column_id': 'DIFERENCIA'},
+                                                'color': '#C0392B',
+                                                'fontWeight': 'bold'
+                                            },
+                                            {
+                                                'if': {'filter_query': '{DIFERENCIA} > 0', 'column_id': 'DIFERENCIA'},
+                                                'color': '#198754',
+                                                'fontWeight': 'bold'
+                                            },
+                                            {
+                                                'if': {'filter_query': '{PORCENTAJE} contains "-"', 'column_id': 'PORCENTAJE'},
+                                                'color': '#C0392B',
+                                                'fontWeight': 'bold'
+                                            },
+                                            {
+                                                'if': {'filter_query': '{PORCENTAJE} contains "+"', 'column_id': 'PORCENTAJE'},
+                                                'color': '#198754',
+                                                'fontWeight': 'bold'
+                                            },
+                                            {
+                                                'if': {'filter_query': '{UNIDAD} eq "TOTAL CORPORACIÓN"'},
+                                                'backgroundColor': '#2C3E50',
+                                                'color': 'white',
+                                                'fontWeight': 'bold'
+                                            }
+                                        ]
                         ),
                     ], className="p-3")
                 ]),
@@ -522,12 +546,26 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
                 if datos:
                     unidad = datos["unidad_educativa"]
                     escenarios_corp[unidad] = datos
-    
+
+        # ← guardia: si no hay escenarios seleccionados, usar df corporativo default
+        if not escenarios_corp:
+            df_corporacion, totales_por_unidad = proyecciones.proyeccion_corporativa(
+                proyecciones.matriculas_iniciales_default
+            )
+        else:
+            df_corporacion, totales_por_unidad = proyecciones.proyeccion_corporativa(
+                proyecciones.matriculas_iniciales_default,
+                escenarios_corp=escenarios_corp
+            )
+
+        # ← debug temporal
+        #print(f"Claves en escenarios_corp: {list(escenarios_corp.keys())}")
+
         # Un solo df_corporacion con escenarios
-        df_corporacion = proyecciones.proyeccion_corporativa(
-        proyecciones.matriculas_iniciales_default,
-        escenarios_corp=escenarios_corp
-        )
+        #df_corporacion = proyecciones.proyeccion_corporativa(
+        #proyecciones.matriculas_iniciales_default,
+        #escenarios_corp=escenarios_corp
+        #)
         
         
         """Cálculo tarjetas KPI CORPORACIÓN"""
@@ -701,9 +739,57 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
                                                 "MATRICULA": "Valor"
                                              })
         tabla_corp_data = df_tabla_corp.to_dict(orient="records")
+
+
+        # Tabla comparativa por unidad educativa
+        columnas_corp = [
+            {"name": "Unidad Educativa", "id": "UNIDAD"},
+            {"name": "Matrícula 2026", "id": "MAT_2026", "type": "numeric"},
+            {"name": "Matrícula 2035", "id": "MAT_2035", "type": "numeric"},
+            {"name": "Diferencia", "id": "DIFERENCIA", "type": "numeric"},
+            {"name": "Variación %", "id": "PORCENTAJE"},
+        ]
+
+        if not escenarios_seleccionados:
+            tabla_comp_data = []
+        else:
+            filas = []
+            total_2026 = 0
+            total_2035 = 0
+            
+            for unidad_nombre, valores in totales_por_unidad.items():
+                val_2026 = valores['2026']
+                val_2035 = valores['2035']
+                diferencia = val_2035 - val_2026
+                porcentaje = (diferencia / val_2026 * 100) if val_2026 != 0 else 0
+                
+                filas.append({
+                    "UNIDAD": unidad_nombre,
+                    "MAT_2026": val_2026,
+                    "MAT_2035": val_2035,
+                    "DIFERENCIA": diferencia,
+                    "PORCENTAJE": f"{porcentaje:+.1f}%"
+                })
+                
+                total_2026 += val_2026
+                total_2035 += val_2035
+            
+            dif_total = total_2035 - total_2026
+            pct_total = (dif_total / total_2026 * 100) if total_2026 != 0 else 0
+            filas.append({
+                "UNIDAD": "TOTAL CORPORACIÓN",
+                "MAT_2026": total_2026,
+                "MAT_2035": total_2035,
+                "DIFERENCIA": dif_total,
+                "PORCENTAJE": f"{pct_total:+.1f}%"
+            })
+            
+            tabla_comp_data = filas
+            
+           
         
         # Retornamos valores vacíos para los outputs que no aplican
-        return corp_graph, kpis_layout, tabla_corp_data, [], [], titulo_grafico_unidad_educativa
+        return corp_graph, kpis_layout, tabla_corp_data, tabla_comp_data, columnas_corp, titulo_grafico_unidad_educativa
          #      grafico  , kpi . tabla resumen , data desagregada , titulo gráfico
 
 
@@ -737,7 +823,7 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
         
         """Importante data frame para generar gráfico corporativo"""
         # Data Frame Corporativo
-        df_corporacion = proyeccion_corporativa(
+        df_corporacion, _ = proyeccion_corporativa(
                 diccionario_matriculas=diccionario_completo_actualizado,
                 unidad_activa=unidad_edu,
                 lista_retencion_activa=lista_retencion,
@@ -1013,7 +1099,7 @@ def ejecutar_guardado_escenario(
                     escenarios_por_unidad[datos["unidad_educativa"]] = ruta
         
         # Calcular df corporativo para guardar
-        df_corp = proyecciones.proyeccion_corporativa(
+        df_corp, _ = proyecciones.proyeccion_corporativa(
             proyecciones.matriculas_iniciales_default,
             escenarios_corp={datos["unidad_educativa"]: cargar_datos_escenario(ruta) 
                            for ruta in (escenarios_seleccionados or []) 

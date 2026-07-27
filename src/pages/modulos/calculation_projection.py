@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 import json
 import pandas as pd
+import copy
 
 # 1. Obtiene la ruta de este archivo script (calculos_proyeccion.py)
 ruta_actual = Path(__file__).resolve()
@@ -300,6 +301,18 @@ def proyeccion_corporativa(diccionario_matriculas=None,
             datos_escenario = escenarios_corp[unidad]
             lista_retencion_corp = datos_escenario["valores_retencion"]
             lista_nuevos_corp = datos_escenario["valores_nuevos"]
+            # ← usar valores_tabla_inicial del escenario
+            
+            if "valores_tabla_inicial" in datos_escenario:
+        
+                diccionario_matriculas = copy.deepcopy(diccionario_matriculas)  # ← copia profunda
+                # Solo copiar años 2027-2035, ignorar 2036 si existe
+                diccionario_matriculas[unidad] = {
+                    k: v for k, v in datos_escenario["valores_tabla_inicial"].items()
+                    if k in [str(y) for y in range(2027, 2036)]
+                }
+
+    
 
         elif unidad == unidad_activa and lista_retencion_activa and lista_nuevos_activa:
             lista_retencion_corp = lista_retencion_activa
@@ -343,15 +356,30 @@ def proyeccion_corporativa(diccionario_matriculas=None,
         if len(tasas_decimales) < total_niveles:
             raise ValueError(f"Error de consistencia: El Excel tiene {total_niveles} cursos, pero se recibieron {len(tasas_decimales)} sliders.")
 
+        # Obtener tasas para esta unidad educativa
+        tasas_unidad = tasas_nuevos_alumnos.get(unidad, {})
+        niveles_unidad = list(df_nivel_filtrado_corp['NIVEL'])
+
         # 2. CORRECCIÓN: Ciclo dinámico basado en la estructura real del colegio
         for periodo in range(2027, 2036):
             j = df_nivel_filtrado_corp.columns.get_loc(str(periodo)) 
             j_anterior = df_nivel_filtrado_corp.columns.get_loc(str(periodo - 1)) 
             estudiantes_carga_inicial = matricula_inicial_uni_edu[str(periodo)]
 
+            anios_transcurridos = periodo - 2027  # ← igual que en proyeccion_por_nivel
+
             for nivel in range(total_niveles):
                 tasa_ret_nivel = tasas_decimales[nivel]
-                alumnos_nuevos_nivel = lista_nuevos_corp[nivel]
+                nombre_nivel = niveles_unidad[nivel]  # ← nuevo
+        
+                # Obtener tasa de crecimiento para este nivel
+                tasa_crecimiento = tasas_unidad.get(nombre_nivel, 0.0)  # ← nuevo
+
+                # Alumnos nuevos con tasa aplicada — igual que proyeccion_por_nivel
+                alumnos_nuevos_base = lista_nuevos_corp[nivel]
+                alumnos_nuevos_nivel = max(0, int(round(
+                        alumnos_nuevos_base * ((1 + tasa_crecimiento) ** anios_transcurridos), 0
+                    )))  # ← nuevo
 
             
                 if nivel == 0:
@@ -442,8 +470,22 @@ def proyeccion_corporativa(diccionario_matriculas=None,
     # Reiniciar el índice final para que quede limpio
     df_completo_corp = df_completo_corp.reset_index(drop=True)
 
+    # ← debug temporal
+    print("=== DataFrame Corporativo ===")
+    print(df_final_corp.to_string())
+    print(f"Total 2035: {df_final_corp[df_final_corp['PERIODO'] == '2035']['MATRICULA'].values}")
 
-    return df_completo_corp
+    # Construir diccionario de totales por unidad para tabla comparativa
+    totales_por_unidad = {}
+    for df_unidad in lista_data_corp:
+        unidad_nombre = df_unidad['UNIDAD_ACADEMICA'].iloc[0]
+        totales_por_unidad[unidad_nombre] = {
+            '2026': int(df_unidad['2026'].iloc[0]),
+            '2035': int(df_unidad['2035'].iloc[0])
+        }
+
+
+    return df_completo_corp, totales_por_unidad  # ← reemplaza el return actual
 
 
 # funciones especializadas en gestionar escenarios
