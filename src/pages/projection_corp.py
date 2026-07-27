@@ -501,7 +501,13 @@ layout = dbc.Container([
                                                 'backgroundColor': '#2C3E50',
                                                 'color': 'white',
                                                 'fontWeight': 'bold'
-                                            }
+                                            },
+                                            {
+                                                'if': {'filter_query': '{PORCENTAJE} eq "Default"'},
+                                                'backgroundColor': '#F5F5F5',
+                                                'color': '#AAAAAA',
+                                                'fontStyle': 'italic'
+                                            },
                                         ]
                         ),
                     ], className="p-3")
@@ -558,15 +564,7 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
                 escenarios_corp=escenarios_corp
             )
 
-        # ← debug temporal
-        #print(f"Claves en escenarios_corp: {list(escenarios_corp.keys())}")
-
-        # Un solo df_corporacion con escenarios
-        #df_corporacion = proyecciones.proyeccion_corporativa(
-        #proyecciones.matriculas_iniciales_default,
-        #escenarios_corp=escenarios_corp
-        #)
-        
+         
         
         """Cálculo tarjetas KPI CORPORACIÓN"""
                
@@ -750,6 +748,7 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
             {"name": "Variación %", "id": "PORCENTAJE"},
         ]
 
+        # Bloque construccion, TABLA COMPARATIVA
         if not escenarios_seleccionados:
             tabla_comp_data = []
         else:
@@ -760,20 +759,34 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
             for unidad_nombre, valores in totales_por_unidad.items():
                 val_2026 = valores['2026']
                 val_2035 = valores['2035']
-                diferencia = val_2035 - val_2026
-                porcentaje = (diferencia / val_2026 * 100) if val_2026 != 0 else 0
+                es_default = valores.get('default', False)
+
                 
-                filas.append({
-                    "UNIDAD": unidad_nombre,
-                    "MAT_2026": val_2026,
-                    "MAT_2035": val_2035,
-                    "DIFERENCIA": diferencia,
-                    "PORCENTAJE": f"{porcentaje:+.1f}%"
-                })
+
+                if es_default:
+                    filas.append({
+                        "UNIDAD": unidad_nombre,
+                        "MAT_2026": "—",
+                        "MAT_2035": "—",
+                        "DIFERENCIA": "—",
+                        "PORCENTAJE": "Default"
+                    })
+                else:
+                    diferencia = val_2035 - val_2026
+                    porcentaje = (diferencia / val_2026 * 100) if val_2026 != 0 else 0
+                
+                    filas.append({
+                        "UNIDAD": unidad_nombre,
+                        "MAT_2026": val_2026,
+                        "MAT_2035": val_2035,
+                        "DIFERENCIA": diferencia,
+                        "PORCENTAJE": f"{porcentaje:+.1f}%"
+                    })
                 
                 total_2026 += val_2026
                 total_2035 += val_2035
-            
+
+            # Fila total solo con unidades con escenario
             dif_total = total_2035 - total_2026
             pct_total = (dif_total / total_2026 * 100) if total_2026 != 0 else 0
             filas.append({

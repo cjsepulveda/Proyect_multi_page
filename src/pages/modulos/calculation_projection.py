@@ -470,20 +470,29 @@ def proyeccion_corporativa(diccionario_matriculas=None,
     # Reiniciar el índice final para que quede limpio
     df_completo_corp = df_completo_corp.reset_index(drop=True)
 
-    # ← debug temporal
-    print("=== DataFrame Corporativo ===")
-    print(df_final_corp.to_string())
-    print(f"Total 2035: {df_final_corp[df_final_corp['PERIODO'] == '2035']['MATRICULA'].values}")
-
     # Construir diccionario de totales por unidad para tabla comparativa
     totales_por_unidad = {}
     for df_unidad in lista_data_corp:
-        unidad_nombre = df_unidad['UNIDAD_ACADEMICA'].iloc[0]
-        totales_por_unidad[unidad_nombre] = {
-            '2026': int(df_unidad['2026'].iloc[0]),
-            '2035': int(df_unidad['2035'].iloc[0])
-        }
 
+        unidad_nombre = df_unidad['UNIDAD_ACADEMICA'].iloc[0]
+
+        print(escenarios_corp)
+
+        if escenarios_corp and unidad_nombre in escenarios_corp:
+
+            totales_por_unidad[unidad_nombre] = {
+            '2026': int(df_unidad['2026'].iloc[0]),
+            '2035': int(df_unidad['2035'].iloc[0]),
+            'default': False # tiene escenario
+            }
+        else:
+            totales_por_unidad[unidad_nombre] = {
+                        '2026': int(df_unidad['2026'].iloc[0]),
+                        '2035': int(df_unidad['2035'].iloc[0]),
+                        'default': True # no tiene escenario
+            }
+
+    print(escenarios_corp)
 
     return df_completo_corp, totales_por_unidad  # ← reemplaza el return actual
 
