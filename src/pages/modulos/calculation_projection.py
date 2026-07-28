@@ -30,6 +30,18 @@ matriculas_iniciales_default = {
                             '2032':200,'2033':200,'2034':190,'2035':190},   
      }
 
+# Capacidad máxima por unidad educativa (K para modelo logístico)
+capacidad_maxima_default = {
+    'BÁSICA 1':         {'K_max': 120, 'K_min': 100},  # PRE-KINDER
+    'BÁSICA 2':         {'K_max': 120, 'K_min': 100},  # PRE-KINDER
+    'BÁSICA SF':        {'K_max': 160, 'K_min': 100},  # PRE-KINDER
+    'MEDIA LOS ANDES':  {'K_max': 480, 'K_min': 100},  # 1° MEDIO
+    'MEDIA SAN FELIPE': {'K_max': 280, 'K_min': 100},  # 1° MEDIO
+}
+
+
+
+
 tasas_nuevos_alumnos = {
     'BÁSICA 1': {
         'PRE-KINDER': 0.000,
@@ -476,7 +488,7 @@ def proyeccion_corporativa(diccionario_matriculas=None,
 
         unidad_nombre = df_unidad['UNIDAD_ACADEMICA'].iloc[0]
 
-        print(escenarios_corp)
+        
 
         if escenarios_corp and unidad_nombre in escenarios_corp:
 
@@ -492,7 +504,7 @@ def proyeccion_corporativa(diccionario_matriculas=None,
                         'default': True # no tiene escenario
             }
 
-    print(escenarios_corp)
+    
 
     return df_completo_corp, totales_por_unidad  # ← reemplaza el return actual
 
@@ -630,3 +642,57 @@ def guardar_escenario_corporativo(nombre_escenario, escenarios_por_unidad, df_re
         json.dump(escenario_dict, f, indent=4, ensure_ascii=False)
     
     return True, f"Escenario corporativo '{nombre_escenario}' guardado con éxito."
+
+# funciones para carga inicial de estudiantes lineal y logística
+def modelo_lineal(p0, pendiente):
+    """
+    Calcula la proyección lineal de matrícula inicial desde 2027 hasta 2035.
+    p0: matrícula inicial año 2026
+    pendiente: alumnos que se agregan o restan por año (puede ser negativo)
+    Retorna diccionario {año: valor}
+    """
+    resultado = {}
+    for i, anio in enumerate(range(2027, 2036), start=1):
+        # Fórmula lineal: P0 + pendiente * años transcurridos
+        valor = int(round(p0 + pendiente * i, 0))
+        # Guardia: nunca menos de 0 alumnos
+        resultado[str(anio)] = max(0, valor)
+    return resultado
+
+
+def modelo_logistico_crecimiento(p0, k_max, r):
+    """
+    Calcula proyección logística de crecimiento desde 2027 hasta 2035.
+    p0: población inicial (matrícula 2026)
+    k_max: capacidad máxima de estudiantes
+    r: tasa de crecimiento [0.05 - 0.5]
+    Fórmula: K / (1 + ((K - P0) / P0) * e^(-r*t))
+    Retorna diccionario {año: valor}
+    """
+    import math
+    resultado = {}
+    for i, anio in enumerate(range(2027, 2036), start=1):
+        # t = años transcurridos desde 2026
+        denominador = 1 + ((k_max - p0) / p0) * math.exp(-r * i)
+        valor = int(round(k_max / denominador, 0))
+        resultado[str(anio)] = max(0, valor)
+    return resultado
+
+
+def modelo_logistico_decrecimiento(p0, k_min, r):
+    """
+    Calcula proyección logística de decrecimiento desde 2027 hasta 2035.
+    p0: población inicial (matrícula 2026)
+    k_min: límite inferior de estudiantes (mínimo viable)
+    r: tasa de decrecimiento [0.05 - 0.5]
+    Fórmula: K + (P0 - K) * 2 / (1 + e^(r*t))
+    Retorna diccionario {año: valor}
+    """
+    import math
+    resultado = {}
+    for i, anio in enumerate(range(2027, 2036), start=1):
+        # t = años transcurridos desde 2026
+        valor = int(round(k_min + (p0 - k_min) * 2 / (1 + math.exp(r * i)), 0))
+        # Guardia: nunca menos que k_min
+        resultado[str(anio)] = max(k_min, valor)
+    return resultado

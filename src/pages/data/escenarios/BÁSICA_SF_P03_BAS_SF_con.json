@@ -3,9 +3,9 @@
     "unidad_educativa": "BÁSICA SF",
     "valores_retencion": [
         95,
-        89,
-        92,
-        86,
+        94,
+        94,
+        94,
         87,
         90,
         90,
@@ -15,9 +15,9 @@
     ],
     "valores_nuevos": [
         0,
-        10,
-        20,
-        20,
+        16,
+        18,
+        18,
         10,
         20,
         20,
@@ -33,8 +33,8 @@
         "2031": 41,
         "2032": 42,
         "2033": 42,
-        "2034": 43,
-        "2035": 44
+        "2034": 44,
+        "2035": 46
     },
     "tabla_proyeccion": [
         {
@@ -74,47 +74,47 @@
         },
         {
             "Año": "2027",
-            "Valor": 938,
+            "Valor": 949,
             "Tipo": "Proyección"
         },
         {
             "Año": "2028",
-            "Valor": 919,
+            "Valor": 939,
             "Tipo": "Proyección"
         },
         {
             "Año": "2029",
-            "Valor": 885,
+            "Valor": 913,
             "Tipo": "Proyección"
         },
         {
             "Año": "2030",
-            "Valor": 846,
+            "Valor": 881,
             "Tipo": "Proyección"
         },
         {
             "Año": "2031",
-            "Valor": 829,
+            "Valor": 871,
             "Tipo": "Proyección"
         },
         {
             "Año": "2032",
-            "Valor": 821,
+            "Valor": 870,
             "Tipo": "Proyección"
         },
         {
             "Año": "2033",
-            "Valor": 809,
+            "Valor": 864,
             "Tipo": "Proyección"
         },
         {
             "Año": "2034",
-            "Valor": 804,
+            "Valor": 863,
             "Tipo": "Proyección"
         },
         {
             "Año": "2035",
-            "Valor": 806,
+            "Valor": 870,
             "Tipo": "Proyección"
         }
     ]

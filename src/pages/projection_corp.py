@@ -300,6 +300,125 @@ menu_lateral = dbc.Card([
                     'border': '1px solid #e0e0e0'
                 }
             ),
+
+        # ← NUEVO: Sección modelos de carga inicial
+        html.Hr(),
+        html.Label(
+            "Modelo Carga Inicial de Estudiantes:", 
+            style={'fontWeight': 'bold', "fontSize": "14px"}
+        ),
+
+        dbc.Tabs([
+            # Pestaña 1: Modelo Lineal
+            dbc.Tab(label="Lineal", tab_id="tab-modelo-lineal", label_style={'fontSize': '13px'},
+                children=[
+                    html.Div([
+                        # Población inicial P0
+                        html.Label("Punto de partida (P0):", style={"fontSize": "13px", "fontWeight": "bold", "marginTop": "10px"}),
+                        dcc.Input(
+                            id="input-lineal-p0",
+                            type="number",
+                            placeholder="Matrícula 2026",
+                            className="form-control mb-2",
+                            style={"fontSize": "13px"}
+                        ),
+                        
+                        # Pendiente
+                        html.Label("Alumnos por año (pendiente):", style={"fontSize": "13px", "fontWeight": "bold"}),
+                        html.Span(" positivo = alza, negativo = baja", style={"fontSize": "11px", "color": "#888888"}),
+                        dcc.Input(
+                            id="input-lineal-pendiente",
+                            type="number",
+                            value=5,  # default +5 alumnos por año
+                            className="form-control mb-3",
+                            style={"fontSize": "13px"}
+                        ),
+                        
+                        # Botón cargar
+                        dbc.Button(
+                            [html.I(className="bi bi-calculator me-2"), "Cargar Modelo"],
+                            id="btn-modelo-lineal",
+                            color="primary",
+                            size="sm",
+                            className="mt-1"
+                        ),
+                        
+                        # Mensaje resultado
+                        html.Div(id="msg-modelo-lineal", className="small text-muted mt-2")
+                        
+                    ], className="pt-2 px-2")
+                ]
+            ),
+
+            # Pestaña 2: Modelo Logístico
+            dbc.Tab(label="Logístico", tab_id="tab-modelo-logistico", label_style={'fontSize': '13px'},
+                children=[
+                    html.Div([
+                        
+                        # Checkbox para elegir crecimiento o decrecimiento
+                        dbc.Checklist(
+                            id="check-decrecimiento",
+                            options=[{"label": " Modo decrecimiento gradual", "value": "decrecer"}],
+                            value=[],  # default: crecimiento
+                            className="mb-2 mt-2",
+                            style={"fontSize": "13px"}
+                        ),
+                        
+                        # Población inicial P0
+                        html.Label("Población inicial (P0):", style={"fontSize": "13px", "fontWeight": "bold"}),
+                        dcc.Input(
+                            id="input-logistico-p0",
+                            type="number",
+                            placeholder="Matrícula 2026",
+                            className="form-control mb-2",
+                            style={"fontSize": "13px"}
+                        ),
+                        
+                        # Capacidad K (máxima o mínima según modo)
+                        html.Label(id="label-k-logistico", children="Capacidad máxima (K):", 
+                                style={"fontSize": "13px", "fontWeight": "bold"}),
+                        dcc.Input(
+                            id="input-logistico-k",
+                            type="number",
+                            className="form-control mb-2",
+                            style={"fontSize": "13px"}
+                        ),
+                        
+                        # Tasa de crecimiento r
+                        html.Label("Tasa de crecimiento (r):", style={"fontSize": "13px", "fontWeight": "bold"}),
+                        dcc.Slider(
+                            id="slider-logistico-r",
+                            min=0.05,
+                            max=0.5,
+                            step=0.05,
+                            value=0.2,  # default
+                            marks={i/100: str(i/100) for i in range(5, 55, 10)},
+                            className="mb-3"
+                        ),
+                        
+                        # Botón cargar
+                        dbc.Button(
+                            [html.I(className="bi bi-calculator me-2"), "Cargar Modelo"],
+                            id="btn-modelo-logistico",
+                            color="primary",
+                            size="sm",
+                            className="mt-1"
+                        ),
+                        
+                        # Mensaje resultado
+                        html.Div(id="msg-modelo-logistico", className="small text-muted mt-2")
+                        
+                    ], className="pt-2 px-2")
+                ]
+            ),
+
+        ], id="tabs-modelos-carga", active_tab="tab-modelo-lineal"),
+
+
+
+        
+
+
         
             ], open=False, style={"marginBottom": "15px"}), # Final menu despegable, escenarios unidades educativa
 
@@ -503,7 +622,7 @@ layout = dbc.Container([
                                                 'fontWeight': 'bold'
                                             },
                                             {
-                                                'if': {'filter_query': '{PORCENTAJE} eq "Default"'},
+                                                'if': {'filter_query': '{ESTADO_ESC} eq "Sin cargar"'},
                                                 'backgroundColor': '#F5F5F5',
                                                 'color': '#AAAAAA',
                                                 'fontStyle': 'italic'
@@ -561,7 +680,7 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
         else:
             df_corporacion, totales_por_unidad = proyecciones.proyeccion_corporativa(
                 proyecciones.matriculas_iniciales_default,
-                escenarios_corp=escenarios_corp
+                escenarios_corp = escenarios_corp
             )
 
          
@@ -746,6 +865,7 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
             {"name": "Matrícula 2035", "id": "MAT_2035", "type": "numeric"},
             {"name": "Diferencia", "id": "DIFERENCIA", "type": "numeric"},
             {"name": "Variación %", "id": "PORCENTAJE"},
+            {"name": "Estado Escenario", "id":"ESTADO_ESC"}
         ]
 
         # Bloque construccion, TABLA COMPARATIVA
@@ -764,12 +884,17 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
                 
 
                 if es_default:
+
+                    diferencia = val_2035 - val_2026
+                    porcentaje = (diferencia / val_2026 * 100) if val_2026 != 0 else 0
+                    
                     filas.append({
                         "UNIDAD": unidad_nombre,
-                        "MAT_2026": "—",
-                        "MAT_2035": "—",
-                        "DIFERENCIA": "—",
-                        "PORCENTAJE": "Default"
+                        "MAT_2026": val_2026,
+                        "MAT_2035": val_2035,
+                        "DIFERENCIA": diferencia,
+                        "PORCENTAJE": f"{porcentaje:+.1f}%",
+                        "ESTADO_ESC": "Sin cargar"
                     })
                 else:
                     diferencia = val_2035 - val_2026
@@ -780,7 +905,8 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
                         "MAT_2026": val_2026,
                         "MAT_2035": val_2035,
                         "DIFERENCIA": diferencia,
-                        "PORCENTAJE": f"{porcentaje:+.1f}%"
+                        "PORCENTAJE": f"{porcentaje:+.1f}%",
+                        "ESTADO_ESC": "Cargado"
                     })
                 
                 total_2026 += val_2026
@@ -1254,3 +1380,101 @@ def ejecutar_eliminacion_escenario(click_aceptar, unidad_edu, ruta_archivo_escen
     
     # 3. Retornamos el mensaje, las nuevas opciones y limpiamos la selección
     return mensaje, nuevas_opciones, None, False
+
+# Callback Modelo Lineal
+@callback(
+    Output('tabla-matriculas-vertical', 'data', allow_duplicate=True),
+    Output('msg-modelo-lineal', 'children'),
+    Input('btn-modelo-lineal', 'n_clicks'),
+    State('input-lineal-p0', 'value'),
+    State('input-lineal-pendiente', 'value'),
+    State('unidades_educativas', 'value'),
+    prevent_initial_call=True
+)
+def aplicar_modelo_lineal(n_clicks, p0, pendiente, unidad_edu):
+    if not n_clicks:
+        raise dash.exceptions.PreventUpdate
+    
+    # Validaciones
+    if p0 is None or pendiente is None:
+        return dash.no_update, "⚠️ Ingresa P0 y la pendiente antes de cargar."
+    
+    if unidad_edu == 'CORPORACIÓN':
+        return dash.no_update, "⚠️ Selecciona una unidad educativa primero."
+    
+    # Calcular proyección lineal
+    resultado = proyecciones.modelo_lineal(p0, pendiente)
+    
+    # Convertir a formato de tabla
+    filas_tabla = [{"Anio": anio, "Matricula": valor} for anio, valor in resultado.items()]
+    
+    return filas_tabla, f"✅ Modelo lineal cargado — P0: {p0}, pendiente: {pendiente:+.0f} alumnos/año"
+
+# Callback Modelo Logístico
+@callback(
+    Output('tabla-matriculas-vertical', 'data', allow_duplicate=True),
+    Output('msg-modelo-logistico', 'children'),
+    Output('label-k-logistico', 'children'),  # ← cambia el label según modo
+    Input('btn-modelo-logistico', 'n_clicks'),
+    Input('check-decrecimiento', 'value'),     # ← reacciona al checkbox
+    State('input-logistico-p0', 'value'),
+    State('input-logistico-k', 'value'),
+    State('slider-logistico-r', 'value'),
+    State('unidades_educativas', 'value'),
+    prevent_initial_call=True
+)
+def aplicar_modelo_logistico(n_clicks, modo_decrecer, p0, k, r, unidad_edu):
+    
+    ctx = dash.callback_context
+    trigger = ctx.triggered[0]['prop_id'].split('.')[0]
+    
+    # Si el trigger es el checkbox, solo actualizar el label
+    if trigger == 'check-decrecimiento':
+        if 'decrecer' in (modo_decrecer or []):
+            return dash.no_update, dash.no_update, "Límite inferior (K mín):"
+        else:
+            return dash.no_update, dash.no_update, "Capacidad máxima (K máx):"
+    
+    # Si el trigger es el botón
+    if not n_clicks:
+        raise dash.exceptions.PreventUpdate
+    
+    # Validaciones
+    if p0 is None or k is None:
+        return dash.no_update, "⚠️ Ingresa P0 y K antes de cargar.", dash.no_update
+    
+    if unidad_edu == 'CORPORACIÓN':
+        return dash.no_update, "⚠️ Selecciona una unidad educativa primero.", dash.no_update
+    
+    # Calcular según modo
+    if 'decrecer' in (modo_decrecer or []):
+        resultado = proyecciones.modelo_logistico_decrecimiento(p0, k, r)
+        msg = f"✅ Decrecimiento gradual — P0: {p0}, K mín: {k}, r: {r}"
+    else:
+        resultado = proyecciones.modelo_logistico_crecimiento(p0, k, r)
+        msg = f"✅ Crecimiento logístico — P0: {p0}, K máx: {k}, r: {r}"
+    
+    # Convertir a formato de tabla
+    filas_tabla = [{"Anio": anio, "Matricula": valor} for anio, valor in resultado.items()]
+    
+    return filas_tabla, msg, dash.no_update
+
+# Callback para cargar K default según unidad educativa
+@callback(
+    Output('input-logistico-k', 'value'),
+    Output('input-lineal-p0', 'value'),
+    Output('input-logistico-p0', 'value'),
+    Input('unidades_educativas', 'value')
+)
+def cargar_defaults_modelos(unidad_edu):
+    if unidad_edu == 'CORPORACIÓN' or unidad_edu is None:
+        return dash.no_update, dash.no_update, dash.no_update
+    
+    # K default según unidad
+    k_default = proyecciones.capacidad_maxima_default.get(unidad_edu, {}).get('K_max', 100)
+    
+    # P0 default: matrícula 2026 desde datos históricos
+    datos_reales = proyecciones.cargar_datos_consolidados(unidad_edu)
+    p0_default = datos_reales.get('2026', 0)
+    
+    return k_default, p0_default, p0_default

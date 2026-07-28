@@ -1,12 +1,12 @@
 {
-    "nombre_escenario": "CORP_optimista",
+    "nombre_escenario": "P01_CORP_pesimista",
     "tipo": "corporativo",
     "escenarios_por_unidad": {
-        "BÁSICA 1": "BÁSICA_1_P01_BAS01_opt.json",
-        "BÁSICA 2": "BÁSICA_2_P01_BAS02_opt.json",
-        "BÁSICA SF": "BÁSICA_SF_P02_BAS_SF_opt.json",
-        "MEDIA LOS ANDES": "MEDIA_LOS_ANDES_P03_MEDIA_LA_optimista.json",
-        "MEDIA SAN FELIPE": "MEDIA_SAN_FELIPE_P03_MEDIA_SF_opt.json"
+        "BÁSICA 1": "BÁSICA_1_P02_BAS01_pes.json",
+        "BÁSICA 2": "BÁSICA_2_P02_BAS02_pes.json",
+        "BÁSICA SF": "BÁSICA_SF_P01_BAS_SF_pes.json",
+        "MEDIA LOS ANDES": "MEDIA_LOS_ANDES_P02_MEDIA_LA_pesimista.json",
+        "MEDIA SAN FELIPE": "MEDIA_SAN_FELIPE_P01_MEDIA_SF_pes.json"
     },
     "tabla_proyeccion": [
         {
@@ -46,47 +46,47 @@
         },
         {
             "PERIODO": 2027,
-            "MATRICULA": 4702,
+            "MATRICULA": 4646,
             "Tipo": "Proyección"
         },
         {
             "PERIODO": 2028,
-            "MATRICULA": 4810,
+            "MATRICULA": 4697,
             "Tipo": "Proyección"
         },
         {
             "PERIODO": 2029,
-            "MATRICULA": 4782,
+            "MATRICULA": 4635,
             "Tipo": "Proyección"
         },
         {
             "PERIODO": 2030,
-            "MATRICULA": 4650,
+            "MATRICULA": 4449,
             "Tipo": "Proyección"
         },
         {
             "PERIODO": 2031,
-            "MATRICULA": 4557,
+            "MATRICULA": 4311,
             "Tipo": "Proyección"
         },
         {
             "PERIODO": 2032,
-            "MATRICULA": 4426,
+            "MATRICULA": 4157,
             "Tipo": "Proyección"
         },
         {
             "PERIODO": 2033,
-            "MATRICULA": 4339,
+            "MATRICULA": 4035,
             "Tipo": "Proyección"
         },
         {
             "PERIODO": 2034,
-            "MATRICULA": 4236,
+            "MATRICULA": 3906,
             "Tipo": "Proyección"
         },
         {
             "PERIODO": 2035,
-            "MATRICULA": 4163,
+            "MATRICULA": 3815,
             "Tipo": "Proyección"
         }
     ]
