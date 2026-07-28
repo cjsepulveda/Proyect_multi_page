@@ -301,15 +301,17 @@ menu_lateral = dbc.Card([
                 }
             ),
 
-        # ← NUEVO: Sección modelos de carga inicial
+        # Sección MODELOS MATEMÁTICOS para carga inicial PRE-KINDER o 1° MEDIOS
         html.Hr(),
         html.Label(
-            "Modelo Carga Inicial de Estudiantes:", 
+            "Modelos Carga Inicial de Estudiantes:", 
             style={'fontWeight': 'bold', "fontSize": "14px"}
         ),
 
         dbc.Tabs([
-            # Pestaña 1: Modelo Lineal
+            # Pestaña 1: Modelo Lineal, 2 elementos 
+            # 1. celdas de entrada, una para punto de partida P0
+            # 2. celda para pendiente "p"
             dbc.Tab(label="Lineal", tab_id="tab-modelo-lineal", label_style={'fontSize': '13px'},
                 children=[
                     html.Div([
@@ -334,7 +336,7 @@ menu_lateral = dbc.Card([
                             style={"fontSize": "13px"}
                         ),
                         
-                        # Botón cargar
+                        # Botón cargar MODELO
                         dbc.Button(
                             [html.I(className="bi bi-calculator me-2"), "Cargar Modelo"],
                             id="btn-modelo-lineal",
@@ -350,7 +352,11 @@ menu_lateral = dbc.Card([
                 ]
             ),
 
-            # Pestaña 2: Modelo Logístico
+            # Pestaña 2: Modelo Logístico, 4 elementos
+            # 1. una casilla check para cambiar a modo DECRECIMIENTO
+            # 2. una celda de entrada para P0 inicial
+            # 3. una celda para "K", carga máxima (máximo o mínimo segun modelo)
+            # 4. un slider para tasa crecimiento "r"
             dbc.Tab(label="Logístico", tab_id="tab-modelo-logistico", label_style={'fontSize': '13px'},
                 children=[
                     html.Div([
@@ -396,7 +402,7 @@ menu_lateral = dbc.Card([
                             className="mb-3"
                         ),
                         
-                        # Botón cargar
+                        # Botón cargar MODELO
                         dbc.Button(
                             [html.I(className="bi bi-calculator me-2"), "Cargar Modelo"],
                             id="btn-modelo-logistico",
@@ -1220,7 +1226,7 @@ def ejecutar_guardado_escenario(
         
     if not nombre_escenario or str(nombre_escenario).strip() == "":
         opciones_actuales = listar_escenarios_por_unidad(unidad_edu)
-        return "⚠️ Por favor, ingresa un nombre para el escenario.", opciones_actuales
+        return "Por favor, ingresa un nombre para el escenario.", opciones_actuales
 
     # Guardar escenario corporativo
     if unidad_edu == 'CORPORACIÓN':
@@ -1397,10 +1403,10 @@ def aplicar_modelo_lineal(n_clicks, p0, pendiente, unidad_edu):
     
     # Validaciones
     if p0 is None or pendiente is None:
-        return dash.no_update, "⚠️ Ingresa P0 y la pendiente antes de cargar."
+        return dash.no_update, "Ingresa P0 y la pendiente antes de cargar."
     
     if unidad_edu == 'CORPORACIÓN':
-        return dash.no_update, "⚠️ Selecciona una unidad educativa primero."
+        return dash.no_update, "Selecciona una unidad educativa primero."
     
     # Calcular proyección lineal
     resultado = proyecciones.modelo_lineal(p0, pendiente)
@@ -1408,7 +1414,7 @@ def aplicar_modelo_lineal(n_clicks, p0, pendiente, unidad_edu):
     # Convertir a formato de tabla
     filas_tabla = [{"Anio": anio, "Matricula": valor} for anio, valor in resultado.items()]
     
-    return filas_tabla, f"✅ Modelo lineal cargado — P0: {p0}, pendiente: {pendiente:+.0f} alumnos/año"
+    return filas_tabla, f"Modelo lineal cargado — P0: {p0}, pendiente: {pendiente:+.0f} alumnos/año"
 
 # Callback Modelo Logístico
 @callback(
@@ -1441,18 +1447,18 @@ def aplicar_modelo_logistico(n_clicks, modo_decrecer, p0, k, r, unidad_edu):
     
     # Validaciones
     if p0 is None or k is None:
-        return dash.no_update, "⚠️ Ingresa P0 y K antes de cargar.", dash.no_update
+        return dash.no_update, "Ingresa P0 y K antes de cargar.", dash.no_update
     
     if unidad_edu == 'CORPORACIÓN':
-        return dash.no_update, "⚠️ Selecciona una unidad educativa primero.", dash.no_update
+        return dash.no_update, "Selecciona una unidad educativa primero.", dash.no_update
     
     # Calcular según modo
     if 'decrecer' in (modo_decrecer or []):
         resultado = proyecciones.modelo_logistico_decrecimiento(p0, k, r)
-        msg = f"✅ Decrecimiento gradual — P0: {p0}, K mín: {k}, r: {r}"
+        msg = f"Decrecimiento gradual — P0: {p0}, K mín: {k}, r: {r}"
     else:
         resultado = proyecciones.modelo_logistico_crecimiento(p0, k, r)
-        msg = f"✅ Crecimiento logístico — P0: {p0}, K máx: {k}, r: {r}"
+        msg = f"Crecimiento logístico — P0: {p0}, K máx: {k}, r: {r}"
     
     # Convertir a formato de tabla
     filas_tabla = [{"Anio": anio, "Matricula": valor} for anio, valor in resultado.items()]
@@ -1474,7 +1480,8 @@ def cargar_defaults_modelos(unidad_edu):
     k_default = proyecciones.capacidad_maxima_default.get(unidad_edu, {}).get('K_max', 100)
     
     # P0 default: matrícula 2026 desde datos históricos
-    datos_reales = proyecciones.cargar_datos_consolidados(unidad_edu)
-    p0_default = datos_reales.get('2026', 0)
+    # datos_reales = proyecciones.cargar_datos_consolidados(unidad_edu)
+    p0_default= proyecciones.matriculas_iniciales_default.get(unidad_edu, {}).get('2027',100)
+    # p0_default = datos_reales.get('2026', 0)
     
     return k_default, p0_default, p0_default

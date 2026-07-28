@@ -509,7 +509,7 @@ def proyeccion_corporativa(diccionario_matriculas=None,
     return df_completo_corp, totales_por_unidad  # ← reemplaza el return actual
 
 
-# funciones especializadas en gestionar escenarios
+# Funciones especializadas en gestionar escenarios
 def asegurar_carpeta_escenarios():
 
     """Usa disco persistente en Render, carpeta local en desarrollo."""
@@ -643,7 +643,7 @@ def guardar_escenario_corporativo(nombre_escenario, escenarios_por_unidad, df_re
     
     return True, f"Escenario corporativo '{nombre_escenario}' guardado con éxito."
 
-# funciones para carga inicial de estudiantes lineal y logística
+# Funciones para carga inicial de estudiantes lineal y logística
 def modelo_lineal(p0, pendiente):
     """
     Calcula la proyección lineal de matrícula inicial desde 2027 hasta 2035.
@@ -657,6 +657,7 @@ def modelo_lineal(p0, pendiente):
         valor = int(round(p0 + pendiente * i, 0))
         # Guardia: nunca menos de 0 alumnos
         resultado[str(anio)] = max(0, valor)
+        
     return resultado
 
 def modelo_logistico_crecimiento(p0, k_max, r):
