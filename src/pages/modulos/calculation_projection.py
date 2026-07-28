@@ -659,7 +659,6 @@ def modelo_lineal(p0, pendiente):
         resultado[str(anio)] = max(0, valor)
     return resultado
 
-
 def modelo_logistico_crecimiento(p0, k_max, r):
     """
     Calcula proyección logística de crecimiento desde 2027 hasta 2035.
@@ -677,7 +676,6 @@ def modelo_logistico_crecimiento(p0, k_max, r):
         valor = int(round(k_max / denominador, 0))
         resultado[str(anio)] = max(0, valor)
     return resultado
-
 
 def modelo_logistico_decrecimiento(p0, k_min, r):
     """
