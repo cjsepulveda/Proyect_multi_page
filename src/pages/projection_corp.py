@@ -5,6 +5,7 @@ import plotly.graph_objects as graph_objects
 import pandas as pd
 import copy
 from pathlib import Path
+import io
 
 import pages.modulos.calculation_projection as proyecciones
 # Importar funciones para calculo de matricula proyectada
@@ -1207,14 +1208,16 @@ def exportar_a_excel(n_clicks, lista_retencion, lista_nuevos, unidad_edu, tabla_
             df, totales_por_unidad = proyecciones.proyeccion_corporativa(
                 proyecciones.matriculas_iniciales_default,
                 escenarios_corp = escenarios_corp
-            )
+            ) # primer data frame
 
         df_resumen_corporativo = pd.DataFrame.from_dict(totales_por_unidad, orient="index")
         df_reset_index = df_resumen_corporativo.reset_index(names="UNIDAD EDUCATIVA")
         df_reset_index["Diferencia"] = df_reset_index["2035"] - df_reset_index["2026"]
         df_reset_index["%Variación"] =df_reset_index["Diferencia"]/df_reset_index["2026"]
 
-        print(df_reset_index)
+        df_desagregado = df_reset_index # segundo dataframe
+
+        
 
     else:
         if not n_clicks or not lista_retencion or not lista_nuevos:
@@ -1249,6 +1252,22 @@ def exportar_a_excel(n_clicks, lista_retencion, lista_nuevos, unidad_edu, tabla_
             unidad_edu, 
             diccionario_completo_actualizado
             )
+
+        # Extraer diccionario con desagregado por nivel y convertirlo en data frama df_desagregado
+
+
+
+    # ENVIO DE EXCEL con varias hosas
+    # Crear un buffer en memoria
+    output = io.BytesIO()
+
+    # Escribir multiples hojas con ExcelWriter
+    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+        df.to_excel(writer, sheet_name="DATA_GENERAL", index=False)
+        df_desagregado.to_excel(writer, sheet_name="DATA_DESAGREGADO", index=False)
+
+    # Enviar data utilizando sen_bytes
+    envio_excel = dcc.send_bytes(output.getvalue(), "Reporte_Proyeccion_Matriculas.xlsx") 
 
 
     df_excel = df.rename(columns={"Año": "Año Académico", "Valor": "Matrícula (Alumnos)", "Tipo": "Estado del Dato"})
