@@ -1179,19 +1179,76 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
     State({"type": "slider-retencion", "id": ALL}, "value"),
     State({"type": "slider-nuevos", "id": ALL}, "value"),
     State('unidades_educativas', 'value'),
+    State('tabla-matriculas-vertical', 'data'),
+    State('dropdown-escenarios-corp', 'value'),
     prevent_initial_call=True
 )
-def exportar_a_excel(n_clicks, lista_retencion, lista_nuevos, unidad_edu):
-    if not n_clicks or not lista_retencion or not lista_nuevos:
-        return dash.no_update
+def exportar_a_excel(n_clicks, lista_retencion, lista_nuevos, unidad_edu, tabla_matriculas_iniciales, escenarios_select):
+    
+
+    if unidad_edu == "CORPORACIÓN":
+        if not n_clicks :
+                return dash.no_update
+        # Construir diccionario de escenarios seleccionados
+        escenarios_corp = {}
+        if escenarios_select:
+            for ruta in escenarios_select:
+                datos = cargar_datos_escenario(ruta)
+                if datos:
+                    unidad = datos["unidad_educativa"]
+                    escenarios_corp[unidad] = datos
+
+        # Si no hay escenarios seleccionados, usar df corporativo default
+        if not escenarios_corp:
+            df, totales_por_unidad = proyecciones.proyeccion_corporativa(
+                proyecciones.matriculas_iniciales_default
+            )
+        else:
+            df, totales_por_unidad = proyecciones.proyeccion_corporativa(
+                proyecciones.matriculas_iniciales_default,
+                escenarios_corp = escenarios_corp
+            )
+
+        df_resumen_corporativo = pd.DataFrame.from_dict(totales_por_unidad, orient="index")
+        df_reset_index = df_resumen_corporativo.reset_index(names="UNIDAD EDUCATIVA")
+        df_reset_index["Diferencia"] = df_reset_index["2035"] - df_reset_index["2026"]
+        df_reset_index["%Variación"] =df_reset_index["Diferencia"]/df_reset_index["2026"]
+
+        print(df_reset_index)
+
+    else:
+        if not n_clicks or not lista_retencion or not lista_nuevos:
+                return dash.no_update
+        # Copia diccionario de matrículas iniciales
+        diccionario_completo_actualizado = copy.deepcopy(proyecciones.matriculas_iniciales_default)
+        # 1. Validación inicial por si la tabla de matriculas iniciales 
+        # viene vacía en el primer renderizado
+        if not tabla_matriculas_iniciales:
+            # Si está vacía, se usa el diccionario default directamente para no romper el flujo
+            valores_modificados = proyecciones.matriculas_iniciales_default.get(unidad_edu, {})
+        else:
+            # 2. Reconstruir el diccionario desde la tabla vertical
+            valores_modificados = {}
+            for fila in tabla_matriculas_iniciales:
+                anio = str(fila["Anio"])
+                valor_matricula = int(fila["Matricula"]) if fila["Matricula"] is not None else 0
+                valores_modificados[anio] = valor_matricula
+
+        # Reemplazamos solo los datos de la unidad modificada
+        # dentro del diccionario de matriculas iniciales
+        # este nuevo diccionario se utiliza para la proyeccion completa
+        diccionario_completo_actualizado[unidad_edu] = valores_modificados
         
-    # Ejecutamos el motor analítico con los mismos datos actuales de la pantalla
-    df, _, _ = calcular_proyeccion_completa(
-        lista_retencion, 
-        lista_nuevos, 
-        unidad_edu, 
-        proyecciones.matriculas_iniciales_default
-        )
+        # Calcular proyeccion completa con datos cargados en pantalla
+        # sean default al inicio de la aplicación
+        # o datos cargados de un escenario
+        # se carga con datos de tabla actualizada "diccionario_completo_actualizado"
+        df, _, _ = calcular_proyeccion_completa(
+            lista_retencion, 
+            lista_nuevos, 
+            unidad_edu, 
+            diccionario_completo_actualizado
+            )
 
 
     df_excel = df.rename(columns={"Año": "Año Académico", "Valor": "Matrícula (Alumnos)", "Tipo": "Estado del Dato"})

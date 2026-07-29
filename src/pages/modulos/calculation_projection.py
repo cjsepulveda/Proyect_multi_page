@@ -144,8 +144,8 @@ def calcular_proyeccion_completa(lista_retencion, lista_nuevos, unidad_educativa
     #valor_actual = reales_dict[str(ultimo_anio_real)]
 
     # 2. Generar la proyección (esto te devuelve un DataFrame con columnas PERIODO y MATRICULA)
-     # 🌟 PASO CLAVE: Pasamos las dos listas al motor por niveles
-     # 🚀 Ajustamos la recepción de las dos variables desde el motor por nivel
+     # PASO CLAVE: Pasamos las dos listas al motor por niveles
+     # Ajustamos la recepción de las dos variables desde el motor por nivel
     df_proj_corp, df_matriz_desglose = proyeccion_por_nivel(lista_retencion, lista_nuevos, unidad_educativa, data_diccionario)
     
     for anio in anios:
@@ -506,7 +506,7 @@ def proyeccion_corporativa(diccionario_matriculas=None,
 
     
 
-    return df_completo_corp, totales_por_unidad  # ← reemplaza el return actual
+    return df_completo_corp, totales_por_unidad  # devuelve dataframe corporativo y totales por unidad
 
 
 # Funciones especializadas en gestionar escenarios
