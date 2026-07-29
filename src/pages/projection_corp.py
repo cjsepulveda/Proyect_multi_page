@@ -19,6 +19,7 @@ from pages.modulos.calculation_projection import (
     eliminar_archivo_escenario,
     proyeccion_corporativa,
     asegurar_carpeta_escenarios,
+    proyeccion_por_nivel,
     tasas_nuevos_alumnos,  
    )
 
@@ -1200,21 +1201,23 @@ def exportar_a_excel(n_clicks, lista_retencion, lista_nuevos, unidad_edu, tabla_
                     escenarios_corp[unidad] = datos
 
         # Si no hay escenarios seleccionados, usar df corporativo default
+        # Extrae 1° data frame "df_proyeccion"
         if not escenarios_corp:
-            df, totales_por_unidad = proyecciones.proyeccion_corporativa(
+            df_proyeccion, totales_por_unidad = proyecciones.proyeccion_corporativa(
                 proyecciones.matriculas_iniciales_default
             )
         else:
-            df, totales_por_unidad = proyecciones.proyeccion_corporativa(
+            df_proyeccion, totales_por_unidad = proyecciones.proyeccion_corporativa(
                 proyecciones.matriculas_iniciales_default,
                 escenarios_corp = escenarios_corp
-            ) # primer data frame
+            )
 
+        # Extraer 2° dataframe "df_desagregado"
         df_resumen_corporativo = pd.DataFrame.from_dict(totales_por_unidad, orient="index")
         df_reset_index = df_resumen_corporativo.reset_index(names="UNIDAD EDUCATIVA")
         df_reset_index["Diferencia"] = df_reset_index["2035"] - df_reset_index["2026"]
         df_reset_index["%Variación"] =df_reset_index["Diferencia"]/df_reset_index["2026"]
-
+        df_reset_index_drop = df_reset_index.drop(columns='default')
         df_desagregado = df_reset_index # segundo dataframe
 
         
@@ -1222,6 +1225,7 @@ def exportar_a_excel(n_clicks, lista_retencion, lista_nuevos, unidad_edu, tabla_
     else:
         if not n_clicks or not lista_retencion or not lista_nuevos:
                 return dash.no_update
+
         # Copia diccionario de matrículas iniciales
         diccionario_completo_actualizado = copy.deepcopy(proyecciones.matriculas_iniciales_default)
         # 1. Validación inicial por si la tabla de matriculas iniciales 
@@ -1246,7 +1250,7 @@ def exportar_a_excel(n_clicks, lista_retencion, lista_nuevos, unidad_edu, tabla_
         # sean default al inicio de la aplicación
         # o datos cargados de un escenario
         # se carga con datos de tabla actualizada "diccionario_completo_actualizado"
-        df, _, _ = calcular_proyeccion_completa(
+        df_proyeccion, _, _ = calcular_proyeccion_completa(
             lista_retencion, 
             lista_nuevos, 
             unidad_edu, 
@@ -1254,25 +1258,34 @@ def exportar_a_excel(n_clicks, lista_retencion, lista_nuevos, unidad_edu, tabla_
             )
 
         # Extraer diccionario con desagregado por nivel y convertirlo en data frama df_desagregado
+        _, df_desagregado = proyeccion_por_nivel(
+            lista_retencion, 
+            lista_nuevos, 
+            unidad_edu, 
+            diccionario_completo_actualizado)
 
-
-
-    # ENVIO DE EXCEL con varias hosas
-    # Crear un buffer en memoria
+    # ENVIO DE EXCEL con varias hojas
+    # Crear un buffer en memoria con módulo "io" para almacenar hojas
     output = io.BytesIO()
 
-    # Escribir multiples hojas con ExcelWriter
-    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-        df.to_excel(writer, sheet_name="DATA_GENERAL", index=False)
+    # Renombrar columnas data frame proyeccion
+    df_proyeccion_rename = df_proyeccion.rename(columns={"Año": "Año Académico", "Valor": "Matrícula (Alumnos)", "Tipo": "Estado del Dato"})
+
+    # Agregar multiples hojas con ExcelWriter utilizando buffer "output"
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        df_proyeccion_rename.to_excel(writer, sheet_name="DATA_GENERAL", index=False)
         df_desagregado.to_excel(writer, sheet_name="DATA_DESAGREGADO", index=False)
 
-    # Enviar data utilizando sen_bytes
-    envio_excel = dcc.send_bytes(output.getvalue(), "Reporte_Proyeccion_Matriculas.xlsx") 
-
-
-    df_excel = df.rename(columns={"Año": "Año Académico", "Valor": "Matrícula (Alumnos)", "Tipo": "Estado del Dato"})
     
-    return dcc.send_data_frame(df_excel.to_excel, filename="Reporte_Proyeccion_Matriculas.xlsx", sheet_name="Matrículas", index=False)
+
+    # Enviar data utilizando send_bytes
+    send_excel = dcc.send_bytes(output.getvalue(), "Reporte_Proyeccion_Matriculas.xlsx") 
+
+    
+    # df_excel = df.rename(columns={"Año": "Año Académico", "Valor": "Matrícula (Alumnos)", "Tipo": "Estado del Dato"})
+    # dcc.send_data_frame(df_excel.to_excel, filename="Reporte_Proyeccion_Matriculas.xlsx", sheet_name="Matrículas", index=False)
+    
+    return send_excel
 
 # Callback para GUARDAR escenario de una unidad educativa específica
 @callback(
