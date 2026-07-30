@@ -273,7 +273,7 @@ def proyeccion_por_nivel(lista_retencion, lista_nuevos, unidad_educativa, diccio
     df_totales_proyectados = df_totales_proyectados[df_totales_proyectados['PERIODO'] != '2026']
     # el data frame final está forma por dos columnas una llamada PERIODO y otra MATRICULA, parte desde 2027
     
-    print(df_matriz_desglose)
+    
     
     return df_totales_proyectados, df_matriz_desglose
 

@@ -667,7 +667,7 @@ layout = dbc.Container([
 )
 def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, data_tabla_matriculas, escenarios_seleccionados):
     
-    # ← Agregar este bloque al inicio
+# Sección Corporacion
     if unidad_edu == 'CORPORACIÓN':
         titulo_grafico_unidad_educativa = unidad_edu
 
@@ -680,7 +680,7 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
                     unidad = datos["unidad_educativa"]
                     escenarios_corp[unidad] = datos
 
-        # ← guardia: si no hay escenarios seleccionados, usar df corporativo default
+        # Si no hay escenarios seleccionados, usar df corporativo default
         if not escenarios_corp:
             df_corporacion, totales_por_unidad = proyecciones.proyeccion_corporativa(
                 proyecciones.matriculas_iniciales_default
@@ -693,8 +693,8 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
 
          
         
-        """Cálculo tarjetas KPI CORPORACIÓN"""
-               
+        """Cálculo y diseño tarjetas KPI CORPORACIÓN"""
+        # region KPI       
         # 1. Determinar nivel matrícula critica de unidad educativa, promedio años 2024, 2025 y 2026
         df_real_solo = df_corporacion[df_corporacion["Tipo"] == "Real"]      
         promedio = df_real_solo.loc[df_real_solo['PERIODO'].isin([2024, 2025, 2026]),'MATRICULA'].mean().round().astype(int)
@@ -728,16 +728,13 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
                     kpi_alerta_color = "warning"
             
         else:
-            
-                 
+                             
             kpi_alerta_texto = f"Estable {'a la baja' if valor_2035 < valor_2026 * 1 else 
                                           
                                           'al alza' if valor_2035 < valor_2026 * 1.1 else 'alza sostenida'
                                           } {porcentaje_matricula:.1%}"
             kpi_alerta_color = "success"
             
-            
-        
         # DEFINIR TU VARIABLE O CONDICIÓN
         # Ejemplo: si el valor es mayor a 50000 es exitoso, si no, es una alerta.
 
@@ -813,7 +810,11 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
 
         ], className="g-3", style={"marginTop": "5px"}) # Cierre fila con dos tarjetas
 
+        # endregion
 
+
+        """Sección Gráfico Corporativo"""
+        # region GRAFICO CORPORATIVO
         # CALCULAR RANGO DINÁMICO SEGÚN LOS DATOS ACTUALES DE ESTA ESCUELA
         # Buscamos el valor máximo y mínimo dentro del DataFrame generado
         valor_maximo_corp = int(df_corporacion["MATRICULA"].max())
@@ -858,13 +859,14 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
                                 range=[piso_eje_y_corp, techo_eje_y_corp],
                                 )
 
+        # endregion
+
         # Preparar datos para la tabla
         df_tabla_corp = df_corporacion.rename(columns={
                                                 "PERIODO": "Año",
                                                 "MATRICULA": "Valor"
                                              })
         tabla_corp_data = df_tabla_corp.to_dict(orient="records")
-
 
         # Tabla comparativa por unidad educativa
         columnas_corp = [
@@ -939,10 +941,10 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
         return corp_graph, kpis_layout, tabla_corp_data, tabla_comp_data, columnas_corp, titulo_grafico_unidad_educativa
          #      grafico  , kpi . tabla resumen , data desagregada , titulo gráfico
 
-
-
-# CODIGO ORIGINAL
+# Seccion Unidades Educativa individuales
     else: 
+        # Sección para actualizar matriculas iniciales
+
         # PASO 1: Clonar el diccionario completo primero 
         # (usando tu variable 'matriculas_iniciales_deafault')
         diccionario_completo_actualizado = copy.deepcopy(proyecciones.matriculas_iniciales_default)
@@ -968,20 +970,15 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
         if not lista_retencion or not lista_nuevos:
             raise dash.exceptions.PreventUpdate
         
-        """Importante data frame para generar gráfico corporativo"""
-        # Data Frame Corporativo
-        df_corporacion, _ = proyeccion_corporativa(
-                diccionario_matriculas=diccionario_completo_actualizado,
-                unidad_activa=unidad_edu,
-                lista_retencion_activa=lista_retencion,
-                lista_nuevos_activa=lista_nuevos,
-                escenarios_corp=None
-                )
+       
         # Data frame para la unidad educativa seleccionada
         df, ultimo_anio_real_str, df_matriz_desglose = calcular_proyeccion_completa(lista_retencion, lista_nuevos, unidad_edu, diccionario_completo_actualizado)
         
-       # CÁLCULO DE MÉTRICAS PARA TARJETAS KPI ---
+
        
+       
+        # region TARJETAS KPI
+
        # 1. Determinar nivel matrícula critica de unidad educativa, promedio años 2024, 2025 y 2026
         df_real_solo = df[df["Tipo"] == "Real"]      
         promedio = df_real_solo.loc[df_real_solo['Año'].isin(['2024', '2025', '2026']),'Valor'].mean().round().astype(int)
@@ -1022,11 +1019,12 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
                                           'al alza' if valor_2035 < valor_2026 * 1.1 else 'alza sostenida'
                                           } {porcentaje_matricula:.1%}"
             kpi_alerta_color = "success"
-            
+
+        
             
         
-    # DEFINIR TU VARIABLE O CONDICIÓN
-    # Ejemplo: si el valor es mayor a 50000 es exitoso, si no, es una alerta.
+        # DEFINIR TU VARIABLE O CONDICIÓN
+        # Ejemplo: si el valor es mayor a 50000 es exitoso, si no, es una alerta.
 
         valor_condicion = valor_2035
 
@@ -1043,7 +1041,7 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
 
 
 
-    # CONSTRUCCIÓN VISUAL DE LAS TARJETAS KPI (Bootstrap)
+     # CONSTRUCCIÓN VISUAL DE LAS TARJETAS KPI (Bootstrap)
         kpis_layout = dbc.Row([
             # 1. Primera Columna 
             dbc.Col(dbc.Card([
@@ -1100,8 +1098,11 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
 
         ], className="g-3", style={"marginTop": "5px"}) # Cierre fila con dos tarjetas
         
-            
-        # 1. 🚀 CALCULAR RANGO DINÁMICO SEGÚN LOS DATOS ACTUALES DE ESTA ESCUELA
+     # endregion
+        
+
+        # region GRAFICO unidades educativas
+        # 1. CALCULAR RANGO DINÁMICO SEGÚN LOS DATOS ACTUALES DE ESTA ESCUELA
         # Buscamos el valor máximo y mínimo dentro del DataFrame generado
         valor_maximo = int(df["Valor"].max())
         valor_minimo = int(df["Valor"].min())
@@ -1148,8 +1149,7 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
                         gridcolor="#EAEAEA",
                         range=[piso_eje_y, techo_eje_y]
                         )
-        
-        
+        # endregion        
 
         # 1. Datos para tabla resumen por año
         tabla_consolidada_data = df.to_dict(orient="records") 
@@ -1191,6 +1191,7 @@ def exportar_a_excel(n_clicks, lista_retencion, lista_nuevos, unidad_edu, tabla_
     if unidad_edu == "CORPORACIÓN":
         if not n_clicks :
                 return dash.no_update
+
         # Construir diccionario de escenarios seleccionados
         escenarios_corp = {}
         if escenarios_select:
@@ -1216,11 +1217,19 @@ def exportar_a_excel(n_clicks, lista_retencion, lista_nuevos, unidad_edu, tabla_
         df_resumen_corporativo = pd.DataFrame.from_dict(totales_por_unidad, orient="index")
         df_reset_index = df_resumen_corporativo.reset_index(names="UNIDAD EDUCATIVA")
         df_reset_index["Diferencia"] = df_reset_index["2035"] - df_reset_index["2026"]
-        df_reset_index["%Variación"] =df_reset_index["Diferencia"]/df_reset_index["2026"]
+        df_reset_index["% Variación"] =df_reset_index["Diferencia"]/df_reset_index["2026"]
         df_reset_index_drop = df_reset_index.drop(columns='default')
-        df_desagregado = df_reset_index # segundo dataframe
+        fila_total = {
+                'UNIDAD EDUCATIVA': 'TOTAL CORPORACIÓN',
+                '2026': df_reset_index_drop['2026'].sum(),
+                '2035': df_reset_index_drop['2035'].sum(),
+                'Diferencia': df_reset_index_drop['Diferencia'].sum(),
+                '% Variación': df_reset_index_drop['% Variación'].mean(),
+             }
 
+        df_desagregado = pd.concat([df_reset_index_drop, pd.DataFrame([fila_total])], ignore_index=True)
         
+              
 
     else:
         if not n_clicks or not lista_retencion or not lista_nuevos:
@@ -1250,6 +1259,8 @@ def exportar_a_excel(n_clicks, lista_retencion, lista_nuevos, unidad_edu, tabla_
         # sean default al inicio de la aplicación
         # o datos cargados de un escenario
         # se carga con datos de tabla actualizada "diccionario_completo_actualizado"
+
+        # 1° Data frame, df_proyeccion unidad educativa
         df_proyeccion, _, _ = calcular_proyeccion_completa(
             lista_retencion, 
             lista_nuevos, 
@@ -1258,6 +1269,7 @@ def exportar_a_excel(n_clicks, lista_retencion, lista_nuevos, unidad_edu, tabla_
             )
 
         # Extraer diccionario con desagregado por nivel y convertirlo en data frama df_desagregado
+        # 2° Data frame, df_desagregado
         _, df_desagregado = proyeccion_por_nivel(
             lista_retencion, 
             lista_nuevos, 
@@ -1276,21 +1288,15 @@ def exportar_a_excel(n_clicks, lista_retencion, lista_nuevos, unidad_edu, tabla_
         df_proyeccion_rename.to_excel(writer, sheet_name="DATA_GENERAL", index=False)
         df_desagregado.to_excel(writer, sheet_name="DATA_DESAGREGADO", index=False)
 
-    
-
     # Enviar data utilizando send_bytes
     send_excel = dcc.send_bytes(output.getvalue(), "Reporte_Proyeccion_Matriculas.xlsx") 
-
-    
-    # df_excel = df.rename(columns={"Año": "Año Académico", "Valor": "Matrícula (Alumnos)", "Tipo": "Estado del Dato"})
-    # dcc.send_data_frame(df_excel.to_excel, filename="Reporte_Proyeccion_Matriculas.xlsx", sheet_name="Matrículas", index=False)
     
     return send_excel
 
 # Callback para GUARDAR escenario de una unidad educativa específica
 @callback(
     Output("mensaje-alerta-escenario", "children"),
-    # 🚀 CORRECCIÓN: Agregamos allow_duplicate=True para permitir que este callback actualice las opciones
+    # CORRECCIÓN: Agregamos allow_duplicate=True para permitir que este callback actualice las opciones
     Output("dropdown-escenarios-guardados", "options", allow_duplicate=True), # Actualiza la lista desplegable al guardar
     Input("btn-guardar-escenario", "n_clicks"),
     State("unidades_educativas", "value"),
@@ -1299,7 +1305,7 @@ def exportar_a_excel(n_clicks, lista_retencion, lista_nuevos, unidad_edu, tabla_
     State({"type": "slider-nuevos", "id": ALL}, "value"),
     State('tabla-matriculas-vertical', 'data'),
     State('dropdown-escenarios-corp', 'value'),  # ← agregar
-    prevent_initial_call=True # 👈 Esto es obligatorio si usas allow_duplicate
+    prevent_initial_call=True # Esto es obligatorio si usas allow_duplicate
 )
 def ejecutar_guardado_escenario(
                         n_clicks, 
