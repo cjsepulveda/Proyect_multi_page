@@ -691,7 +691,41 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
                 escenarios_corp = escenarios_corp
             )
 
-         
+            # Escenarios BASICAS
+            # Buscar que unidades educativas estan en el escenario
+            # claves transformadas a una lista
+            claves_escenarios_corp = list(escenarios_corp.keys())
+
+            lista_data_frame_escenarios= []
+
+            for ue_escenario in claves_escenarios_corp:
+
+                #claves_internas_escenarios_corp = escenarios_corp["BÁSICA 1"].keys()
+
+                valores_internos_tabla_proyeccion = escenarios_corp.get(ue_escenario, {}).get("tabla_proyeccion")
+                df_valores_internos = pd.DataFrame(valores_internos_tabla_proyeccion)
+                lista_data_frame_escenarios.append(df_valores_internos)
+
+            # crear diccionario unidades educativas y data_frame proyecciones
+            dict_ue_proyecciones= dict(zip(claves_escenarios_corp, lista_data_frame_escenarios))
+
+            # Diccionario 1: Solo las claves que contienen "MEDIA"
+            media = {k: v for k, v in dict_ue_proyecciones.items() if "MEDIA" in k}
+
+            # Diccionario 2: Solo las claves que contienen "BÁSICA"
+            basica = {k: v for k, v in dict_ue_proyecciones.items() if "BÁSICA" in k}
+
+            # Unir los diccionarios bajo claves de grupo
+            diccionario_agrupado = {
+                    "grupo_media": media,
+                    "grupo_basica": basica
+                        }
+
+            print(claves_escenarios_corp)
+           
+            print(diccionario_agrupado)
+
+
         
         """Cálculo y diseño tarjetas KPI CORPORACIÓN"""
         # region KPI       
