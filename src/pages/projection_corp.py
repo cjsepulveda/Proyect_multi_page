@@ -975,6 +975,9 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
         return corp_graph, kpis_layout, tabla_corp_data, tabla_comp_data, columnas_corp, titulo_grafico_unidad_educativa
          #      grafico  , kpi . tabla resumen , data desagregada , titulo gráfico
 
+
+
+
 # Seccion Unidades Educativa individuales
     else: 
         # Sección para actualizar matriculas iniciales
