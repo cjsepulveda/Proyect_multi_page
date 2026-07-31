@@ -6,6 +6,7 @@ import pandas as pd
 import copy
 from pathlib import Path
 import io
+from plotly.subplots import make_subplots
 
 import pages.modulos.calculation_projection as proyecciones
 # Importar funciones para calculo de matricula proyectada
@@ -640,10 +641,19 @@ layout = dbc.Container([
                     ], className="p-3")
                 ]),
 
-
-
             ], id="tabs-gestion", active_tab="tab-ingreso", className="shadow-sm bg-white rounded"), # fin dos pestañas para tablas
  # fin tabla configuracion
+
+                # Gráfico Prueba
+                html.Div(
+                    children=[
+                    dcc.Graph(
+                            id='grafico-escenarios-prueba',
+                            # figure=fig # Aquí va tu objeto figura de plotly
+                        )
+                            ]
+                ),
+
 
          ], width=8) # Fin columna diagrama general
     ])
@@ -657,7 +667,8 @@ layout = dbc.Container([
     Output("tabla-matriz-desglose-cursos", "data"),    # 🚀 NUEVO OUTPUT DATA
     Output("tabla-matriz-desglose-cursos", "columns"), # 🚀 NUEVO OUTPUT COLUMNS DINÁMICAS
     Output("variable-matricula", "children"), # nombre unidad educativa para el titulo de gráfico
-        
+    Output("grafico-escenarios-prueba", "figure"),    
+
     Input({"type": "slider-retencion", "id": ALL}, "value"), # Lista de 10 porcentajes para retención
     Input({"type": "slider-nuevos", "id": ALL}, "value"),    # Lista de 10 cantidades de alumnos
     Input('unidades_educativas', 'value'), # unidad educativa elegida para filtrar excel
@@ -720,13 +731,20 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
                     "grupo_media": media,
                     "grupo_basica": basica
                         }
+            lista_claves_grupo_media = list(diccionario_agrupado.get("grupo_media",{}).keys())
+            lista_claves_grupo_basica = list(diccionario_agrupado.get("grupo_basica",{}).keys())
 
-            print(claves_escenarios_corp)
-           
-            print(diccionario_agrupado)
+            filas_media = len(lista_claves_grupo_media)
+            filas_basica = len(lista_claves_grupo_basica)
 
+            dict_media = dict(diccionario_agrupado.get("grupo_media",{}))
+            dict_basica = dict(diccionario_agrupado.get("grupo_basica",{}))
 
-        
+            #graph_media = graficos_ue_escenario_corp( filas_media, dict_media)
+            
+            graph_basica = graficos_ue_escenario_corp(filas_basica, dict_basica)
+
+                    
         """Cálculo y diseño tarjetas KPI CORPORACIÓN"""
         # region KPI       
         # 1. Determinar nivel matrícula critica de unidad educativa, promedio años 2024, 2025 y 2026
@@ -972,7 +990,14 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
            
         
         # Retornamos valores vacíos para los outputs que no aplican
-        return corp_graph, kpis_layout, tabla_corp_data, tabla_comp_data, columnas_corp, titulo_grafico_unidad_educativa
+        return (corp_graph, 
+                kpis_layout, 
+                tabla_corp_data, 
+                tabla_comp_data, 
+                columnas_corp, 
+                titulo_grafico_unidad_educativa,
+                graph_basica)
+
          #      grafico  , kpi . tabla resumen , data desagregada , titulo gráfico
 
 
@@ -1208,7 +1233,8 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
             tabla_consolidada_data, # Tabla con el resumen por año de la matrícula
             tabla_matriz_data,  # Las filas con los datos desagregados por nivel y año
             columnas_matriz, # Los nombres de las columnas de cada año
-            titulo_grafico_unidad_educativa, # título del gráfico
+            titulo_grafico_unidad_educativa,
+            no_update # título del gráfico
             )
 
 # Callback para DESCARGAR el archivo Excel vinculando los componentes reales
@@ -1617,3 +1643,20 @@ def cargar_defaults_modelos(unidad_edu):
     # p0_default = datos_reales.get('2026', 0)
     
     return k_default, p0_default, p0_default
+
+def graficos_ue_escenario_corp(filas_subplots, data_dict):
+
+    claves_escenarios_corp_graph = list(data_dict.keys())
+
+    graph_grupo = make_subplots(rows=filas_subplots, cols=1)
+    
+    for fila, unidad_edu in enumerate(claves_escenarios_corp_graph, start=1):
+
+        df_ue_escenario = data_dict[unidad_edu]
+
+        graph_grupo.add_trace(
+            graph_objects.Scatter(x=df_ue_escenario["Año"], y=df_ue_escenario["Valor"]),
+            row=fila, col=1
+                )
+
+    return graph_grupo

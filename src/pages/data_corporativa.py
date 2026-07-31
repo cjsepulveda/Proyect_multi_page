@@ -545,6 +545,7 @@ def graficos_corporativos(unidad_educativa, nivel_educativo):
     for options in config_graficos_corp:
         
         data, data_col_x, data_col_y, color_marker, color_line, num_format = options
+
         grafico_corporativo = generar_graficos_corp (   data, 
                                                         data_col_x, 
                                                         data_col_y, 
