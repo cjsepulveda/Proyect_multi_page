@@ -696,6 +696,9 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
             df_corporacion, totales_por_unidad = proyecciones.proyeccion_corporativa(
                 proyecciones.matriculas_iniciales_default
             )
+
+            graph_basica = None
+
         else:
             df_corporacion, totales_por_unidad = proyecciones.proyeccion_corporativa(
                 proyecciones.matriculas_iniciales_default,
@@ -1001,8 +1004,6 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
          #      grafico  , kpi . tabla resumen , data desagregada , titulo gráfico
 
 
-
-
 # Seccion Unidades Educativa individuales
     else: 
         # Sección para actualizar matriculas iniciales
@@ -1233,8 +1234,8 @@ def actualizar_interfaz_proyeccion(lista_retencion, lista_nuevos, unidad_edu, da
             tabla_consolidada_data, # Tabla con el resumen por año de la matrícula
             tabla_matriz_data,  # Las filas con los datos desagregados por nivel y año
             columnas_matriz, # Los nombres de las columnas de cada año
-            titulo_grafico_unidad_educativa,
-            no_update # título del gráfico
+            titulo_grafico_unidad_educativa, # título del gráfico
+            no_update # sin devolver gráfico
             )
 
 # Callback para DESCARGAR el archivo Excel vinculando los componentes reales
@@ -1644,19 +1645,51 @@ def cargar_defaults_modelos(unidad_edu):
     
     return k_default, p0_default, p0_default
 
+# Callback para escenarios de unidades educativas en vista corporativa
 def graficos_ue_escenario_corp(filas_subplots, data_dict):
 
     claves_escenarios_corp_graph = list(data_dict.keys())
 
-    graph_grupo = make_subplots(rows=filas_subplots, cols=1)
+    graph_grupo = make_subplots(
+                        rows=filas_subplots, 
+                        cols=1,
+                        subplot_titles=claves_escenarios_corp_graph,
+                        shared_xaxes=True,
+                        vertical_spacing=0.1
+                        )
     
     for fila, unidad_edu in enumerate(claves_escenarios_corp_graph, start=1):
 
         df_ue_escenario = data_dict[unidad_edu]
 
+        valor_maximo_corp = int(df_ue_escenario["Valor"].max())
+        valor_minimo_corp = int(df_ue_escenario["Valor"].min())
+        
+        # Dejamos un 25% de holgura hacia arriba y hacia abajo para que la línea respire
+        techo_eje_y_corp = int(valor_maximo_corp * 1.15)
+        piso_eje_y_corp = max(0, int(valor_minimo_corp * 0.85))
+
         graph_grupo.add_trace(
-            graph_objects.Scatter(x=df_ue_escenario["Año"], y=df_ue_escenario["Valor"]),
-            row=fila, col=1
+            graph_objects.Scatter(x=df_ue_escenario["Año"], y=df_ue_escenario["Valor"],
+                                    name=claves_escenarios_corp_graph[fila-1],
+                                    mode="lines+markers",
+                                    marker=dict(size=8),
+                                    line=dict(width=2)),
+                    row = fila, col = 1
                 )
+        graph_grupo.update_layout(
+                    hovermode="x unified", plot_bgcolor="white", height=550,
+                    margin=dict(l=40, r=30, t=20, b=10),
+                    showlegend=True,
+                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+                    font_family='Roboto mono',
+                )
+        graph_grupo.update_xaxes(showgrid=True, gridcolor="#EAEAEA")
+        graph_grupo.update_yaxes(showgrid=True, 
+                                        gridcolor="#EAEAEA",
+                                        range=[piso_eje_y_corp, techo_eje_y_corp],
+                                        row = fila,
+                                        col = 1
+                                        )
 
     return graph_grupo
