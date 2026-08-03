@@ -563,8 +563,9 @@ def listar_escenarios_por_unidad(unidad_edu):
     for archivo in archivos:
         with open(archivo, "r", encoding="utf-8") as f:
             data = json.load(f)
-            # Guardamos la ruta del archivo como valor y el nombre lindo como etiqueta
+            # Guardamos la ruta del archivo como valor y el nombre del escenario como etiqueta
             opciones.append({"label": data["nombre_escenario"], "value": str(archivo)})
+
     return opciones
 
 def cargar_datos_escenario(ruta_archivo):

@@ -525,10 +525,10 @@ layout = dbc.Container([
     # Layaout General, 1 fila, 2 columnas,
     dbc.Row([
         
-        # Columna para menu lateral
+        # 1° Columna para menu lateral
         dbc.Col(menu_lateral, width=4), 
         
-        # Columna para KPI, 1 Gráfico y 2 pestañas con tablas
+        # 2° Columna para KPI, 1 Gráfico y 2 pestañas con tablas
         dbc.Col([                       
             # Tarjetas KPI
             html.Div(id="contenedor-kpis", className="mb-4"), # Tarjetas KPI
@@ -537,7 +537,9 @@ layout = dbc.Container([
             dbc.Card([
                 dbc.CardHeader(html.Div([
                                         html.H6("Modelación Escenarios Matrículas: ", className="m-0 text-dark", style={"display": "inline"}),
-                                        html.Span(id="variable-matricula", className="text-white fw-bold", style={"display": "inline", "marginLeft": "5px"})
+                                        html.Span(id="variable-matricula", className="text-white fw-bold", style={"display": "inline", "marginLeft": "5px"}),
+                                        html.Span(id="escenario-text", className="text-white fw-bold", style={"display": "inline", "marginLeft": "5px"})
+                                        
                                         ], className="d-flex align-items-center"),
                                         style={"backgroundColor": "#020072"}
                 ),
@@ -1382,6 +1384,7 @@ def ejecutar_guardado_escenario(
         )
 
     nuevas_opciones = listar_escenarios_por_unidad(unidad_edu)
+
     return mensaje, nuevas_opciones
 
 # Callback para CARGAR un escenario en los Sliders
@@ -1492,6 +1495,40 @@ def ejecutar_eliminacion_escenario(click_aceptar, unidad_edu, ruta_archivo_escen
     
     # 3. Retornamos el mensaje, las nuevas opciones y limpiamos la selección
     return mensaje, nuevas_opciones, None, False
+
+
+# Callback limpia el texto del gráfico de inmediato si cambia el dropdown de unidades educativas
+@callback(
+    Output('escenario-text', 'children', allow_duplicate=True),
+    Input('unidades_educativas', 'value'),
+    prevent_initial_call=True # Evita que borre cosas al cargar la página
+)
+def limpiar_texto_al_cambiar(valor_dropdown):
+    # No importa qué elija el usuario, devolvemos un texto vacío ("") 
+    # para asegurar que el label anterior desaparezca de la pantalla
+    return ""
+
+# Callback para extraer el nombre del escenario elegido
+@callback(
+    Output("escenario-text", "children"),
+    Input("btn-cargar-escenario", "n_clicks"),
+    State("dropdown-escenarios-guardados", "value"),
+    State("dropdown-escenarios-guardados", "options"),
+    prevent_initial_call=True 
+ )
+def nombre_escenario(n_clicks, value_escenarios,options_escenarios):
+
+    if not n_clicks or not value_escenarios or not options_escenarios:
+            raise dash.exceptions.PreventUpdate
+
+    for option in options_escenarios:
+        if option["value"] == value_escenarios:
+            return  f", escenario: {option['label']}"
+       
+    return ""
+
+
+""" Funciones de Modelado Para matrículas"""
 
 # Callback Modelo Lineal
 @callback(
