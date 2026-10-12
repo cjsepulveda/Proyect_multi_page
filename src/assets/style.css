@@ -83,7 +83,7 @@ body {
 .menu {
     border-radius: 15px;
     height: 90px;
-    width: 700px;
+    width: 1000px;
     display: flex;
     justify-content: space-evenly;
     padding-top: 16px;
@@ -133,6 +133,19 @@ body {
 #unidades_educativas *:hover,
 #unidades_educativas [data-selected="true"],
 #unidades_educativas [data-placeholder="false"] {
+    color: rgb(0, 0, 0) !important;
+    font-weight: bold !important;
+    -webkit-text-fill-color: rgb(0, 0, 0) !important; /* Asegura el color en Chrome/Edge/Safari */
+}
+
+
+/* 2. Anular el violeta nativo de Dash 4.1.0 y forzar Azul + Negrita */
+/* Usamos el ID del componente (#unidades_educativas) para ganarle a Radix UI */
+#periodo_mat,
+#periodo_mat *,
+#periodo_mat *:hover,
+#periodo_mat [data-selected="true"],
+#periodo_mat [data-placeholder="false"] {
     color: rgb(0, 0, 0) !important;
     font-weight: bold !important;
     -webkit-text-fill-color: rgb(0, 0, 0) !important; /* Asegura el color en Chrome/Edge/Safari */

@@ -301,6 +301,14 @@ fecha_menos_3h = fecha_mod + timedelta(hours=-3)
 # Formatear como string legible (ej: '2025-12-11 10:30:00')
 fecha_actualizada_menos_tres = fecha_menos_3h.strftime('%Y-%m-%d %H:%M:%S')
 
+periodo_option = {
+                    'MATRICULA 2027': 'MATRICULA2027',
+                    'MATRICULA 2026': 'MATRICULA2026',
+                    'COMPARACIÓN 2026-2027': 'COMPARAR'
+                 }
+
+# Lista de diccionarios para 'periodo_option' usando una lista por comprensión
+periodo_option_dropdown = [{'label': k, 'value': v} for k, v in periodo_option.items()]
 
 # Diccionario de Unidades Educativas
 ue_options = {
@@ -348,6 +356,20 @@ def layout():
             ),
         ]),
 
+
+    # Lista despegable de PERIODO
+     html.Div(
+            children=[
+                html.Div(children='PERIODO', className='menu-title'),
+                dcc.Dropdown(
+                    id='periodo_mat', 
+                    options=periodo_option_dropdown,
+                    value='MATRICULA2027',
+                    clearable=False,
+                    className='dropdown'
+                ),
+            ]),
+    
     ],
     className="menu",
     ),
