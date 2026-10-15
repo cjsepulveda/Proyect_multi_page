@@ -28,14 +28,27 @@ _df01 = _df02 = _df03 = _df04 = _df05 = _df06 = _df07= None
 _tabla_proyeccion = None
 
 
-def load_data():
+def load_data(periodo):
     """Carga los datos de Excel solo una vez por proceso."""
     global _df01, _df02, _df03, _df04, _df05, _df06, _df07, _df08
     # Si ya se cargaron los datos, no hacemos nada.
     if _df01 is not None:
         return
 
-    workbook = DATA_PATH.joinpath('mat_2026.xlsx')
+    print (periodo)
+
+    if periodo == 2026:
+
+        workbook = DATA_PATH.joinpath('mat_2026.xlsx')
+
+    elif periodo == 2027:
+         workbook = DATA_PATH.joinpath('mat_2027.xlsx')
+
+    else:
+        workbook = DATA_PATH.joinpath('mat_2026.xlsx')
+
+    print (workbook)
+    
     _df01 = pd.read_excel(workbook, sheet_name='mat_2026')
     _df02 = pd.read_excel(workbook, sheet_name='proyeccion_2026')
     _df03 = pd.read_excel(workbook, sheet_name='genero')
@@ -52,7 +65,9 @@ def load_data():
 def get_tabla_proyeccion():
     """Devuelve la tabla de proyección, construida solo una vez."""
     global _tabla_proyeccion
-    load_data()
+
+    periodo = 2027
+    load_data(periodo)
     if _tabla_proyeccion is not None:
         return _tabla_proyeccion
 
@@ -416,14 +431,26 @@ def layout():
         Output('tabla_cursos', 'children'),
         Output('grafico_colegios','children'),
         [Input('unidades_educativas', 'value'),
+         Input ('periodo_mat', 'value'),
          ]
         )
 
 # función para trazar grafico de matricula
-def update_charts(unidad_edu):
+def update_charts(unidad_edu, periodo):
     
     # Asegura que los datos de Excel estén cargados antes de generar los gráficos.
-    load_data()
+    if periodo == 'MATRICULA2026':
+        periodo_select = 2026
+
+    elif periodo == 'MATRICULA2027':
+        periodo_select = 2027
+
+    else:
+        periodo_select = 2026
+
+    print (periodo_select)
+
+    load_data(periodo_select)
     if unidad_edu == 'Corporacion':
         origen_df = _df05
     else:
