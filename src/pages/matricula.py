@@ -28,12 +28,14 @@ _df01 = _df02 = _df03 = _df04 = _df05 = _df06 = _df07= None
 _tabla_proyeccion = None
 
 
+
+
 def load_data(periodo):
     """Carga los datos de Excel solo una vez por proceso."""
     global _df01, _df02, _df03, _df04, _df05, _df06, _df07, _df08
     # Si ya se cargaron los datos, no hacemos nada.
-    if _df01 is not None:
-        return
+    #if _df01 is not None:
+     #   return
 
     print (periodo)
 
@@ -62,12 +64,21 @@ def load_data(periodo):
     _df04['MATRICULA'] = pd.to_datetime(_df04['MATRICULA'], errors='coerce')
 
 
-def get_tabla_proyeccion():
+def get_tabla_proyeccion(periodo_tabla):
     """Devuelve la tabla de proyección, construida solo una vez."""
     global _tabla_proyeccion
 
-    periodo = 2027
-    load_data(periodo)
+    if periodo_tabla == 2026:
+        tabla_periodo = 2026
+
+    elif periodo_tabla == 2027:
+        tabla_periodo = 2027
+    else:
+        tabla_periodo = 2026
+
+    
+    load_data(tabla_periodo)
+
     if _tabla_proyeccion is not None:
         return _tabla_proyeccion
 
@@ -414,7 +425,7 @@ def layout():
 
         # Contenedor de la tabla de proyección, con el mismo filtro de unidad educativa,
         # para que se actualice junto al gráfico de matrícula por unidad educativa o nivel.
-        html.Div(get_tabla_proyeccion(), id='tabla_matricula' , className="wrapper"),
+        html.Div(id='tabla_matricula' , className="wrapper"),
        
        
        
@@ -430,6 +441,7 @@ def layout():
         Output('mapa_comunas', 'children'),
         Output('tabla_cursos', 'children'),
         Output('grafico_colegios','children'),
+        Output('tabla_matricula','children'),
         [Input('unidades_educativas', 'value'),
          Input ('periodo_mat', 'value'),
          ]
@@ -438,9 +450,10 @@ def layout():
 # función para trazar grafico de matricula
 def update_charts(unidad_edu, periodo):
     
-    # Asegura que los datos de Excel estén cargados antes de generar los gráficos.
+    # Opciones para cargar datos segun periodo.
     if periodo == 'MATRICULA2026':
         periodo_select = 2026
+        
 
     elif periodo == 'MATRICULA2027':
         periodo_select = 2027
@@ -448,9 +461,10 @@ def update_charts(unidad_edu, periodo):
     else:
         periodo_select = 2026
 
-    print (periodo_select)
-
+    # Cargar datos de Excel estén cargados antes de generar los gráficos.
     load_data(periodo_select)
+    tabla_proyecciones = get_tabla_proyeccion(periodo_select)
+
     if unidad_edu == 'Corporacion':
         origen_df = _df05
     else:
@@ -493,6 +507,8 @@ def update_charts(unidad_edu, periodo):
 
     # funcion para obtener la cantidad de cursos por colegio, con filtro por unidad educativa
     df_cantidad_cursos = cantidad_cursos_colegio(_df08, unidad_edu)
+
+    
 
 
     # Color específico para la barra del gráfico de matrícula por unidad educativa o nivel,
@@ -810,7 +826,7 @@ def update_charts(unidad_edu, periodo):
        
     
 
-    return new_trace01, newtrace02, newtrace03, newtrace05, tabla_cantidad_cursos, newtrace04
+    return new_trace01, newtrace02, newtrace03, newtrace05, tabla_cantidad_cursos, newtrace04, tabla_proyecciones
 
 # cargar en servidor
 # if __name__ == '__main__':
