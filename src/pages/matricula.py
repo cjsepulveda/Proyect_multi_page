@@ -27,60 +27,48 @@ DATA_PATH = PATH.joinpath("data").resolve()
 _df01 = _df02 = _df03 = _df04 = _df05 = _df06 = _df07= None
 _tabla_proyeccion = None
 
+DATA_STORE_CACHE = {}
 
-
-
-def load_data(periodo):
-    """Carga los datos de Excel solo una vez por proceso."""
-    global _df01, _df02, _df03, _df04, _df05, _df06, _df07, _df08
-    # Si ya se cargaron los datos, no hacemos nada.
-    #if _df01 is not None:
-     #   return
-
-    print (periodo)
-
-    if periodo == 2026:
-
-        workbook = DATA_PATH.joinpath('mat_2026.xlsx')
-
-    elif periodo == 2027:
-         workbook = DATA_PATH.joinpath('mat_2027.xlsx')
-
-    else:
-        workbook = DATA_PATH.joinpath('mat_2026.xlsx')
-
-    print (workbook)
+def load_data_year():
     
-    _df01 = pd.read_excel(workbook, sheet_name='mat_2026')
-    _df02 = pd.read_excel(workbook, sheet_name='proyeccion_2026')
-    _df03 = pd.read_excel(workbook, sheet_name='genero')
-    _df04 = pd.read_excel(workbook, sheet_name='mat_time')
-    _df05 = pd.read_excel(workbook, sheet_name='origen_estudiantes')
-    _df06 = pd.read_excel(workbook, sheet_name='origen_colegios')
-    _df07 = pd.read_excel(workbook, sheet_name='com_est')
-    _df08 = pd.read_excel(workbook, sheet_name='cantidad_cursos')
+    global DATA_STORE_CACHE
+    data_year = [2026,2027]
 
-    # Convertir la columna de fechas solo una vez, al leer los datos.
-    _df04['MATRICULA'] = pd.to_datetime(_df04['MATRICULA'], errors='coerce')
+    for year in data_year:
+        workbook = DATA_PATH.joinpath(f'mat_{year}.xlsx')
+
+        if not workbook.exists():
+            continue
+
+        DATA_STORE_CACHE[year] = {
+
+            'df01': pd.read_excel(workbook, sheet_name='mat_2026'),
+            'df02': pd.read_excel(workbook, sheet_name='proyeccion_2026'),
+            'df03': pd.read_excel(workbook, sheet_name='genero'),
+            
+            'df05': pd.read_excel(workbook, sheet_name='origen_estudiantes'),
+            'df06': pd.read_excel(workbook, sheet_name='origen_colegios'),
+            'df07': pd.read_excel(workbook, sheet_name='com_est'),
+            'df08': pd.read_excel(workbook, sheet_name='cantidad_cursos')
+        }
+
+        df04 = pd.read_excel(workbook, sheet_name='mat_time')
+        df04['MATRICULA'] = pd.to_datetime(df04['MATRICULA'], errors='coerce')
+        DATA_STORE_CACHE[year]['df04'] = df04
+
+load_data_year()
 
 
 def get_tabla_proyeccion(periodo_tabla):
-    """Devuelve la tabla de proyección, construida solo una vez."""
-    global _tabla_proyeccion
 
-    if periodo_tabla == 2026:
-        tabla_periodo = 2026
-
-    elif periodo_tabla == 2027:
-        tabla_periodo = 2027
-    else:
-        tabla_periodo = 2026
-
+    if not periodo_tabla or periodo_tabla not in DATA_STORE_CACHE:
+            periodo_tabla = 2026
     
-    load_data(tabla_periodo)
-
-    if _tabla_proyeccion is not None:
-        return _tabla_proyeccion
+    data_user = DATA_STORE_CACHE[periodo_tabla]
+    
+     
+    _df02 = data_user['df02']
+         
 
     # Formatear el DataFrame de proyección y construir la tabla Dash una sola vez.
     df02_redondeado = _df02.round({'% CRECIMIENTO': 3, '% ALCANZADO PROYECCIÓN': 3})
@@ -169,6 +157,7 @@ def build_summary_df(df_source, unidad_edu=None):
         etiqueta = 'Niveles'
         total_label = 'GENERAL'
         label_col = 'NIVEL'
+        
     else:
         df_filtered = df_source.groupby('UNI_EDU').sum().reset_index()
         df_clean = df_filtered.drop(columns=['NIVEL', '% META'], errors='ignore')
@@ -328,8 +317,8 @@ fecha_menos_3h = fecha_mod + timedelta(hours=-3)
 fecha_actualizada_menos_tres = fecha_menos_3h.strftime('%Y-%m-%d %H:%M:%S')
 
 periodo_option = {
-                    'MATRICULA 2027': 'MATRICULA2027',
-                    'MATRICULA 2026': 'MATRICULA2026',
+                    'MATRICULA 2027': 2027,
+                    'MATRICULA 2026': 2026,
                     'COMPARACIÓN 2026-2027': 'COMPARAR'
                  }
 
@@ -390,7 +379,7 @@ def layout():
                 dcc.Dropdown(
                     id='periodo_mat', 
                     options=periodo_option_dropdown,
-                    value='MATRICULA2027',
+                    value=2027,
                     clearable=False,
                     className='dropdown'
                 ),
@@ -449,21 +438,78 @@ def layout():
 
 # función para trazar grafico de matricula
 def update_charts(unidad_edu, periodo):
-    
-    # Opciones para cargar datos segun periodo.
-    if periodo == 'MATRICULA2026':
-        periodo_select = 2026
-        
 
-    elif periodo == 'MATRICULA2027':
-        periodo_select = 2027
+    
+    if periodo == "COMPARAR":
+        data_user = DATA_STORE_CACHE[2027]
 
     else:
-        periodo_select = 2026
+        data_user = DATA_STORE_CACHE[periodo]
 
-    # Cargar datos de Excel estén cargados antes de generar los gráficos.
-    load_data(periodo_select)
-    tabla_proyecciones = get_tabla_proyeccion(periodo_select)
+    # Control por si el valor del periodo tiene un diccionario vacio
+    if not periodo or periodo not in DATA_STORE_CACHE:
+        periodo = 2027
+        data_user_2026 = DATA_STORE_CACHE[2026]
+        data_user_2027 = DATA_STORE_CACHE[2027]
+        _df01_2026 = data_user_2026['df01']
+        _df01_2027 = data_user_2027['df01']
+
+        level_2026, x_axes_2026, color_bar_2026, etiqueta = build_summary_df(_df01_2026, unidad_edu)
+        level_2027, x_axes_2027, color_bar_2027, etiqueta = build_summary_df(_df01_2027, unidad_edu)
+        
+        level_2026['PERIODO'] = "2026"
+        level_2026['PERIODO']=level_2026['PERIODO'].astype(str)
+
+        level_2027['PERIODO'] = "2027"
+        level_2027['PERIODO']=level_2027['PERIODO'].astype(str)
+
+        all_level_df = pd.concat([level_2026, level_2027], ignore_index=True)
+
+
+        print(periodo)
+        print(level_2026)
+        print(level_2027)
+        print(all_level_df)
+
+        
+
+        if unidad_edu and unidad_edu != 'Corporacion':
+
+            select_nivel_subject = all_level_df
+            graph_x_axes = 'NIVEL'
+            color_bar = 'PERIODO'
+            bar_mode = 'group'
+            width_bar = None
+        else:
+            select_nivel_subject = all_level_df
+            graph_x_axes = 'UNI_EDU'
+            color_bar = 'PERIODO'
+            bar_mode = 'group'
+            width_bar = None
+
+    else:
+        _df01 = data_user['df01']
+        select_nivel_subject, graph_x_axes, color_bar, etiqueta = build_summary_df(_df01, unidad_edu)
+        bar_mode = 'stack'
+        width_bar = 0.5
+    
+    
+    # Cargar datos del diccionario según el periodo elegido en la variable data_user
+    
+    # definir cada data frame que será utilizado en la construcción de los gráficos
+    
+    # _df02 = data_user['df02'] no es utilizado
+    _df03 = data_user['df03']
+    _df04 = data_user['df04']
+    _df05 = data_user['df05']
+    _df06 = data_user['df06']
+    _df07 = data_user['df07']
+    _df08 = data_user['df08']
+
+      
+    # Construir la tabla segun el periodo con la funcion get_tabla_proyeccion(periodo)
+    tabla_proyecciones = get_tabla_proyeccion(periodo)
+        
 
     if unidad_edu == 'Corporacion':
         origen_df = _df05
@@ -484,7 +530,7 @@ def update_charts(unidad_edu, periodo):
    
     # Funcion para dataframe de matrícula por unidad educativa o nivel, con fila adicional GENERAL
     # y calculo de % Meta alcanzada.
-    select_nivel_subject, graph_x_axes, color_bar, etiqueta = build_summary_df(_df01, unidad_edu)
+    # select_nivel_subject, graph_x_axes, color_bar, etiqueta = build_summary_df(_df01, unidad_edu)
 
     # Función para dataframe de evolución de matrícula por fecha, 
     # con acumulado de estudiantes matriculados,
@@ -530,6 +576,8 @@ def update_charts(unidad_edu, periodo):
                      template="simple_white",
                      custom_data=['SAE_2026','% Meta'],
                      text_auto=True,
+                     barmode= bar_mode,
+                     
                      
             )
     
@@ -548,7 +596,7 @@ def update_charts(unidad_edu, periodo):
                           '<b>% Meta  : </b>%{customdata[1]:.1f} %</b><br>',
                           textfont_size=16, textangle=0, textposition="outside", cliponaxis=False,
                           textfont=dict(weight="bold"),
-                          width=0.5,
+                          width = width_bar,
                           )
 
     
