@@ -65,16 +65,31 @@ def get_tabla_proyeccion(periodo_tabla):
             periodo_tabla = 2026
     
     data_user = DATA_STORE_CACHE[periodo_tabla]
-    
-     
-    _df02 = data_user['df02']
          
+    _df02 = data_user['df02']
+
+    if periodo_tabla == 2027:
+        name_table = "2027"
+        name_table_before = "2026"
+
+    elif periodo_tabla == 2026:
+        name_table = "2026"
+        name_table_before = "2025"
+
+    else:
+        name_table = "2026"
+        name_table_before = "2025"
 
     # Formatear el DataFrame de proyección y construir la tabla Dash una sola vez.
     df02_redondeado = _df02.round({'% CRECIMIENTO': 3, '% ALCANZADO PROYECCIÓN': 3})
     df02_redondeado['% CRECIMIENTO'] = df02_redondeado['% CRECIMIENTO'].map('{:.2%}'.format)
     df02_redondeado['% ALCANZADO PROYECCIÓN'] = df02_redondeado['% ALCANZADO PROYECCIÓN'].map('{:.2%}'.format)
-    df02_nuevo = df02_redondeado.rename(columns={'% CRECIMIENTO': 'VARIACION PORCENTUAL SAE 2026 Y MATRÍCULA 2025'})
+    df02_nuevo = df02_redondeado.rename(columns={'% CRECIMIENTO': f'VARIACION PORCENTUAL SAE {name_table} Y MATRÍCULA {name_table_before}',
+                                                 'MATRÍCULA 2025': f'MATRÍCULA {name_table_before}',
+                                                 'MATRÍCULA PROYECTADA 2026': f'MATRÍCULA PROYECTADA {name_table}',
+                                                 'ESTUDIANTES ESPERADOS SAE 2026': f'ESTUDIANTES ESPERADOS SAE {name_table}',
+                                                                                     
+                                                 })
 
     _tabla_proyeccion = dbc.Table.from_dataframe(df02_nuevo,
                                                striped=True,
@@ -442,9 +457,16 @@ def update_charts(unidad_edu, periodo):
     
     if periodo == "COMPARAR":
         data_user = DATA_STORE_CACHE[2027]
+        label_matricula = "2026-2027"
 
     else:
         data_user = DATA_STORE_CACHE[periodo]
+        if periodo == 2027:
+            label_matricula = "2027"
+        else:
+            label_matricula = "2026"
+         
+
 
     # Control por si el valor del periodo tiene un diccionario vacio
     if not periodo or periodo not in DATA_STORE_CACHE:
@@ -465,14 +487,7 @@ def update_charts(unidad_edu, periodo):
 
         all_level_df = pd.concat([level_2026, level_2027], ignore_index=True)
 
-
-        print(periodo)
-        print(level_2026)
-        print(level_2027)
-        print(all_level_df)
-
         
-
         if unidad_edu and unidad_edu != 'Corporacion':
 
             select_nivel_subject = all_level_df
@@ -480,12 +495,39 @@ def update_charts(unidad_edu, periodo):
             color_bar = 'PERIODO'
             bar_mode = 'group'
             width_bar = None
+            all_level_df_pivot = all_level_df.pivot( index ='NIVEL', columns ='PERIODO',
+                                                            values = 'MAT_2026')
+            all_level_df_pivot ['Variación %'] = (
+                        (all_level_df_pivot['2027']-all_level_df_pivot['2026'])/all_level_df_pivot['2026']*100
+                    )
+            all_level_df_pivot['text_hover'] = all_level_df_pivot ['Variación %'].map('{:+.2f}%'.format)
+
+            all_level_df_nuevo = all_level_df.merge(
+                all_level_df_pivot[['text_hover']].reset_index(), on ='UNI_EDU', how ='left'
+            )
+
+            df['Diferencia_vs_2026'] = np.where(
+                df['PERIODO'] == 2027, df['Texto_Hover'], 'Año Base'
+            )
+            
         else:
             select_nivel_subject = all_level_df
             graph_x_axes = 'UNI_EDU'
             color_bar = 'PERIODO'
             bar_mode = 'group'
             width_bar = None
+            all_level_df_pivot = all_level_df.pivot( index ='UNI_EDU', columns ='PERIODO',
+                                                            values = 'MAT_2026')
+            all_level_df_pivot ['Variación %'] = (
+                        (all_level_df_pivot['2027']-all_level_df_pivot['2026'])/all_level_df_pivot['2026']*100
+                    )
+            all_level_df_pivot['text_hover'] = all_level_df_pivot ['Variación %'].map('{:+.2f}%'.format)
+
+            all_level_df_nuevo = all_level_df.merge(
+                all_level_df_pivot[['text_hover']].reset_index(), on ='UNI_EDU', how ='left'
+            )
+
+        print(all_level_df_nuevo)
 
     else:
         _df01 = data_user['df01']
@@ -567,7 +609,7 @@ def update_charts(unidad_edu, periodo):
     # con barra de colores diferenciada por unidad educativa o nivel, 
     # y con porcentaje de meta alcanzada en el tooltip.
     trace01 = px.bar(select_nivel_subject, x=graph_x_axes, y='MAT_2026', 
-                     title=f'Matrícula 2026 - {label_graph}',
+                     title=f'Matrícula {label_matricula} - {label_graph}',
                      width=1020, height=380,
                      labels={graph_x_axes: '','MAT_2026':''},
                      color=color_bar,
@@ -615,11 +657,20 @@ def update_charts(unidad_edu, periodo):
                          showlegend=False,
                          
                          )
-    
+
+    if periodo == 2027:
+        label_mat_time = "2027"
+
+    elif periodo == 2026:
+        label_mat_time = "2026"
+
+    else:
+        label_mat_time = "2027"
+
     # Gráfico de evolución matricula por fecha, filtrado por unidad educativa, 
     # con acumulado de estudiantes matriculados en el eje y, y fecha de matrícula en el eje x.
     trace02 = px.line(df_time_agrupado, x='MATRICULA', y='accumulated', 
-                      title=f'Matrícula 2026 - {label_graph}',
+                      title=f'Matrícula {label_mat_time} - {label_graph}',
                       width=1280, height=500,
                       template="simple_white",
                       )
@@ -660,7 +711,7 @@ def update_charts(unidad_edu, periodo):
     # Gráfico de torta con el origen de los estudiantes matriculados: Interno, Nuevo SAE y Anotate Lista,
     # con filtro por unidad educativa.
     trace03=px.pie(values=valores_origen, names=categorias_origen, 
-                         title=f'Origen Matrícula 2026 - {label_graph}',
+                         title=f'Origen Matrícula {label_mat_time} - {label_graph}',
                          labels={'names':'Origen','values':'Cantidad'},
                          width=650, height=490,
                          hole=0.4, 
@@ -692,7 +743,7 @@ def update_charts(unidad_edu, periodo):
         
         trace04 = go.Figure()
         trace04.update_layout(
-                title='Origen Estudiantes, Matrícula 2026 (colegios que aportan 10 o más estudiantes)',
+                title=f'Origen Estudiantes, Matrícula {label_mat_time} (colegios que aportan 10 o más estudiantes)',
                 title_font=dict(size=20, color="black", family="Roboto mono"),
                 title_font_weight='bold',
                 title_xanchor='left',
@@ -718,7 +769,7 @@ def update_charts(unidad_edu, periodo):
         trace04 = px.bar(df_filtered_institution, x='ESTUDIANTES', y='PROCEDENCIA',
                      facet_col="UE", 
                      orientation='h', 
-                     title='Origen Estudiantes, Matrícula 2026 (colegios que aportan 10 o más estudiantes)',
+                     title=f'Origen Estudiantes, Matrícula {label_mat_time} (colegios que aportan 10 o más estudiantes)',
                      width=1280, height=550,
                      labels={'UE': 'Unidad Académica'},
                      color='UE',
