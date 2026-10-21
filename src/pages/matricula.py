@@ -503,19 +503,13 @@ def update_charts(unidad_edu, periodo):
             all_level_df_pivot['text_hover'] = all_level_df_pivot ['Variación %'].map('{:+.2f}%'.format)
 
             all_level_df_nuevo = all_level_df.merge(
-                all_level_df_pivot[['text_hover']].reset_index(), on ='UNI_EDU', how ='left'
+                all_level_df_pivot[['text_hover']].reset_index(), on ='NIVEL', how ='left'
             )
 
-            df['Diferencia_vs_2026'] = np.where(
-                df['PERIODO'] == 2027, df['Texto_Hover'], 'Año Base'
-            )
+            alfa = "MAT_2026"
             
         else:
-            select_nivel_subject = all_level_df
-            graph_x_axes = 'UNI_EDU'
-            color_bar = 'PERIODO'
-            bar_mode = 'group'
-            width_bar = None
+            
             all_level_df_pivot = all_level_df.pivot( index ='UNI_EDU', columns ='PERIODO',
                                                             values = 'MAT_2026')
             all_level_df_pivot ['Variación %'] = (
@@ -523,17 +517,23 @@ def update_charts(unidad_edu, periodo):
                     )
             all_level_df_pivot['text_hover'] = all_level_df_pivot ['Variación %'].map('{:+.2f}%'.format)
 
-            all_level_df_nuevo = all_level_df.merge(
-                all_level_df_pivot[['text_hover']].reset_index(), on ='UNI_EDU', how ='left'
-            )
+            df_cleaned = all_level_df_pivot.reset_index().rename_axis(columns=None)
 
-        print(all_level_df_nuevo)
+            select_nivel_subject = df_cleaned
+            graph_x_axes = 'UNI_EDU'
+            color_bar = 'UNI_EDU'
+            bar_mode = 'group'
+            width_bar = None
+            print(df_cleaned)
+            alfa = ["2026", "2027"]
+        
 
     else:
         _df01 = data_user['df01']
         select_nivel_subject, graph_x_axes, color_bar, etiqueta = build_summary_df(_df01, unidad_edu)
         bar_mode = 'stack'
         width_bar = 0.5
+        alfa = "MAT_2026"
     
     
     # Cargar datos del diccionario según el periodo elegido en la variable data_user
@@ -608,16 +608,17 @@ def update_charts(unidad_edu, periodo):
     # Gráfico de matriculados por unidad educativa o nivel, con filtro por unidad educativa, 
     # con barra de colores diferenciada por unidad educativa o nivel, 
     # y con porcentaje de meta alcanzada en el tooltip.
-    trace01 = px.bar(select_nivel_subject, x=graph_x_axes, y='MAT_2026', 
+    
+    trace01 = px.bar(select_nivel_subject, x=graph_x_axes, y= alfa, 
                      title=f'Matrícula {label_matricula} - {label_graph}',
                      width=1020, height=380,
-                     labels={graph_x_axes: '','MAT_2026':''},
+                     #labels={graph_x_axes: '','MAT_2026':''},
                      color=color_bar,
                      color_discrete_map= {'GENERAL':color_03},
                      color_discrete_sequence=px.colors.qualitative.G10,
                      template="simple_white",
-                     custom_data=['SAE_2026','% Meta'],
-                     text_auto=True,
+                     #custom_data=['SAE_2026','% Meta'],
+                     #text_auto=True,
                      barmode= bar_mode,
                      
                      
