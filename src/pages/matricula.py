@@ -3,6 +3,7 @@ from dash import dcc, html, Input, Output, callback, register_page
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 import os
 import datetime
 from datetime import timedelta
@@ -490,11 +491,7 @@ def update_charts(unidad_edu, periodo):
         
         if unidad_edu and unidad_edu != 'Corporacion':
 
-            select_nivel_subject = all_level_df
-            graph_x_axes = 'NIVEL'
-            color_bar = 'PERIODO'
-            bar_mode = 'group'
-            width_bar = None
+            
             all_level_df_pivot = all_level_df.pivot( index ='NIVEL', columns ='PERIODO',
                                                             values = 'MAT_2026')
             all_level_df_pivot ['Variación %'] = (
@@ -502,12 +499,18 @@ def update_charts(unidad_edu, periodo):
                     )
             all_level_df_pivot['text_hover'] = all_level_df_pivot ['Variación %'].map('{:+.2f}%'.format)
 
-            all_level_df_nuevo = all_level_df.merge(
-                all_level_df_pivot[['text_hover']].reset_index(), on ='NIVEL', how ='left'
-            )
+            df_cleaned = all_level_df_pivot.reset_index().rename_axis(columns=None)
 
-            alfa = "MAT_2026"
+            select_nivel_subject = df_cleaned
+            graph_x_axes = 'NIVEL'
+            alfa = ["2026", "2027"]
+            color_bar =  ["#3067FD","#FFA21F"]
+            bar_mode = 'group'
+            width_bar = None
+
             
+            print(df_cleaned)
+
         else:
             
             all_level_df_pivot = all_level_df.pivot( index ='UNI_EDU', columns ='PERIODO',
@@ -521,11 +524,12 @@ def update_charts(unidad_edu, periodo):
 
             select_nivel_subject = df_cleaned
             graph_x_axes = 'UNI_EDU'
-            color_bar = 'UNI_EDU'
+            alfa = ["2026", "2027"]
+            color_bar =  ["#3067FD","#FFA21F"]
             bar_mode = 'group'
             width_bar = None
             print(df_cleaned)
-            alfa = ["2026", "2027"]
+           
         
 
     else:
@@ -534,6 +538,7 @@ def update_charts(unidad_edu, periodo):
         bar_mode = 'stack'
         width_bar = 0.5
         alfa = "MAT_2026"
+        
     
     
     # Cargar datos del diccionario según el periodo elegido en la variable data_user
@@ -609,20 +614,23 @@ def update_charts(unidad_edu, periodo):
     # con barra de colores diferenciada por unidad educativa o nivel, 
     # y con porcentaje de meta alcanzada en el tooltip.
     
-    trace01 = px.bar(select_nivel_subject, x=graph_x_axes, y= alfa, 
-                     title=f'Matrícula {label_matricula} - {label_graph}',
-                     width=1020, height=380,
-                     #labels={graph_x_axes: '','MAT_2026':''},
-                     color=color_bar,
-                     color_discrete_map= {'GENERAL':color_03},
-                     color_discrete_sequence=px.colors.qualitative.G10,
-                     template="simple_white",
-                     #custom_data=['SAE_2026','% Meta'],
-                     #text_auto=True,
-                     barmode= bar_mode,
-                     
-                     
-            )
+    trace01 = make_subplots ( specs = [[{ "secondary_y" :  True }]])
+
+    for per_mat, color in zip(alfa, color_bar):
+
+        trace01.add_trace(
+            go.Bar(
+                x = select_nivel_subject[graph_x_axes],
+                y = select_nivel_subject[per_mat],
+                marker_color = color,
+                name = per_mat
+            ),
+
+            secondary_y=False,
+        )
+
+
+
     
     trace01.add_layout_image(                                 
                             source= "assets/logo_corp.png",
