@@ -534,12 +534,13 @@ def update_charts(unidad_edu, periodo):
 
     else:
         _df01 = data_user['df01']
-        select_nivel_subject, graph_x_axes, color_bar, etiqueta = build_summary_df(_df01, unidad_edu)
+        select_nivel_subject, graph_x_axes, _, etiqueta = build_summary_df(_df01, unidad_edu)
         bar_mode = 'stack'
         width_bar = 0.5
-        alfa = "MAT_2026"
+        alfa = ["MAT_2026"]
+        color_bar =["#3067FD"]
         
-    
+        
     
     # Cargar datos del diccionario según el periodo elegido en la variable data_user
     
@@ -618,26 +619,29 @@ def update_charts(unidad_edu, periodo):
 
     for per_mat, color in zip(alfa, color_bar):
 
+        print(per_mat)
+        print(color)
+        print(color_bar)
         trace01.add_trace(
             go.Bar(
                 x = select_nivel_subject[graph_x_axes],
                 y = select_nivel_subject[per_mat],
                 marker_color = color,
-                name = per_mat
+                name = per_mat,
+                text = select_nivel_subject[per_mat],
+                
+                
             ),
 
             secondary_y=False,
         )
 
-
-
-    
     trace01.add_layout_image(                                 
                             source= "assets/logo_corp.png",
                             xref="paper", yref="paper",
-                            x=0.9, 
-                            y=1.15,
-                            sizex=0.2, sizey=0.2,
+                            x=0.85, 
+                            y=1.1,
+                            sizex=0.15, sizey=0.15,
                             xanchor="left", yanchor="bottom",                                
                             )
 
@@ -650,22 +654,31 @@ def update_charts(unidad_edu, periodo):
                           width = width_bar,
                           )
 
-    
-    trace01.update_yaxes(tickfont_weight='normal', showgrid=True, tickfont_size=15,showline=False, ticks="",
-                         tickfont=dict(color='gray'))
-    
-    trace01.update_xaxes(tickfont_weight='bold', tickfont_size=12, showline=False, ticks="")
-
     trace01.update_layout(
                          hoverlabel_font=dict(family='Roboto mono', weight='bold', size=15, color='white'),
                          font_family='Roboto mono',
+                         title=f'Matrícula {label_matricula} - {label_graph}',
                          title_font_weight='bold',
                          title_font_size=20,
+                         title_font_color = "black",
                          title_xanchor='left',
                          xaxis_type='category',
                          showlegend=False,
-                         
+                         width=1020, height=380,
+                         plot_bgcolor='white',
+                         margin=dict(
+                                        r=10,   
+                                        l=50,    
+                                        t=80,   
+                                        b=40    
+                                    )   
                          )
+
+    trace01.update_yaxes(tickfont_weight='normal', showgrid=True, tickfont_size=15,showline=False, ticks="",
+                             tickfont=dict(color='gray'),
+                             gridcolor='LightGray')
+        
+    trace01.update_xaxes(tickfont_weight='bold', tickfont_size=12, showline=False, ticks="")
 
     if periodo == 2027:
         label_mat_time = "2027"
