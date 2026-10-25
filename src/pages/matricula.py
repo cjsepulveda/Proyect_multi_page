@@ -700,13 +700,39 @@ def update_charts(unidad_edu, periodo):
                     y = select_nivel_subject[per_mat],
                     marker_color = color,
                     name = per_mat,
-                    text = select_nivel_subject[per_mat],
+                    #text = select_nivel_subject[per_mat],
                      
                     ),
 
                     secondary_y=False,
                 )
 
+        trace01.add_trace(
+                    go.Scatter(
+                        x = select_nivel_subject[graph_x_axes],
+                        y = select_nivel_subject['Variación %'],
+                        name="% Variación",
+                        #text = select_nivel_subject['Variación %'],
+                        mode="lines+markers",
+                        line=dict(color="#5F5F5F", width=3),
+                        marker=dict(color = "#ffffff", size = 12, 
+                                            line=dict(width = 2,
+                                            color = "#BB0000")),
+                        
+                        ),
+                        secondary_y=True,
+                        )
+        
+        trace01.update_yaxes(
+                    showgrid=False,       # Quita las líneas de cuadrícula horizontales
+                    secondary_y=True      # Aplica el cambio exclusivamente al eje secundario
+                        )
+        trace01.update_layout(
+            
+            hoverlabel_font=dict(color="black", size=16),
+            #hovermode="x unified",
+            
+                            )
         
     else: 
         trace01.add_trace(
@@ -733,14 +759,16 @@ def update_charts(unidad_edu, periodo):
                             xanchor="left", yanchor="bottom",                                
                             )
 
-    trace01.update_traces(hovertemplate=
-                          '<b>SAE 2026: </b>%{customdata[0]}</b><br>'+
-                          '<b>Mat 2026: </b>%{y:f}<br>'+
-                          '<b>% Meta  : </b>%{customdata[1]:.1f} %</b><br>',
-                          textfont_size=16, textangle=0, textposition="outside", cliponaxis=False,
-                          textfont=dict(weight="bold"),
-                          width = width_bar,
-                          )
+    if graph_comparar  == 'no_active':
+
+        trace01.update_traces(hovertemplate=
+                            '<b>SAE 2026: </b>%{customdata[0]}</b><br>'+
+                            '<b>Mat 2026: </b>%{y:f}<br>'+
+                            '<b>% Meta  : </b>%{customdata[1]:.1f} %</b><br>',
+                            textfont_size=16, textangle=0, textposition="outside", cliponaxis=False,
+                            textfont=dict(weight="bold"),
+                            width = width_bar,
+                            )
 
     trace01.update_layout(
                          hoverlabel_font=dict(family='Roboto mono', weight='bold', size=15, color='white'),
@@ -764,7 +792,8 @@ def update_charts(unidad_edu, periodo):
 
     trace01.update_yaxes(tickfont_weight='normal', showgrid=True, tickfont_size=15,showline=False, ticks="",
                              tickfont=dict(color='gray'),
-                             gridcolor='LightGray')
+                             gridcolor='LightGray',
+                             secondary_y=False,)
         
     trace01.update_xaxes(tickfont_weight='bold', tickfont_size=12, showline=False, ticks="")
 
