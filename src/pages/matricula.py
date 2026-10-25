@@ -459,6 +459,8 @@ def update_charts(unidad_edu, periodo):
     if periodo == "COMPARAR":
         data_user = DATA_STORE_CACHE[2027]
         label_matricula = "2026-2027"
+        
+        
 
     else:
         data_user = DATA_STORE_CACHE[periodo]
@@ -471,6 +473,7 @@ def update_charts(unidad_edu, periodo):
 
     # Control por si el valor del periodo tiene un diccionario vacio
     if not periodo or periodo not in DATA_STORE_CACHE:
+        graph_comparar ='active'
         periodo = 2027
         data_user_2026 = DATA_STORE_CACHE[2026]
         data_user_2027 = DATA_STORE_CACHE[2027]
@@ -501,15 +504,36 @@ def update_charts(unidad_edu, periodo):
 
             df_cleaned = all_level_df_pivot.reset_index().rename_axis(columns=None)
 
+            if unidad_edu in ['BÁSICA 1', 'BÁSICA 2', 'BÁSICA SF']:
+
+                # Etiqueta de la fila que quieres mover al principio (ejemplo: índice 2)
+                fila_a_mover_01 = 9
+                # Crear nueva lista de índices colocando la fila deseada primero
+                nuevo_orden_01 = [fila_a_mover_01] + [
+                    idx for idx in df_cleaned.index if idx != fila_a_mover_01
+                ]
+
+                # Reordenar el DataFrame
+                df_cleaned = df_cleaned.loc[nuevo_orden_01]
+
+                # Etiqueta de la fila que quieres mover al principio (ejemplo: índice 2)
+                fila_a_mover_02 = 10
+                # Crear nueva lista de índices colocando la fila deseada primero
+                nuevo_orden_02 = [fila_a_mover_02] + [
+                            idx for idx in df_cleaned.index if idx != fila_a_mover_02
+                                ]
+                # Reordenar el DataFrame
+                df_cleaned = df_cleaned.loc[nuevo_orden_02]
+                df_cleaned =df_cleaned.reset_index(drop=True)
+
+               
+
             select_nivel_subject = df_cleaned
             graph_x_axes = 'NIVEL'
             alfa = ["2026", "2027"]
             color_bar =  ["#3067FD","#FFA21F"]
-            bar_mode = 'group'
             width_bar = None
-
             
-            print(df_cleaned)
 
         else:
             
@@ -522,25 +546,77 @@ def update_charts(unidad_edu, periodo):
 
             df_cleaned = all_level_df_pivot.reset_index().rename_axis(columns=None)
 
+            
+
+            # Definir la posición de la fila a mover al final (ejemplo: posición 1)
+            target_idx = 3
+
+            # Crear una lista con el nuevo orden de índices
+            new_order = [i for i in range(len(df_cleaned)) if i != target_idx] + [target_idx]
+
+            # Reordenar el DataFrame
+            df_cleaned = df_cleaned.iloc[new_order]
+            df_cleaned =df_cleaned.reset_index(drop=True)
+            
+            
             select_nivel_subject = df_cleaned
             graph_x_axes = 'UNI_EDU'
             alfa = ["2026", "2027"]
             color_bar =  ["#3067FD","#FFA21F"]
-            bar_mode = 'group'
             width_bar = None
-            print(df_cleaned)
-           
+               
         
 
     else:
+        graph_comparar ='no_active'
         _df01 = data_user['df01']
         select_nivel_subject, graph_x_axes, _, etiqueta = build_summary_df(_df01, unidad_edu)
-        bar_mode = 'stack'
         width_bar = 0.5
-        alfa = ["MAT_2026"]
-        color_bar =["#3067FD"]
+        alfa = "MAT_2026"
+
+        if unidad_edu == 'Corporacion':
+
+            group_colors = {
+                                'BÁSICA 1':"#C11007",
+                                'BÁSICA 2':"#FFB300",
+                                'BÁSICA SF':"#439B00",
+                                'MEDIA LOS ANDES':"#7B3306",
+                                'MEDIA SAN FELIPE':"#F0B13B",
+                                'GENERAL': "#1447E6"
+                            }
+            colores_barras = [group_colors[cat] for cat in select_nivel_subject[graph_x_axes]]
         
+        elif unidad_edu in ['BÁSICA 1', 'BÁSICA 2', 'BÁSICA SF']:
+
+            group_colors ={
+                                'PREKINDER':"#E7180B",
+                                'KINDER':"#FF692A",
+                                '1BÁSICO':"#FE9A37",
+                                '2BÁSICO':"#7CCF35",
+                                '3BÁSICO':"#37BC7D",
+                                '4BÁSICO':"#3BB8DB",
+                                '5BÁSICO':"#2B7FFF",
+                                '6BÁSICO':"#8E51FF",
+                                '7BÁSICO':"#E61876",
+                                '8BÁSICO':"#F6339A",
+                                'GENERAL': "#1447E6"
+                                
+                            }
+
+            colores_barras = [group_colors[cat] for cat in select_nivel_subject[graph_x_axes]]
+
+        else:
+
+            group_colors = {
+                                '1MEDIO':"#C11007",
+                                '2MEDIO':"#009900",
+                                '3MEDIO':"#FF8800",
+                                '4MEDIO':"#6E11B0",
+                                'GENERAL': "#1447E6"
+
+                            }
         
+            colores_barras = [group_colors[cat] for cat in select_nivel_subject[graph_x_axes]]    
     
     # Cargar datos del diccionario según el periodo elegido en la variable data_user
     
@@ -602,9 +678,6 @@ def update_charts(unidad_edu, periodo):
     # funcion para obtener la cantidad de cursos por colegio, con filtro por unidad educativa
     df_cantidad_cursos = cantidad_cursos_colegio(_df08, unidad_edu)
 
-    
-
-
     # Color específico para la barra del gráfico de matrícula por unidad educativa o nivel,
     # para que se destaque del resto de barras, y se mantenga el mismo color tanto 
     # para la barra de la unidad educativa o nivel seleccionado, 
@@ -617,25 +690,40 @@ def update_charts(unidad_edu, periodo):
     
     trace01 = make_subplots ( specs = [[{ "secondary_y" :  True }]])
 
-    for per_mat, color in zip(alfa, color_bar):
+    if graph_comparar  == 'active':
+          
+        for per_mat, color in zip(alfa, color_bar):
+        
+            trace01.add_trace(
+                go.Bar(
+                    x = select_nivel_subject[graph_x_axes],
+                    y = select_nivel_subject[per_mat],
+                    marker_color = color,
+                    name = per_mat,
+                    text = select_nivel_subject[per_mat],
+                     
+                    ),
 
-        print(per_mat)
-        print(color)
-        print(color_bar)
+                    secondary_y=False,
+                )
+
+        
+    else: 
         trace01.add_trace(
-            go.Bar(
-                x = select_nivel_subject[graph_x_axes],
-                y = select_nivel_subject[per_mat],
-                marker_color = color,
-                name = per_mat,
-                text = select_nivel_subject[per_mat],
-                
-                
-            ),
+                        go.Bar(
+                            x = select_nivel_subject[graph_x_axes],
+                            y = select_nivel_subject[alfa],
+                            marker_color = colores_barras,
+                            name = alfa,
+                            text = select_nivel_subject[alfa],
+                             
+                            ),
+        
+                            secondary_y=False,
+                        )
 
-            secondary_y=False,
-        )
-
+   
+        
     trace01.add_layout_image(                                 
                             source= "assets/logo_corp.png",
                             xref="paper", yref="paper",
