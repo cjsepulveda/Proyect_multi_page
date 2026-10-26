@@ -531,7 +531,7 @@ def update_charts(unidad_edu, periodo):
             select_nivel_subject = df_cleaned
             graph_x_axes = 'NIVEL'
             alfa = ["2026", "2027"]
-            color_bar =  ["#3067FD","#FFA21F"]
+            color_bar =  ["#FFB300","#439B00"]
             width_bar = None
             
 
@@ -562,7 +562,7 @@ def update_charts(unidad_edu, periodo):
             select_nivel_subject = df_cleaned
             graph_x_axes = 'UNI_EDU'
             alfa = ["2026", "2027"]
-            color_bar =  ["#3067FD","#FFA21F"]
+            color_bar =  ["#FFB300","#439B00"]
             width_bar = None
                
         
@@ -712,13 +712,15 @@ def update_charts(unidad_edu, periodo):
                         x = select_nivel_subject[graph_x_axes],
                         y = select_nivel_subject['Variación %'],
                         name="% Variación",
-                        #text = select_nivel_subject['Variación %'],
+                       
                         mode="lines+markers",
                         line=dict(color="#5F5F5F", width=3),
                         marker=dict(color = "#ffffff", size = 12, 
                                             line=dict(width = 2,
                                             color = "#BB0000")),
-                        
+
+                        hovertemplate="%{y:.2f}%<extra></extra>"
+                         
                         ),
                         secondary_y=True,
                         )
@@ -727,12 +729,35 @@ def update_charts(unidad_edu, periodo):
                     showgrid=False,       # Quita las líneas de cuadrícula horizontales
                     secondary_y=True      # Aplica el cambio exclusivamente al eje secundario
                         )
+        
         trace01.update_layout(
-            
-            hoverlabel_font=dict(color="black", size=16),
-            #hovermode="x unified",
-            
-                            )
+                        hoverlabel_font=dict(family='Roboto mono', weight='bold', size=15, color='black'),
+                        hovermode="x unified",
+                        font_family='Roboto mono',
+                        title=f'Matrícula {label_matricula} - {label_graph}',
+                        title_font_weight='bold',
+                        title_font_size=20,
+                        title_font_color = "black",
+                        title_xanchor='left',
+                        xaxis_type='category',
+                        showlegend=False,
+                        width=1020, height=380,
+                        plot_bgcolor='white',
+                        margin=dict(
+                                    r=10,   
+                                    l=50,    
+                                    t=80,   
+                                    b=40    
+                                ),
+                         yaxis2=dict(
+                                title="Porcentaje de Admisión",
+                                tickformat= ".2f",
+                                ticksuffix="%",
+                                overlaying="y",
+                                side="right"
+                                ),
+   
+                        )
         
     else: 
         trace01.add_trace(
@@ -770,25 +795,25 @@ def update_charts(unidad_edu, periodo):
                             width = width_bar,
                             )
 
-    trace01.update_layout(
-                         hoverlabel_font=dict(family='Roboto mono', weight='bold', size=15, color='white'),
-                         font_family='Roboto mono',
-                         title=f'Matrícula {label_matricula} - {label_graph}',
-                         title_font_weight='bold',
-                         title_font_size=20,
-                         title_font_color = "black",
-                         title_xanchor='left',
-                         xaxis_type='category',
-                         showlegend=False,
-                         width=1020, height=380,
-                         plot_bgcolor='white',
-                         margin=dict(
-                                        r=10,   
-                                        l=50,    
-                                        t=80,   
-                                        b=40    
-                                    )   
-                         )
+        trace01.update_layout(
+                            hoverlabel_font=dict(family='Roboto mono', weight='bold', size=15, color='white'),
+                            font_family='Roboto mono',
+                            title=f'Matrícula {label_matricula} - {label_graph}',
+                            title_font_weight='bold',
+                            title_font_size=20,
+                            title_font_color = "black",
+                            title_xanchor='left',
+                            xaxis_type='category',
+                            showlegend=False,
+                            width=1020, height=380,
+                            plot_bgcolor='white',
+                            margin=dict(
+                                            r=10,   
+                                            l=50,    
+                                            t=80,   
+                                            b=40    
+                                        )   
+                            )
 
     trace01.update_yaxes(tickfont_weight='normal', showgrid=True, tickfont_size=15,showline=False, ticks="",
                              tickfont=dict(color='gray'),
