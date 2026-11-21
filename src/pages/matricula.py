@@ -25,6 +25,7 @@ DATA_PATH = PATH.joinpath("data").resolve()
 
 # Caching de datos para evitar leer el Excel en cada importación del módulo.
 # La lectura se hará solo la primera vez que se necesiten los datos.
+
 _df01 = _df02 = _df03 = _df04 = _df05 = _df06 = _df07= None
 _tabla_proyeccion = None
 
@@ -491,6 +492,7 @@ def update_charts(unidad_edu, periodo):
 
         all_level_df = pd.concat([level_2026, level_2027], ignore_index=True)
 
+        print(all_level_df)
         
         if unidad_edu and unidad_edu != 'Corporacion':
 
