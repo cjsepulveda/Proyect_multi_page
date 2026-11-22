@@ -483,7 +483,9 @@ def update_charts(unidad_edu, periodo):
 
         level_2026, x_axes_2026, color_bar_2026, etiqueta = build_summary_df(_df01_2026, unidad_edu)
         level_2027, x_axes_2027, color_bar_2027, etiqueta = build_summary_df(_df01_2027, unidad_edu)
-        
+
+       
+
         level_2026['PERIODO'] = "2026"
         level_2026['PERIODO']=level_2026['PERIODO'].astype(str)
 
@@ -492,7 +494,7 @@ def update_charts(unidad_edu, periodo):
 
         all_level_df = pd.concat([level_2026, level_2027], ignore_index=True)
 
-        print(all_level_df)
+        
         
         if unidad_edu and unidad_edu != 'Corporacion':
 
@@ -528,8 +530,7 @@ def update_charts(unidad_edu, periodo):
                 df_cleaned = df_cleaned.loc[nuevo_orden_02]
                 df_cleaned =df_cleaned.reset_index(drop=True)
 
-               
-
+            
             select_nivel_subject = df_cleaned
             graph_x_axes = 'NIVEL'
             alfa = ["2026", "2027"]
@@ -566,7 +567,8 @@ def update_charts(unidad_edu, periodo):
             alfa = ["2026", "2027"]
             color_bar =  ["#FFB300","#439B00"]
             width_bar = None
-               
+        
+        
         
 
     else:
