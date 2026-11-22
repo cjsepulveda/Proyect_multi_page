@@ -52,7 +52,11 @@ def load_data_year():
             'df06': pd.read_excel(workbook, sheet_name='origen_colegios'),
             'df07': pd.read_excel(workbook, sheet_name='com_est'),
             'df08': pd.read_excel(workbook, sheet_name='cantidad_cursos')
-        }
+          }
+
+        df09 = pd.read_excel(workbook, sheet_name='mat_time_nivel')
+        df09['FECHA']= pd.to_datetime(df09['FECHA'], errors='coerce')
+        DATA_STORE_CACHE[year]['df09'] = df09
 
         df04 = pd.read_excel(workbook, sheet_name='mat_time')
         df04['MATRICULA'] = pd.to_datetime(df04['MATRICULA'], errors='coerce')
@@ -161,6 +165,33 @@ def get_gender_counts(df_genero, unidad_edu=None):
     df_grouped = df_grouped.drop(columns=['UNIDAD ACADÉMICA'], errors='ignore')
     df_dict = df_grouped.set_index('Sexo')['RECUENTO'].to_dict()
     return df_dict.get('F', 0), df_dict.get('M', 0)
+
+def comparar_data_fecha(df_2026_time, unidad_edu=None):
+
+    df_filter_time = df_2026_time[df_2026_time["FECHA"].between("2025-12-09", "2025-12-10")]
+  
+    
+    if unidad_edu and unidad_edu != 'Corporacion':
+        df_filter_time_query = df_filter_time.query("UNI_EDU == @unidad_edu")
+        df_filter_drop = df_filter_time_query.drop(columns=['UNI_EDU', 'FECHA'], errors='ignore')
+        df_filter_group = df_filter_drop.groupby('NIVEL')['MATRICULA'].sum().reset_index()
+        total_label = 'GENERAL'
+        label_col = 'NIVEL'
+
+    else:
+        df_filter_drop = df_filter_time.drop(columns=['NIVEL', 'FECHA'], errors='ignore')
+        df_filter_group = df_filter_drop.groupby('UNI_EDU')['MATRICULA'].sum().reset_index()
+        total_label = 'GENERAL'
+        label_col = 'UNI_EDU'
+       
+    total_matricula = df_filter_group['MATRICULA'].sum()
+    fila_total = {label_col: total_label, 'MATRICULA': total_matricula}
+    df_total = pd.DataFrame([fila_total])
+    df_filter_group = pd.concat([df_filter_group, df_total], ignore_index=True)
+    
+
+
+    return df_filter_group
 
 
 def build_summary_df(df_source, unidad_edu=None):
@@ -480,19 +511,34 @@ def update_charts(unidad_edu, periodo):
         data_user_2027 = DATA_STORE_CACHE[2027]
         _df01_2026 = data_user_2026['df01']
         _df01_2027 = data_user_2027['df01']
+        _df09_2027 = data_user_2027['df09']
 
         level_2026, x_axes_2026, color_bar_2026, etiqueta = build_summary_df(_df01_2026, unidad_edu)
         level_2027, x_axes_2027, color_bar_2027, etiqueta = build_summary_df(_df01_2027, unidad_edu)
 
-       
+        
+        level_2026_date = comparar_data_fecha(_df09_2027, unidad_edu)
+        level_2026_date_new = level_2026_date.rename(columns={"MATRICULA": "MAT_2026"})
+     
+
+        level_2027_new = level_2027.drop(columns=['SAE_2026', '% Meta'], errors='ignore')
+
+        level_2026_date_new['PERIODO'] = '2026'
+        level_2026_date_new['PERIODO'] = level_2026_date_new['PERIODO'].astype(str)
+
+        level_2027_new['PERIODO'] = '2027'
+        level_2027_new['PERIODO'] = level_2027_new['PERIODO'].astype(str)
 
         level_2026['PERIODO'] = "2026"
-        level_2026['PERIODO']=level_2026['PERIODO'].astype(str)
+        level_2026['PERIODO'] =level_2026['PERIODO'].astype(str)
 
         level_2027['PERIODO'] = "2027"
-        level_2027['PERIODO']=level_2027['PERIODO'].astype(str)
+        level_2027['PERIODO'] =level_2027['PERIODO'].astype(str)
 
-        all_level_df = pd.concat([level_2026, level_2027], ignore_index=True)
+        #all_level_df = pd.concat([level_2026, level_2027], ignore_index=True)
+        all_level_df = pd.concat([level_2026_date_new, level_2027_new], ignore_index=True)
+
+        print(all_level_df)
 
         
         
